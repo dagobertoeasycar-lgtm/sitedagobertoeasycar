@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $backupRoot = "C:\Backups\DagobertoEasycar"
 $environmentFile = Join-Path $root ".env.production"
-$logFile = "C:\Logs\DagobertoEasycar\backup.log"
+$logFile = "C:\Logs\DagobertoEasycar\monitor\backup.log"
 $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $destination = Join-Path $backupRoot "daily\DagobertoEasycar_$stamp"
 New-Item -ItemType Directory -Path $destination -Force | Out-Null
@@ -25,7 +25,7 @@ $uploadItems = @(Get-ChildItem -LiteralPath $uploads -Force -ErrorAction Silentl
 if ($uploadItems.Count -gt 0) {
     Compress-Archive -Path (Join-Path $uploads "*") -DestinationPath (Join-Path $destination "uploads.zip") -CompressionLevel Optimal
 }
-$manifest = [ordered]@{ createdAt = (Get-Date).ToString("o"); version = (git -C $root rev-parse HEAD); hostname = $env:COMPUTERNAME; files = @() }
+$manifest = [ordered]@{ createdAt = (Get-Date).ToString("o"); version = $settings["APP_VERSION"]; hostname = $env:COMPUTERNAME; files = @() }
 $manifest.files = @(Get-ChildItem -File -LiteralPath $destination | ForEach-Object { [ordered]@{ name = $_.Name; bytes = $_.Length; sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash } })
 $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $destination "manifest.json") -Encoding UTF8
 Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue

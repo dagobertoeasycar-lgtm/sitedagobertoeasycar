@@ -19,4 +19,5 @@ coverage/
 *.tsbuildinfo
 infra/downloads/
 validation/screenshots/*.png
+scripts/healthcheck.exe
 .DS_Store

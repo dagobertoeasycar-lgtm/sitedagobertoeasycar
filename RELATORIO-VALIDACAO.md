@@ -1,6 +1,6 @@
 # Relatório de validação
 
-Data final da validação: 30/07/2026, UTC-3.
+Data final da validação: 31/07/2026, UTC-3.
 
 ## Build e qualidade
 
@@ -52,12 +52,18 @@ Evidências: `validation\screenshots\home-<largura>.png` e `validation\screensho
 - Restauração isolada executada em `dagoberto_easycar_restore_test`.
 - Resultado restaurado: 6 tabelas públicas, 1 migration e 1 usuário.
 - O banco de teste foi removido após a validação.
+- Backup disparado pelo serviço de monitoramento: `C:\Backups\DagobertoEasycar\daily\DagobertoEasycar_20260731_123432`.
+- O novo dump possui 14.247 bytes, SHA-256 `CF62C526803B2A2E21ADEECBCBDD49A68116D0C2E10421A1DAA30481ADC34CD5`, igual ao manifesto, e catálogo custom legível pelo `pg_restore` com 35 entradas.
+- A restauração isolada do novo dump não foi repetida porque a conta da aplicação, corretamente, não possui `CREATEDB` e a política de segurança impediu procurar credenciais administrativas. A recuperação completa permanece comprovada pelo primeiro dump gerado pelo mesmo script.
 - Retenção limitada às 7 pastas diárias mais recentes, com verificação de caminho antes de exclusão.
 
 ## Automação operacional
 
-- `DagobertoEasycar-Backup-Diario`: diariamente às 02:30 como SYSTEM.
-- `DagobertoEasycar-Healthcheck-5min`: a cada 5 minutos como SYSTEM.
+- `DagobertoEasycarMonitor`: serviço Windows automático via NSSM, executado como a conta virtual exclusiva `NT SERVICE\DagobertoEasycarMonitor`.
+- Healthcheck direto e via IIS a cada 5 minutos, com log restrito em `C:\Logs\DagobertoEasycar\monitor\healthcheck.log`.
+- Backup diário entre 02:30 e 02:34, disparado pelo mesmo serviço; teste manual do fluxo registrou `OK monitor exit=0` e consumiu corretamente o marcador.
+- ACL mínima da conta virtual: leitura de `scripts`, `.env.production` e uploads; modificação somente em `C:\Logs\DagobertoEasycar\monitor` e `C:\Backups\DagobertoEasycar\daily`. A raiz da aplicação e o `.git` não foram liberados.
+- As tarefas equivalentes do Agendador de Tarefas foram removidas após falharem ao iniciar processos nesta VM; não fazem parte da arquitetura ativa.
 - Recuperação do serviço: reinícios após 5 s, 15 s e 60 s.
 - Backups de build para rollback em `C:\Backups\DagobertoEasycar\releases`.
 - Deploy/rollback aguardam até 180 segundos, necessário por causa da baixa memória da VM.

@@ -9,6 +9,7 @@ O repositório oficial não continha código-fonte além do README. O protótipo
 - Next.js 16.2.12, React 19.2.8 e TypeScript estrito.
 - PostgreSQL 17.10 com SCRAM-SHA-256, usuário de aplicação sem privilégios administrativos e migrations versionadas.
 - Serviço Windows `DagobertoEasycarApp` via NSSM, inicialização automática atrasada, dependência do PostgreSQL, logs separados e recuperação automática.
+- Serviço Windows `DagobertoEasycarMonitor` via NSSM para healthcheck a cada 5 minutos e backup diário às 02:30, sob conta virtual exclusiva e ACL mínima.
 - Site público com Home, estoque, detalhe do veículo, sobre, financiamento, venda do carro, contato, privacidade e termos.
 - SEO técnico: metadados, canonical, sitemap, robots e dados estruturados `AutoDealer`/`LocalBusiness`.
 - Formulários comerciais persistidos em PostgreSQL com consentimento e validação de tamanho.
@@ -28,6 +29,7 @@ Tabelas: `schema_migrations`, `users`, `vehicles`, `leads`, `audit_log` e `sync_
 - Uploads aceitam somente JPEG, PNG, WebP ou AVIF de até 8 MB, verificam magic bytes, usam UUID aleatório e ficam em `C:\Sites\DagobertoEasycar\data\uploads`.
 - CSP, `X-Content-Type-Options`, `X-Frame-Options`, Referrer Policy e Permissions Policy estão ativos.
 - Healthcheck não revela credenciais nem detalhes internos do banco.
+- A conta virtual do monitor não possui acesso à raiz completa nem ao `.git`; lê apenas scripts, `.env.production` e uploads e grava somente nos diretórios dedicados de monitoramento e backup diário.
 
 ## Itens condicionais não ativados
 

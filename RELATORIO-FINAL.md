@@ -23,11 +23,15 @@ Não copie a senha para chamados, e-mail ou logs. Após a troca e confirmação,
 
 - Saúde direta: `http://127.0.0.1:3100/api/health`
 - Logs: `C:\Logs\DagobertoEasycar`
+- Logs restritos do monitor: `C:\Logs\DagobertoEasycar\monitor`
 - Backups: `C:\Backups\DagobertoEasycar`
 - Uploads: `C:\Sites\DagobertoEasycar\data\uploads`
 - Serviço web: `DagobertoEasycarApp`
+- Serviço de monitoramento e backup: `DagobertoEasycarMonitor`, automático, sob a conta virtual exclusiva `NT SERVICE\DagobertoEasycarMonitor`
 - Serviço de banco: `postgresql-x64-17`
 - IIS: site `Dagoberto Easycar`, pool `DagobertoEasycarPool`
+
+O monitor verifica a aplicação diretamente e pelo IIS a cada 5 minutos e dispara o backup diário às 02:30. Sua conta possui somente as ACLs necessárias para ler scripts, ambiente e uploads e para gravar no diretório restrito de logs e na pasta diária de backup. O fluxo automatizado foi comprovado pelo backup `DagobertoEasycar_20260731_123432`, com saída `OK monitor exit=0` e hash conferido contra o manifesto. As tentativas equivalentes pelo Agendador de Tarefas foram removidas porque o subsistema não iniciava processos corretamente nesta VM.
 
 O deploy usa `scripts\deploy.ps1`; rollback por commit usa `scripts\rollback.ps1 -Commit <sha>`. Ambos devem ser executados em PowerShell elevado com `-ExecutionPolicy Bypass -File`, pois a política global da máquina bloqueia scripts não assinados e não foi enfraquecida.
 
