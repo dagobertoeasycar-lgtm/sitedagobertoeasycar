@@ -1,5 +1,6 @@
 import { access, appendFile, readFile, unlink, writeFile } from "node:fs/promises";
 import http from "node:http";
+import https from "node:https";
 import { spawn } from "node:child_process";
 
 const logFile = "C:\\Logs\\DagobertoEasycar\\monitor\\healthcheck.log";
@@ -9,9 +10,10 @@ const backupState = "C:\\Logs\\DagobertoEasycar\\monitor\\last-scheduled-backup.
 const intervalMs = 5 * 60 * 1000;
 let backupRunning = false;
 
-function requestHealth(port, host) {
+function requestHealth(protocol, port, host) {
   return new Promise((resolve) => {
-    const request = http.get({ hostname: "127.0.0.1", port, path: "/api/health", headers: { Host: host }, agent: false, timeout: 8000 }, (response) => {
+    const client = protocol === "https" ? https : http;
+    const request = client.get({ hostname: host, port, path: "/api/health", headers: { Host: host }, agent: false, timeout: 8000 }, (response) => {
       let body = "";
       response.setEncoding("utf8");
       response.on("data", (chunk) => { body += chunk; });
@@ -24,8 +26,8 @@ function requestHealth(port, host) {
 
 async function check() {
   const [direct, iis] = await Promise.all([
-    requestHealth(3100, "127.0.0.1"),
-    requestHealth(80, "www.dagobertoeasycar.com.br"),
+    requestHealth("http", 3100, "127.0.0.1"),
+    requestHealth("https", 443, "www.dagobertoeasycar.com.br"),
   ]);
   const ok = direct && iis;
   await appendFile(logFile, `${new Date().toISOString()} ${ok ? "OK monitor" : `FALHA monitor direct=${direct} iis=${iis}`}\r\n`, "utf8");
