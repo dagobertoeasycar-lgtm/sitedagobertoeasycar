@@ -14,7 +14,14 @@ export function VehicleCard({ vehicle, index = 0 }: { vehicle: Vehicle; index?: 
         <div className="badges">{vehicle.featured && <span>Destaque</span>}<span>Periciado</span>{vehicle.promotion && <span>Promoção</span>}</div>
         <h2><Link href={`/veiculos/${vehicle.slug}`}>{vehicle.title}</Link></h2>
         <p>{vehicle.version} · {vehicle.fuel} · {vehicle.transmission}</p>
-        <strong className="price">{money(vehicle.price_cents)}</strong>
+        {vehicle.old_price_cents && vehicle.old_price_cents > vehicle.price_cents ? (
+          <div>
+            <span style={{ textDecoration: "line-through", color: "#94a3b8", fontSize: "0.85rem" }}>{money(vehicle.old_price_cents)}</span>
+            <strong className="price">{money(vehicle.price_cents)}</strong>
+          </div>
+        ) : (
+          <strong className="price">{money(vehicle.price_cents)}</strong>
+        )}
         <div className="vehicle-meta"><span>{vehicle.mileage.toLocaleString("pt-BR")} km</span><span>{vehicle.city}</span></div>
         <div className="card-actions">
           <Link className="button button-outline" href={`/veiculos/${vehicle.slug}`}>Detalhes</Link>

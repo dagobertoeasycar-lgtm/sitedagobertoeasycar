@@ -171,3 +171,117 @@ th { background: var(--soft); }
   .search-strip { padding: 15px; }
   .detail-list { grid-template-columns: 1fr; }
 }
+
+/* ── Sync Panel ─────────────────────────────────────────── */
+.sync-panel {
+  background: var(--surface, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+.sync-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.sync-header h2 { margin: 0; font-size: 1.25rem; }
+.sync-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.sync-badge.active { background: #dcfce7; color: #16a34a; }
+.sync-badge.inactive { background: #fef3c7; color: #d97706; }
+.sync-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.sync-stat span { display: block; font-size: 0.8rem; color: #64748b; }
+.sync-stat strong { font-size: 1.1rem; }
+.sync-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.sync-interval {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+.sync-interval select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+}
+.sync-msg {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+.sync-history { margin-top: 1rem; }
+.sync-history summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+.sync-history table { width: 100%; margin-top: 0.5rem; font-size: 0.85rem; }
+
+/* ── Vehicle gallery ────────────────────────────────────── */
+.vehicle-gallery {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+.vehicle-gallery-main {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.vehicle-gallery-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+.vehicle-gallery-thumbs button {
+  flex-shrink: 0;
+  width: 80px;
+  height: 60px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+}
+.vehicle-gallery-thumbs button.active {
+  border-color: var(--primary, #0052cc);
+}
+.vehicle-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.vehicle-options span {
+  background: var(--surface, #f1f5f9);
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.vehicle-store {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0.5rem 0;
+}

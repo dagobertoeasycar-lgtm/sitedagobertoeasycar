@@ -4,6 +4,20 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   compress: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "resized-images.autoconf.com.br",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "static.autoconf.com.br",
+        pathname: "/**",
+      },
+    ],
+  },
   async headers() {
     return [
       {
@@ -16,7 +30,7 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-src https://www.google.com; form-action 'self'; frame-ancestors 'self'; base-uri 'self'",
+            value: "default-src 'self'; img-src 'self' data: https://resized-images.autoconf.com.br https://static.autoconf.com.br; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-src https://www.google.com; form-action 'self'; frame-ancestors 'self'; base-uri 'self'",
           },
         ],
       },

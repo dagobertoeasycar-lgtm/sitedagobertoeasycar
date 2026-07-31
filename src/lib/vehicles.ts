@@ -10,15 +10,21 @@ export type Vehicle = {
   year_model: number;
   year_make: number;
   price_cents: number;
+  old_price_cents: number | null;
   mileage: number;
   fuel: string;
   transmission: string;
   body_type: string;
   city: string;
+  color: string;
+  doors: number;
   status: string;
   featured: boolean;
   promotion: boolean;
   image_url: string | null;
+  images: string[];
+  options: string[];
+  store: string;
   description: string;
 };
 
