@@ -40,4 +40,4 @@ Tabelas: `schema_migrations`, `users`, `vehicles`, `leads`, `audit_log` e `sync_
 
 ## Integração IIS
 
-O site `Dagoberto Easycar` possui bindings HTTP específicos para `dagobertoeasycar.com.br` e `www.dagobertoeasycar.com.br`. O proxy foi corrigido de 3000 para 3100. Enquanto DNS/SSL estão pendentes, usa `web.config.pre-dns` sem redirecionamento quebrado. O `web.config` final com HTTPS e canonical está pronto para ativação após o certificado.
+O site `Dagoberto Easycar` possui bindings HTTP e HTTPS específicos para `dagobertoeasycar.com.br` e `www.dagobertoeasycar.com.br`. O proxy foi corrigido de 3000 para 3100. O `web.config` final está ativo: HTTP e o host sem `www` redirecionam permanentemente para o domínio canônico HTTPS. O certificado público Let's Encrypt foi instalado pelo win-acme com renovação automática, sem alterar os sites e bindings UPT existentes.

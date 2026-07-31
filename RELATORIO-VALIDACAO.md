@@ -70,4 +70,6 @@ Evidências: `validation\screenshots\home-<largura>.png` e `validation\screensho
 
 ## Resultado externo
 
-HTTP por IP público `148.224.63.68` com Host header retornou 200. `dagobertoeasycar.com.br` e `www.dagobertoeasycar.com.br` ainda não retornam registros A; por isso HTTPS público não foi falsamente declarado como concluído.
+Os registros A de `dagobertoeasycar.com.br` e `www.dagobertoeasycar.com.br` resolvem para `148.224.63.68`. O certificado público Let's Encrypt contém os dois nomes e é válido até 29/10/2026. HTTP nos dois hosts e HTTPS sem `www` retornam 301 para `https://www.dagobertoeasycar.com.br/`.
+
+O domínio oficial foi aberto no navegador externo com certificado válido, título e conteúdo corretos. As rotas `/`, `/api/health`, `/robots.txt`, `/sitemap.xml` e `/admin/login` responderam em HTTPS; o healthcheck público retornou aplicação e banco `ok` com a versão implantada.
