@@ -22,7 +22,15 @@ export async function POST(request: NextRequest) {
   if (!user || !verifyPassword(currentPassword, user.password_salt, user.password_hash)) return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
   const salt = randomBytes(16).toString("hex");
   const passwordHash = hashPassword(newPassword, salt);
-  await query("update users set password_hash=$1,password_salt=$2,must_change_password=false,updated_at=now() where id=$3", [passwordHash, salt, session.userId]);
-  await query("insert into audit_log(actor_id,action,entity_type,entity_id) values($1,'change_password','user',$1)", [session.userId]);
+  await query(`
+    with changed as (
+      update users
+      set password_hash=$1, password_salt=$2, must_change_password=false, updated_at=now()
+      where id=$3
+      returning id
+    )
+    insert into audit_log(actor_id, action, entity_type, entity_id)
+    select id, 'change_password', 'user', id::text from changed
+  `, [passwordHash, salt, session.userId]);
   return NextResponse.json({ ok: true });
 }
