@@ -1,26 +1,98 @@
-import { SyncPanel } from "@/components/SyncPanel";
 import { redirect } from "next/navigation";
-import { AdminVehicleForm } from "@/components/AdminVehicleForm";
-import { VehicleStatusForm } from "@/components/VehicleStatusForm";
 import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
+import Link from "next/link";
 
-type CountRow = { vehicles: string; leads: string; users: string };
-type VehicleRow = { id: string; title: string; status: string; price_cents: number; updated_at: Date };
-type LeadRow = { id: string; name: string; phone: string; kind: string; status: string; created_at: Date };
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+type DashboardStatsRow = {
+  vehicles: number;
+  published: number;
+  leads: number;
+  leads_today: number;
+  banners: number;
+  users: number;
+  last_sync: string | null;
+};
+
+type RecentVehicleRow = {
+  id: string;
+  title: string;
+  status: string;
+  price_cents: number;
+  image_url: string | null;
+  updated_at: Date;
+};
+
+type RecentLeadRow = {
+  id: string;
+  name: string;
+  phone: string;
+  kind: string;
+  status: string;
+  created_at: Date;
+};
+
+export default async function AdminDashboard() {
   const session = await currentSession();
   if (!session) redirect("/admin/login");
-  const account = await query<{ must_change_password: boolean }>("select must_change_password from users where id=$1 and active limit 1", [session.userId]);
-  if (account.rows[0]?.must_change_password) redirect("/admin/trocar-senha");
-  const [counts, vehicles, leads] = await Promise.all([
-    query<CountRow>("select (select count(*) from vehicles)::text vehicles, (select count(*) from leads)::text leads, (select count(*) from users where active)::text users"),
-    query<VehicleRow>("select id,title,status,price_cents,updated_at from vehicles order by updated_at desc limit 40"),
-    query<LeadRow>("select id,name,phone,kind,status,created_at from leads order by created_at desc limit 30"),
-  ]);
-  const count = counts.rows[0];
-  return <section className="shell admin-shell"><div className="section-heading"><div><p className="eyebrow dark">Painel</p><h1>Administração</h1></div><form action="/api/auth/logout" method="post"><button className="button button-outline">Sair</button></form></div><div className="admin-grid"><div className="stat"><span>Veículos</span><strong>{count.vehicles}</strong></div><div className="stat"><span>Leads</span><strong>{count.leads}</strong></div><div className="stat"><span>Usuários ativos</span><strong>{count.users}</strong></div></div><AdminVehicleForm /><SyncPanel />
-<h2>Estoque</h2><div className="admin-table-wrap"><table><thead><tr><th>Veículo</th><th>Status</th><th>Preço</th><th>Atualizado</th><th>Ações</th></tr></thead><tbody>{vehicles.rows.map((vehicle) => <tr key={vehicle.id}><td>{vehicle.title}</td><td>{vehicle.status}</td><td>{(vehicle.price_cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td><td>{new Date(vehicle.updated_at).toLocaleString("pt-BR")}</td><td><VehicleStatusForm id={vehicle.id} status={vehicle.status} /></td></tr>)}</tbody></table></div><h2>Leads recentes</h2><div className="admin-table-wrap"><table><thead><tr><th>Nome</th><th>Telefone</th><th>Tipo</th><th>Status</th><th>Data</th></tr></thead><tbody>{leads.rows.map((lead) => <tr key={lead.id}><td>{lead.name}</td><td>{lead.phone}</td><td>{lead.kind}</td><td>{lead.status}</td><td>{new Date(lead.created_at).toLocaleString("pt-BR")}</td></tr>)}</tbody></table></div></section>;
+
+  let stats = { vehicles: 0, published: 0, leads: 0, leadsToday: 0, banners: 0, users: 0, lastSync: "Nunca" };
+  try {
+    const r = await query<DashboardStatsRow>(`SELECT
+      (SELECT count(*) FROM vehicles)::int as vehicles,
+      (SELECT count(*) FROM vehicles WHERE status='published')::int as published,
+      (SELECT count(*) FROM leads)::int as leads,
+      (SELECT count(*) FROM leads WHERE created_at >= CURRENT_DATE)::int as leads_today,
+      (SELECT count(*) FROM banners WHERE active=true)::int as banners,
+      (SELECT count(*) FROM users WHERE active)::int as users,
+      (SELECT to_char(max(finished_at),'DD/MM HH24:MI') FROM sync_runs)::text as last_sync
+    `);
+    const row = r.rows[0];
+    stats = { vehicles: row.vehicles, published: row.published, leads: row.leads, leadsToday: row.leads_today, banners: row.banners, users: row.users, lastSync: row.last_sync || "Nunca" };
+  } catch {}
+
+  let recentVehicles: RecentVehicleRow[] = [];
+  let recentLeads: RecentLeadRow[] = [];
+  try {
+    recentVehicles = (await query<RecentVehicleRow>("SELECT id,title,status,price_cents,image_url,updated_at FROM vehicles ORDER BY updated_at DESC LIMIT 5")).rows;
+    recentLeads = (await query<RecentLeadRow>("SELECT id,name,phone,kind,status,created_at FROM leads ORDER BY created_at DESC LIMIT 5")).rows;
+  } catch {}
+
+  return (
+    <>
+      <div className="adm-header">
+        <h1>Dashboard</h1>
+        <div className="adm-header-actions">
+          <span className="adm-sync-status">🔄 Última sync: {stats.lastSync}</span>
+        </div>
+      </div>
+      <div className="adm-stats">
+        <div className="adm-stat"><span className="adm-stat-icon">🚗</span><div><strong>{stats.published}</strong><span>Veículos ativos</span></div></div>
+        <div className="adm-stat"><span className="adm-stat-icon">📦</span><div><strong>{stats.vehicles}</strong><span>Total no estoque</span></div></div>
+        <div className="adm-stat"><span className="adm-stat-icon">📋</span><div><strong>{stats.leadsToday}</strong><span>Leads hoje</span></div></div>
+        <div className="adm-stat"><span className="adm-stat-icon">📨</span><div><strong>{stats.leads}</strong><span>Total de leads</span></div></div>
+        <div className="adm-stat"><span className="adm-stat-icon">🖼️</span><div><strong>{stats.banners}</strong><span>Banners ativos</span></div></div>
+        <div className="adm-stat"><span className="adm-stat-icon">👥</span><div><strong>{stats.users}</strong><span>Usuários</span></div></div>
+      </div>
+      <div className="adm-grid-2">
+        <div className="adm-card">
+          <div className="adm-card-header"><h2>Veículos recentes</h2><Link href="/admin/veiculos" className="adm-link">Ver todos →</Link></div>
+          <table className="adm-table"><thead><tr><th>Foto</th><th>Veículo</th><th>Status</th><th>Preço</th></tr></thead><tbody>
+            {recentVehicles.map((v) => (
+              <tr key={v.id}><td><img src={v.image_url || "/em-breve.jpg"} alt="" className="adm-thumb" /></td><td>{v.title}</td><td><span className={`adm-badge ${v.status}`}>{v.status}</span></td><td>{(v.price_cents/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0})}</td></tr>
+            ))}
+          </tbody></table>
+        </div>
+        <div className="adm-card">
+          <div className="adm-card-header"><h2>Leads recentes</h2><Link href="/admin/leads" className="adm-link">Ver todos →</Link></div>
+          <table className="adm-table"><thead><tr><th>Nome</th><th>Telefone</th><th>Tipo</th><th>Status</th></tr></thead><tbody>
+            {recentLeads.map((l) => (
+              <tr key={l.id}><td>{l.name}</td><td>{l.phone}</td><td>{l.kind}</td><td><span className={`adm-badge ${l.status}`}>{l.status}</span></td></tr>
+            ))}
+          </tbody></table>
+        </div>
+      </div>
+    </>
+  );
 }

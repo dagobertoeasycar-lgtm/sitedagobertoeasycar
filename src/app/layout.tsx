@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
 import "./globals.css";
 
 const siteUrl = "https://www.dagobertoeasycar.com.br";
@@ -26,10 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pt-BR">
       <body>
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <a className="whatsapp-float" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer" aria-label="Falar pelo WhatsApp">WhatsApp</a>
+        {children}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </body>
     </html>

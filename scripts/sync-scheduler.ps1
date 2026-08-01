@@ -1,64 +1,38 @@
-<#
-.SYNOPSIS
-  Agenda a sincronização do estoque EasyCar a cada 5 minutos via Task Scheduler do Windows.
-.USAGE
-  powershell -ExecutionPolicy Bypass -File scripts\sync-scheduler.ps1
-#>
+# Cria tarefa agendada para sync do estoque a cada 10 minutos
+$taskName = "DagobertoEasycar-SyncEstoque"
+$projectDir = "C:\Sites\DagobertoEasycar"
 
-$ErrorActionPreference = "Stop"
-$TaskName = "DagobertoEasycar-SyncEstoque"
-$ProjectDir = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
-
-# Carrega variáveis do .env se existir
-$EnvFile = Join-Path $ProjectDir ".env"
-$DbUrl = $env:DATABASE_URL
-if (Test-Path $EnvFile) {
-    Get-Content $EnvFile | ForEach-Object {
-        if ($_ -match '^DATABASE_URL=(.+)$') { $DbUrl = $Matches[1] }
+# Script inline que carrega .env.production e roda o sync
+$scriptBlock = @"
+Set-Location '$projectDir'
+Get-Content '.env.production' | ForEach-Object {
+    if (`$_ -match '^([^#=]+)=(.*)$') {
+        [System.Environment]::SetEnvironmentVariable(`$Matches[1].Trim(), `$Matches[2].Trim(), 'Process')
     }
 }
-if (-not $DbUrl) { throw "DATABASE_URL não encontrada no .env ou ambiente" }
+node scripts/sync-easycar.mjs >> logs/sync.log 2>&1
+"@
 
-# Script que será executado
-$SyncScript = Join-Path $ProjectDir "scripts\sync-easycar.mjs"
-$LogFile = Join-Path $ProjectDir "logs\sync.log"
+$action = New-ScheduledTaskAction `
+    -Execute "powershell.exe" `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -Command `"$scriptBlock`"" `
+    -WorkingDirectory $projectDir
 
-# Criar pasta de logs
-$LogDir = Join-Path $ProjectDir "logs"
-if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 10) -RepetitionDuration ([TimeSpan]::MaxValue)
 
-# Comando
-$Action = New-ScheduledTaskAction `
-    -Execute "node" `
-    -Argument "`"$SyncScript`"" `
-    -WorkingDirectory $ProjectDir
-
-# Trigger: a cada 5 minutos, indefinidamente
-$Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5)
-
-# Configurações
-$Settings = New-ScheduledTaskSettingsSet `
+$settings = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries `
     -DontStopIfGoingOnBatteries `
     -StartWhenAvailable `
-    -ExecutionTimeLimit (New-TimeSpan -Minutes 10) `
+    -ExecutionTimeLimit (New-TimeSpan -Minutes 8) `
     -MultipleInstances IgnoreNew
 
-# Remover tarefa existente se houver
-Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+# Remove existing task if exists
+Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
 
-# Criar tarefa
-Register-ScheduledTask `
-    -TaskName $TaskName `
-    -Action $Action `
-    -Trigger $Trigger `
-    -Settings $Settings `
-    -Description "Sincroniza estoque da EasyCar Veiculos a cada 5 minutos" `
-    -RunLevel Highest
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -User "SYSTEM" -RunLevel Highest -Description "Sync estoque EasyCar a cada 10 minutos"
 
-Write-Host "Tarefa '$TaskName' criada com sucesso!"
-Write-Host "Intervalo: 5 minutos"
-Write-Host "Script: $SyncScript"
-Write-Host ""
-Write-Host "Para verificar: Get-ScheduledTask -TaskName '$TaskName'"
-Write-Host "Para remover:   Unregister-ScheduledTask -TaskName '$TaskName'"
+# Create logs folder
+New-Item -ItemType Directory -Force -Path "$projectDir\logs" | Out-Null
+
+Write-Host "Tarefa '$taskName' criada com sucesso! Sync a cada 10 minutos." -ForegroundColor Green

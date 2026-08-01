@@ -33,9 +33,12 @@ export function SyncPanel() {
   }, []);
 
   useEffect(() => {
-    fetchStatus();
+    const initial = window.setTimeout(() => void fetchStatus(), 0);
     const interval = setInterval(fetchStatus, 10_000); // poll every 10s
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(interval);
+    };
   }, [fetchStatus]);
 
   async function doAction(action: string, value?: string) {
