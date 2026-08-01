@@ -10,19 +10,22 @@ type Banner = {
   link_target: string;
 };
 
-export function BannerCarousel({ banners }: { banners: Banner[] }) {
+export function BannerCarousel({ banners, intervalSeconds = 5 }: { banners: Banner[]; intervalSeconds?: number }) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = banners.length;
+  const safeIntervalSeconds = Number.isFinite(intervalSeconds)
+    ? Math.min(300, Math.max(1, Math.round(intervalSeconds)))
+    : 5;
 
   const next = useCallback(() => setCurrent(c => (c + 1) % count), [count]);
   const prev = useCallback(() => setCurrent(c => (c - 1 + count) % count), [count]);
 
   useEffect(() => {
     if (paused || count <= 1) return;
-    const timer = setInterval(next, 5000);
+    const timer = setInterval(next, safeIntervalSeconds * 1000);
     return () => clearInterval(timer);
-  }, [paused, count, next]);
+  }, [paused, count, next, safeIntervalSeconds]);
 
   if (count === 0) return null;
   const banner = banners[current];

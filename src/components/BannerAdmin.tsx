@@ -18,11 +18,37 @@ export function BannerAdmin() {
   const [msg, setMsg] = useState("");
   const [form, setForm] = useState({ title: "", image_url: "", link_url: "", sort_order: 0 });
   const [editing, setEditing] = useState<number | null>(null);
+  const [intervalSeconds, setIntervalSeconds] = useState(5);
+  const [settingsMsg, setSettingsMsg] = useState("");
 
   const load = () => {
     fetch("/api/admin/banners").then(r => r.json()).then(d => { setBanners(d); setLoading(false); });
   };
   useEffect(load, []);
+
+  useEffect(() => {
+    fetch("/api/admin/banner-settings")
+      .then((response) => response.json())
+      .then((data: { intervalSeconds?: number }) => {
+        if (Number.isInteger(data.intervalSeconds)) setIntervalSeconds(data.intervalSeconds as number);
+      })
+      .catch(() => setSettingsMsg("Não foi possível carregar a configuração"));
+  }, []);
+
+  const saveSettings = async () => {
+    if (!Number.isInteger(intervalSeconds) || intervalSeconds < 1 || intervalSeconds > 300) {
+      setSettingsMsg("Informe um tempo entre 1 e 300 segundos");
+      return;
+    }
+    setSettingsMsg("Salvando...");
+    const response = await fetch("/api/admin/banner-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ intervalSeconds }),
+    });
+    if (response.ok) setSettingsMsg("Tempo do carrossel atualizado!");
+    else setSettingsMsg("Erro ao salvar o tempo do carrossel");
+  };
 
   const save = async () => {
     if (!form.image_url) { setMsg("URL da imagem é obrigatória"); return; }
@@ -67,8 +93,28 @@ export function BannerAdmin() {
     <div className="banner-admin">
       <h2>Banners do Site</h2>
       <p style={{ color: "#64748b", fontSize: "0.9rem", margin: "0 0 16px" }}>
-        Os banners aparecem no topo da página inicial em formato carrossel automático. Use imagens com resolução mínima de 1920x600px.
+        Os banners aparecem no topo da página inicial em formato carrossel automático. Use imagens na proporção 1916x821 para exibição completa.
       </p>
+
+      <div className="banner-settings">
+        <div>
+          <h3>Configuração do carrossel</h3>
+          <p>Defina por quantos segundos cada banner permanece visível.</p>
+        </div>
+        <label>
+          Tempo de troca (segundos)
+          <input
+            type="number"
+            min="1"
+            max="300"
+            step="1"
+            value={intervalSeconds}
+            onChange={(event) => setIntervalSeconds(parseInt(event.target.value, 10) || 1)}
+          />
+        </label>
+        <button className="button button-small" type="button" onClick={saveSettings}>Salvar tempo</button>
+        {settingsMsg && <span className={settingsMsg.includes("Erro") || settingsMsg.includes("Não") ? "error" : "done"}>{settingsMsg}</span>}
+      </div>
 
       {/* Form */}
       <div className="banner-form">
@@ -111,7 +157,7 @@ export function BannerAdmin() {
             <tbody>
               {banners.map(b => (
                 <tr key={b.id}>
-                  <td><img src={b.image_url} alt="" style={{ width: 120, height: 45, objectFit: "cover", borderRadius: 6 }} /></td>
+                  <td><img src={b.image_url} alt="" style={{ width: 120, height: 52, objectFit: "contain", background: "#0a0a14", borderRadius: 6 }} /></td>
                   <td>{b.title || <span style={{ color: "#94a3b8" }}>Sem título</span>}</td>
                   <td>{b.sort_order}</td>
                   <td>

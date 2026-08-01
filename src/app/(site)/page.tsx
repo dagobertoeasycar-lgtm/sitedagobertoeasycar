@@ -15,17 +15,30 @@ async function getBanners() {
   }
 }
 
+async function getCarouselIntervalSeconds() {
+  try {
+    const result = await query<{ value: string }>(
+      "SELECT value FROM site_settings WHERE key='banner_interval_seconds' LIMIT 1",
+    );
+    const interval = Number(result.rows[0]?.value);
+    return Number.isInteger(interval) && interval >= 1 && interval <= 300 ? interval : 5;
+  } catch {
+    return 5;
+  }
+}
+
 export default async function Home() {
-  const [vehicles, banners] = await Promise.all([
+  const [vehicles, banners, carouselIntervalSeconds] = await Promise.all([
     listVehicles().catch(() => []),
     getBanners(),
+    getCarouselIntervalSeconds(),
   ]);
 
   return (
     <>
       {/* Banner carousel - managed from admin */}
       {banners.length > 0 ? (
-        <BannerCarousel banners={banners} />
+        <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
       ) : (
         <section className="hero">
           <img src="/vehicles/hero.avif" alt="Veículo em showroom automotivo" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
