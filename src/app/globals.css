@@ -905,7 +905,7 @@ th { background: var(--soft); }
 .banner-carousel {
   position: relative;
   width: 100%;
-  aspect-ratio: 1916 / 821;
+  height: clamp(280px, 26vw, 360px);
   overflow: hidden;
   background: #0a0a14;
 }
@@ -1050,10 +1050,10 @@ th { background: var(--soft); }
 
 @media (max-width: 1050px) {
   .header-actions { display: none; }
-  .banner-carousel { aspect-ratio: 1916 / 821; }
+  .banner-carousel { height: clamp(250px, 32vw, 336px); }
 }
 @media (max-width: 760px) {
-  .banner-carousel { aspect-ratio: 1916 / 821; }
+  .banner-carousel { height: auto; aspect-ratio: 1916 / 821; }
   .banner-settings { grid-template-columns: 1fr; align-items: stretch; }
   .banner-settings input { max-width: none; }
   .banner-nav { width: 36px; height: 36px; font-size: 1.4rem; }
