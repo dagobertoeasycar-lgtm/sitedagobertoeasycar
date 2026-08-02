@@ -17,7 +17,8 @@
     "smtp:test": "node scripts/test-smtp.mjs",
     "sync:json": "node scripts/sync-json.mjs",
     "sync:easycar": "node scripts/sync-easycar.mjs",
-    "sync:schedule": "powershell -ExecutionPolicy Bypass -File scripts\\sync-scheduler.ps1"
+    "sync:schedule": "powershell -ExecutionPolicy Bypass -File scripts\\sync-scheduler.ps1",
+    "feed:validate": "node scripts/validate-meta-feed.mjs"
   },
   "dependencies": {
     "next": "16.2.12",
