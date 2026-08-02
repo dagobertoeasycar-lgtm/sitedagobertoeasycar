@@ -1320,3 +1320,38 @@ th { background: var(--soft); }
   .adm-grid-2 { grid-template-columns: 1fr; }
   .adm-stats { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Catálogo Meta ──────────────────────────────────────── */
+.meta-catalog-panel { display: grid; gap: 20px; }
+.meta-loading { padding: 30px; color: #64748b; }
+.meta-feed-summary { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px; }
+.meta-feed-summary h2 { margin: 2px 0 8px; }
+.meta-kicker, .meta-breadcrumb { margin: 0; color: #64748b; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.meta-feed-url { color: #0a4da2; font-weight: 700; overflow-wrap: anywhere; }
+.meta-actions, .meta-save-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.meta-feed-stats { margin: 0; }
+.meta-feed-stats .adm-stat strong { font-size: 1.35rem; overflow-wrap: anywhere; }
+.meta-grid { align-items: start; }
+.meta-section { padding: 22px; }
+.meta-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.meta-form-grid label { display: grid; gap: 6px; color: #334155; font-size: .86rem; font-weight: 700; }
+.meta-span-2 { grid-column: 1 / -1; }
+.meta-check { grid-template-columns: auto 1fr !important; align-items: center; }
+.meta-check input { width: auto; }
+.meta-flow { margin: 18px 0 0; padding: 12px; border-radius: 8px; color: #0a4da2; background: #eff6ff; font-size: .84rem; font-weight: 700; }
+.meta-save-row { min-height: 42px; }
+.meta-save-row span { color: #475569; }
+.meta-times { display: flex; flex-direction: column; gap: 3px; color: #64748b; font-size: .78rem; text-align: right; }
+.meta-empty { padding: 30px !important; color: #64748b; text-align: center !important; }
+.config-link-card { display: flex; align-items: center; gap: 18px; padding: 24px; color: inherit; text-decoration: none; }
+.config-link-card:hover { border-color: #93c5fd; box-shadow: 0 8px 25px rgba(10,77,162,.1); }
+.config-link-card h2 { margin: 0 0 5px; font-size: 1.05rem; }
+.config-link-card p { margin: 0; color: #64748b; }
+.config-link-icon { font-size: 2rem; }
+
+@media (max-width: 760px) {
+  .meta-feed-summary, .meta-section .adm-card-header { align-items: flex-start; flex-direction: column; }
+  .meta-form-grid { grid-template-columns: 1fr; }
+  .meta-span-2 { grid-column: auto; }
+  .meta-times { text-align: left; }
+}

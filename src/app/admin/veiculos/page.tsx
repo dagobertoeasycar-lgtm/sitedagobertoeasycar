@@ -10,6 +10,7 @@ type AdminVehicleRow = {
   brand: string;
   model: string;
   status: string;
+  stock_status: string;
   price_cents: number;
   mileage: number;
   year_make: number;
@@ -36,7 +37,7 @@ export default async function AdminVehiclesPage({ searchParams }: { searchParams
   const where = conditions.join(" AND ");
 
   const [vehicles, countRes] = await Promise.all([
-    query<AdminVehicleRow>(`SELECT id,title,brand,model,status,price_cents,mileage,year_make,year_model,image_url,updated_at FROM vehicles WHERE ${where} ORDER BY updated_at DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, limit, offset]),
+    query<AdminVehicleRow>(`SELECT id,title,brand,model,status,stock_status,price_cents,mileage,year_make,year_model,image_url,updated_at FROM vehicles WHERE ${where} ORDER BY updated_at DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, limit, offset]),
     query<CountRow>(`SELECT count(*)::int as total FROM vehicles WHERE ${where}`, params),
   ]);
   const total = countRes.rows[0]?.total || 0;
@@ -74,9 +75,9 @@ export default async function AdminVehiclesPage({ searchParams }: { searchParams
                   <td>{v.year_make}/{v.year_model}</td>
                   <td>{v.mileage?.toLocaleString("pt-BR")} km</td>
                   <td>{(v.price_cents/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0})}</td>
-                  <td><span className={`adm-badge ${v.status}`}>{v.status}</span></td>
+                  <td><span className={`adm-badge ${v.status}`}>{v.status}</span><br/><small>{v.stock_status}</small></td>
                   <td>{new Date(v.updated_at).toLocaleDateString("pt-BR")}</td>
-                  <td><VehicleStatusForm id={v.id} status={v.status} /></td>
+                  <td><VehicleStatusForm id={v.id} status={v.status} stockStatus={v.stock_status} /></td>
                 </tr>
               ))}
             </tbody>
