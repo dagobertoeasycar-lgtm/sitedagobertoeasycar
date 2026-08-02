@@ -38,7 +38,9 @@ export default async function Home() {
     <>
       {/* Banner carousel - managed from admin */}
       {banners.length > 0 ? (
-        <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
+        <div className="banner-band">
+          <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
+        </div>
       ) : (
         <section className="hero">
           <img src="/vehicles/hero.avif" alt="Veículo em showroom automotivo" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />

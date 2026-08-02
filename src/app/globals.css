@@ -902,10 +902,15 @@ th { background: var(--soft); }
 }
 
 /* ── Banner Carousel ────────────────────────────────────── */
+.banner-band {
+  width: 100%;
+  background: #0a0a14;
+}
 .banner-carousel {
   position: relative;
-  width: 100%;
-  height: clamp(280px, 26vw, 360px);
+  width: min(100%, 840px);
+  margin-inline: auto;
+  aspect-ratio: 1916 / 821;
   overflow: hidden;
   background: #0a0a14;
 }
@@ -1050,10 +1055,8 @@ th { background: var(--soft); }
 
 @media (max-width: 1050px) {
   .header-actions { display: none; }
-  .banner-carousel { height: clamp(250px, 32vw, 336px); }
 }
 @media (max-width: 760px) {
-  .banner-carousel { height: auto; aspect-ratio: 1916 / 821; }
   .banner-settings { grid-template-columns: 1fr; align-items: stretch; }
   .banner-settings input { max-width: none; }
   .banner-nav { width: 36px; height: 36px; font-size: 1.4rem; }
