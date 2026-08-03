@@ -102,6 +102,11 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(10,77,162,.1
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .lead-form .consent { grid-template-columns: auto 1fr; align-items: start; color: var(--muted); font-size: .85rem; font-weight: 400; }
 .lead-form .consent input { width: auto; margin-top: 3px; }
+.wholesale-page { align-items: start; }
+.wholesale-form > p:not(.eyebrow):first-of-type { color: var(--muted); margin-top: -8px; }
+.wholesale-form .button { width: 100%; }
+.adm-header-description { margin: 4px 0 0; color: #64748b; }
+.adm-empty-row { padding: 30px !important; color: #94a3b8; text-align: center; }
 .form-status { min-height: 24px; margin-bottom: 0; font-size: .9rem; }
 .form-status.done { color: #08783f; }
 .form-status.error { color: #b42318; }

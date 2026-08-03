@@ -56,7 +56,7 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams: P
                   <td><strong>{l.name}</strong></td>
                   <td><a href={`https://wa.me/55${l.phone?.replace(/\D/g,"")}`} target="_blank" rel="noreferrer">{l.phone}</a></td>
                   <td>{l.email || "—"}</td>
-                  <td>{l.kind}</td>
+                  <td>{l.kind === "wholesale" ? "Atacado" : l.kind}</td>
                   <td style={{maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.message || "—"}</td>
                   <td><span className={`adm-badge ${l.status}`}>{l.status}</span></td>
                   <td>{new Date(l.created_at).toLocaleString("pt-BR")}</td>
