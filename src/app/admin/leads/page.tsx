@@ -1,4 +1,6 @@
 import { query } from "@/lib/db";
+import { currentSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,7 @@ type LeadRow = {
 type CountRow = { total: number };
 
 export default async function AdminLeadsPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
+  if (!(await currentSession())) redirect("/admin/login");
   const sp = await searchParams;
   const page = parseInt(sp.p || "1");
   const status = sp.status || "";

@@ -1,4 +1,6 @@
 import { query } from "@/lib/db";
+import { currentSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,7 @@ type WholesaleLeadRow = {
 };
 
 export default async function AdminWholesalePage() {
+  if (!(await currentSession())) redirect("/admin/login");
   const leads = await query<WholesaleLeadRow>(
     `SELECT id, company_name, cnpj, phone, email, status, created_at
        FROM leads
