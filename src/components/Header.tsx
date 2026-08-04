@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MetaTrackedAnchor } from "@/components/MetaPixelEvents";
 
 export function Header() {
   return (
@@ -11,7 +12,7 @@ export function Header() {
           <Link href="/">Início</Link>
           <Link href="/veiculos">Estoque</Link>
           <Link href="/financiamento">Financiamento</Link>
-          <a href="https://wa.me/5511934718276?text=Olá! Gostaria de simular um financiamento." target="_blank" rel="noreferrer">Simule Online</a>
+          <MetaTrackedAnchor href="https://wa.me/5511934718276?text=Olá! Gostaria de simular um financiamento." target="_blank" rel="noreferrer" eventName="InitiateVehicleFinancing" eventParameters={{ lead_type: "financing" }} custom>Simule Online</MetaTrackedAnchor>
           <Link href="/venda-seu-carro">Venda seu carro</Link>
           <Link href="/atacado">Atacado</Link>
           <Link href="/sobre">Sobre nós</Link>
@@ -33,7 +34,7 @@ export function Header() {
             <Link href="/">Início</Link>
             <Link href="/veiculos">Estoque</Link>
             <Link href="/financiamento">Financiamento</Link>
-            <a href="https://wa.me/5511934718276?text=Olá! Gostaria de simular um financiamento." target="_blank" rel="noreferrer">Simule Online</a>
+            <MetaTrackedAnchor href="https://wa.me/5511934718276?text=Olá! Gostaria de simular um financiamento." target="_blank" rel="noreferrer" eventName="InitiateVehicleFinancing" eventParameters={{ lead_type: "financing" }} custom>Simule Online</MetaTrackedAnchor>
             <Link href="/venda-seu-carro">Venda seu carro</Link>
             <Link href="/atacado">Atacado</Link>
             <Link href="/sobre">Sobre nós</Link>

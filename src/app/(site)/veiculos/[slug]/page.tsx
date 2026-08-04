@@ -3,6 +3,7 @@ import Link from "next/link";
 import { VehicleGallery } from "@/components/VehicleGallery";
 import { findVehicle, money, listVehicles } from "@/lib/vehicles";
 import { VehicleCard } from "@/components/VehicleCard";
+import { MetaTrackedAnchor, VehicleViewContent } from "@/components/MetaPixelEvents";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,19 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
   const message = encodeURIComponent(`Olá! Tenho interesse no ${vehicle.title}. Gostaria de mais informações.`);
   const options = parseOptions(vehicle.options);
   const descParagraphs = parseDescription(vehicle.description);
+  const pixelVehicle = {
+    contentId: vehicle.catalog_item_id,
+    name: vehicle.title,
+    value: vehicle.price_cents / 100,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    year: vehicle.year_model || vehicle.year_make,
+  };
+  const pixelParameters = {
+    content_ids: [vehicle.catalog_item_id], content_type: "product", content_name: vehicle.title,
+    value: vehicle.price_cents / 100, currency: "BRL", marca: vehicle.brand, modelo: vehicle.model,
+    ano: vehicle.year_model || vehicle.year_make,
+  };
 
   // Suggestions: same brand or similar price
   const suggestions = await listVehicles({ brand: vehicle.brand, page: 1 }).catch(() => []);
@@ -34,6 +48,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
+      <VehicleViewContent vehicle={pixelVehicle} />
       <section className="shell section">
         {/* Gallery */}
         <VehicleGallery
@@ -109,14 +124,14 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
 
           {/* Sidebar */}
           <aside className="detail-sidebar">
-            <a className="button detail-sim-btn" href="https://wa.me/5511934718276?text=Olá! Gostaria de simular um financiamento." target="_blank" rel="noreferrer">
+            <MetaTrackedAnchor className="button detail-sim-btn" href="https://wa.me/5511934718276?text=Olá! Gostaria de simular um financiamento." target="_blank" rel="noreferrer" eventName="InitiateVehicleFinancing" eventParameters={pixelParameters} custom>
               Faça sua Simulação Online
-            </a>
+            </MetaTrackedAnchor>
             <div className="detail-contact-card">
-              <a href="https://wa.me/5511934718276" className="detail-contact-item" target="_blank" rel="noreferrer">
+              <MetaTrackedAnchor href="https://wa.me/5511934718276" className="detail-contact-item" target="_blank" rel="noreferrer" eventName="Contact" eventParameters={pixelParameters}>
                 <span className="detail-contact-icon">📱</span>
                 <span>(11) 93471-8276</span>
-              </a>
+              </MetaTrackedAnchor>
               <a href="https://www.google.com/maps?q=dagoberto+easycar+osasco" className="detail-contact-item" target="_blank" rel="noreferrer">
                 <span className="detail-contact-icon">📍</span>
                 <span>Onde estamos</span>
@@ -127,9 +142,12 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
                   <span>📍 {vehicle.store}</span>
                 </p>
               )}
-              <a className="button" href={`https://wa.me/5511934718276?text=${message}`} target="_blank" rel="noreferrer" style={{ width: "100%" }}>
+              <MetaTrackedAnchor className="button" href={`https://wa.me/5511934718276?text=${message}`} target="_blank" rel="noreferrer" style={{ width: "100%" }} eventName="Contact" eventParameters={pixelParameters}>
                 Enviar mensagem
-              </a>
+              </MetaTrackedAnchor>
+              <MetaTrackedAnchor className="button button-outline" href={`https://wa.me/5511934718276?text=${encodeURIComponent(`Olá! Quero agendar uma visita para conhecer o ${vehicle.title}.`)}`} target="_blank" rel="noreferrer" style={{ width: "100%" }} eventName="Schedule" eventParameters={pixelParameters}>
+                Agendar visita
+              </MetaTrackedAnchor>
             </div>
           </aside>
         </div>

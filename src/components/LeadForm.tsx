@@ -1,17 +1,23 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useMetaPixel } from "@/components/MetaPixelProvider";
 
 export function LeadForm({ kind, title }: { kind: "contact" | "financing" | "sell_car"; title: string }) {
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const { track } = useMetaPixel();
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState("sending");
+    if (kind === "financing") track("InitiateVehicleFinancing", { lead_type: kind }, true);
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
     const response = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, kind }) });
     setState(response.ok ? "done" : "error");
-    if (response.ok) event.currentTarget.reset();
+    if (response.ok) {
+      track("Lead", { lead_type: kind });
+      event.currentTarget.reset();
+    }
   }
   return (
     <form className="lead-form" onSubmit={submit}>

@@ -2,12 +2,14 @@
 
 import { useState, type FormEvent } from "react";
 import { formatCnpj } from "@/lib/cnpj";
+import { useMetaPixel } from "@/components/MetaPixelProvider";
 
 type FormState = "idle" | "sending" | "done" | "error";
 
 export function WholesaleLeadForm() {
   const [state, setState] = useState<FormState>("idle");
   const [message, setMessage] = useState("");
+  const { track } = useMetaPixel();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,6 +27,7 @@ export function WholesaleLeadForm() {
       const result = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(result.error || "Não foi possível enviar o cadastro.");
       form.reset();
+      track("Lead", { lead_type: "wholesale" });
       setState("done");
       setMessage("Cadastro enviado. Nossa equipe de atacado entrará em contato.");
     } catch (error) {

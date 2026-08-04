@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; img-src 'self' data: https://resized-images.autoconf.com.br https://static.autoconf.com.br https://autoconf-production.s3.amazonaws.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-src https://www.google.com https://www.youtube.com; form-action 'self'; frame-ancestors 'self'; base-uri 'self'",
+            value: "default-src 'self'; img-src 'self' data: https://www.facebook.com https://resized-images.autoconf.com.br https://static.autoconf.com.br https://autoconf-production.s3.amazonaws.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://connect.facebook.net; connect-src 'self' https://www.facebook.com https://connect.facebook.net; frame-src https://www.google.com https://www.youtube.com; form-action 'self'; frame-ancestors 'self'; base-uri 'self'",
           },
         ],
       },

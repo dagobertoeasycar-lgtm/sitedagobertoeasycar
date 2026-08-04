@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { money, type Vehicle } from "@/lib/vehicles";
+import { MetaTrackedAnchor } from "@/components/MetaPixelEvents";
 
 export function VehicleCard({ vehicle, index = 0 }: { vehicle: Vehicle; index?: number }) {
   const imgSrc = vehicle.image_url || "/em-breve.jpg";
   const isExternal = imgSrc.startsWith("http");
+  const pixelParameters = {
+    content_ids: [vehicle.catalog_item_id], content_type: "product", content_name: vehicle.title,
+    value: vehicle.price_cents / 100, currency: "BRL", marca: vehicle.brand, modelo: vehicle.model,
+    ano: vehicle.year_model || vehicle.year_make,
+  };
 
   return (
     <article className="vehicle-card">
@@ -37,7 +43,7 @@ export function VehicleCard({ vehicle, index = 0 }: { vehicle: Vehicle; index?: 
         </div>
         <div className="card-actions">
           <Link className="button button-outline" href={`/veiculos/${vehicle.slug}`}>Detalhes</Link>
-          <a className="button" href={`https://wa.me/5511934718276?text=${encodeURIComponent(`Olá! Tenho interesse no ${vehicle.title}.`)}`} target="_blank" rel="noreferrer">Contato</a>
+          <MetaTrackedAnchor className="button" href={`https://wa.me/5511934718276?text=${encodeURIComponent(`Olá! Tenho interesse no ${vehicle.title}.`)}`} target="_blank" rel="noreferrer" eventName="Contact" eventParameters={pixelParameters}>Contato</MetaTrackedAnchor>
         </div>
       </div>
     </article>

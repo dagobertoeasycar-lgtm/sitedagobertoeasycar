@@ -126,6 +126,12 @@ input:focus, select:focus, textarea:focus { outline: 3px solid rgba(10,77,162,.1
 .footer-grid a:hover { color: white; }
 .footer-bottom { display: flex; justify-content: space-between; gap: 20px; margin-top: 44px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.13); font-size: .85rem; }
 .whatsapp-float { position: fixed; right: 18px; bottom: 18px; z-index: 35; padding: 12px 16px; color: white; background: #168b4c; border-radius: 999px; box-shadow: var(--shadow); font-weight: 900; }
+.cookie-consent { position: fixed; left: 20px; right: 20px; bottom: 20px; z-index: 100; width: min(920px, calc(100% - 40px)); margin-inline: auto; padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 24px; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 70px rgba(15, 23, 42, .25); }
+.cookie-consent strong { display: block; font-size: 1.05rem; }
+.cookie-consent p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+.cookie-consent-actions { display: flex; flex: 0 0 auto; gap: 10px; }
+.cookie-settings { position: fixed; left: 12px; bottom: 12px; z-index: 34; padding: 7px 10px; color: #475569; background: rgba(255,255,255,.94); border: 1px solid var(--line); border-radius: 8px; font-size: .75rem; cursor: pointer; }
+@media (max-width: 680px) { .cookie-consent { align-items: stretch; flex-direction: column; gap: 14px; } .cookie-consent-actions { display: grid; grid-template-columns: 1fr 1fr; } }
 .admin-shell { min-height: 60vh; padding-block: 60px; }
 .admin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 28px 0; }
 .stat { padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: white; }

@@ -10,6 +10,7 @@ import {
 function vehicle(overrides = {}) {
   return {
     id: "11111111-1111-4111-8111-111111111111",
+    catalog_item_id: "EC-000125",
     slug: "volkswagen-t-cross-2025",
     title: "Volkswagen T-Cross",
     description: "SUV seminovo",
@@ -36,7 +37,7 @@ function vehicle(overrides = {}) {
 test("veículo novo publicado é exportado com ID estável e preço BRL", () => {
   const result = buildMetaFeed([vehicle()]);
   assert.equal(result.exported, 1);
-  assert.equal(result.items[0].id, vehicle().id);
+  assert.equal(result.items[0].id, "EC-000125");
   assert.equal(result.items[0].price, "185900.00 BRL");
   assert.equal(result.items[0].availability, "in stock");
 });
@@ -125,4 +126,3 @@ test("ano, quilometragem, localização e atributos são exportados", () => {
   assert.equal(item.transmission, "Automático");
   assert.equal(item.fuel_type, "Flex");
 });
-

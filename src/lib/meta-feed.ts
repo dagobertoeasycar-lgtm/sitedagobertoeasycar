@@ -60,6 +60,7 @@ export const DEFAULT_META_FEED_SETTINGS: MetaFeedSettings = {
 
 export type MetaFeedVehicle = {
   id: string;
+  catalog_item_id: string;
   slug: string;
   title: string;
   description: string;
@@ -185,7 +186,7 @@ function generatedDescription(vehicle: MetaFeedVehicle): string {
 }
 
 function issue(vehicle: MetaFeedVehicle, code: string, message: string): MetaFeedIssue {
-  return { id: vehicle.id, title: vehicle.title || "Sem título", code, message };
+  return { id: vehicle.catalog_item_id || vehicle.id, title: vehicle.title || "Sem título", code, message };
 }
 
 export function buildMetaFeed(
@@ -209,9 +210,11 @@ export function buildMetaFeed(
     }
 
     const title = String(vehicle.title ?? "").trim();
+    const catalogItemId = String(vehicle.catalog_item_id ?? "").trim();
     const slug = String(vehicle.slug ?? "").trim();
     const priceCents = Number(vehicle.price_cents);
     if (!title) { issues.push(issue(vehicle, "missing_title", "Título obrigatório ausente")); continue; }
+    if (!/^EC-[0-9]{6,}$/.test(catalogItemId)) { issues.push(issue(vehicle, "missing_id", "ID estável do catálogo ausente ou inválido")); continue; }
     if (!slug) { issues.push(issue(vehicle, "missing_link", "Slug do anúncio ausente")); continue; }
     if (!Number.isInteger(priceCents) || priceCents <= 0) { issues.push(issue(vehicle, "invalid_price", "Preço deve ser maior que zero")); continue; }
 
@@ -230,7 +233,7 @@ export function buildMetaFeed(
 
     const location = locationParts(vehicle.city);
     items.push({
-      id: vehicle.id,
+      id: catalogItemId,
       title,
       description: generatedDescription(vehicle),
       availability,
@@ -253,7 +256,7 @@ export function buildMetaFeed(
     });
   }
 
-  const invalidCodes = new Set(["missing_title", "missing_link", "invalid_price", "invalid_link", "missing_image"]);
+  const invalidCodes = new Set(["missing_title", "missing_id", "missing_link", "invalid_price", "invalid_link", "missing_image"]);
   return {
     csv: toCsv(items),
     items,
@@ -265,4 +268,3 @@ export function buildMetaFeed(
     errors: issues.filter(item => invalidCodes.has(item.code)).length,
   };
 }
-

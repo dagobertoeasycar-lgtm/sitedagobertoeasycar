@@ -3,7 +3,7 @@ import { query } from "@/lib/db";
 export type MediaItem = { type: "video" | "image"; url: string };
 
 export type Vehicle = {
-  id: string; slug: string; title: string; brand: string; model: string; version: string;
+  id: string; catalog_item_id: string; slug: string; title: string; brand: string; model: string; version: string;
   year_model: number; year_make: number; price_cents: number; old_price_cents: number | null;
   mileage: number; fuel: string; transmission: string; body_type: string; city: string;
   color: string; doors: number; status: string; featured: boolean; promotion: boolean;
