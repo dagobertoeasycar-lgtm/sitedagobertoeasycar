@@ -10,13 +10,14 @@ export function LeadForm({ kind, title }: { kind: "contact" | "financing" | "sel
     event.preventDefault();
     setState("sending");
     if (kind === "financing") track("InitiateVehicleFinancing", { lead_type: kind }, true);
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     const payload = Object.fromEntries(form.entries());
     const response = await fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, kind }) });
     setState(response.ok ? "done" : "error");
     if (response.ok) {
       track("Lead", { lead_type: kind });
-      event.currentTarget.reset();
+      formEl.reset();
     }
   }
   return (

@@ -65,7 +65,7 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams: P
                   <td>{new Date(l.created_at).toLocaleString("pt-BR")}</td>
                 </tr>
               ))}
-              {leads.rows.length === 0 && <tr><td colSpan={7} style={{textAlign:"center",padding:30,color:"#94a3b8"}}>Nenhum lead encontrado</td></tr>}
+              {leads.rows.length === 0 && <tr><td colSpan={7} style={{textAlign:"center",padding:30,color:"#5b6777"}}>Nenhum lead encontrado</td></tr>}
             </tbody>
           </table>
         </div>

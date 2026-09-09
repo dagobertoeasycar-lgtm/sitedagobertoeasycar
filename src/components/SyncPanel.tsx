@@ -93,7 +93,7 @@ export function SyncPanel() {
             </div>
             <div className="sync-stat">
               <span>Novos</span>
-              <strong style={{ color: last.created > 0 ? "#16a34a" : undefined }}>{last.created}</strong>
+              <strong style={{ color: last.created > 0 ? "#15803d" : undefined }}>{last.created}</strong>
             </div>
             <div className="sync-stat">
               <span>Atualizados</span>

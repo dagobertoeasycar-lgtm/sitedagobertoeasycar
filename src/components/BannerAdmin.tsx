@@ -92,7 +92,7 @@ export function BannerAdmin() {
   return (
     <div className="banner-admin">
       <h2>Banners do Site</h2>
-      <p style={{ color: "#64748b", fontSize: "0.9rem", margin: "0 0 16px" }}>
+      <p style={{ color: "#55617a", fontSize: "0.9rem", margin: "0 0 16px" }}>
         Os banners aparecem no topo da página inicial em formato carrossel automático. Use imagens na proporção 1916x821 para exibição completa.
       </p>
 
@@ -146,7 +146,7 @@ export function BannerAdmin() {
           <button className="button" onClick={save}>{editing ? "Atualizar" : "Adicionar"}</button>
           {editing && <button className="button button-outline" onClick={cancel}>Cancelar</button>}
         </div>
-        {msg && <p style={{ marginTop: 8, fontSize: "0.9rem", color: msg.includes("Erro") ? "#dc2626" : "#16a34a" }}>{msg}</p>}
+        {msg && <p style={{ marginTop: 8, fontSize: "0.9rem", color: msg.includes("Erro") ? "#dc2626" : "#15803d" }}>{msg}</p>}
       </div>
 
       {/* List */}
@@ -158,10 +158,10 @@ export function BannerAdmin() {
               {banners.map(b => (
                 <tr key={b.id}>
                   <td><img src={b.image_url} alt="" style={{ width: 120, height: 52, objectFit: "contain", background: "#0a0a14", borderRadius: 6 }} /></td>
-                  <td>{b.title || <span style={{ color: "#94a3b8" }}>Sem título</span>}</td>
+                  <td>{b.title || <span style={{ color: "#5b6777" }}>Sem título</span>}</td>
                   <td>{b.sort_order}</td>
                   <td>
-                    <button onClick={() => toggle(b)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: 700, color: b.active ? "#16a34a" : "#94a3b8" }}>
+                    <button onClick={() => toggle(b)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: 700, color: b.active ? "#15803d" : "#5b6777" }}>
                       {b.active ? "✅ Ativo" : "⏸️ Inativo"}
                     </button>
                   </td>

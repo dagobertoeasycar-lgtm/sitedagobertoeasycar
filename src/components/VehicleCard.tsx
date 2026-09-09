@@ -31,7 +31,7 @@ export function VehicleCard({ vehicle, index = 0 }: { vehicle: Vehicle; index?: 
         <p>{vehicle.version} · {vehicle.fuel} · {vehicle.transmission}</p>
         {vehicle.old_price_cents && vehicle.old_price_cents > vehicle.price_cents ? (
           <div>
-            <span style={{ textDecoration: "line-through", color: "#94a3b8", fontSize: "0.85rem" }}>{money(vehicle.old_price_cents)}</span>
+            <span style={{ textDecoration: "line-through", color: "#64748b", fontSize: "0.85rem" }}>{money(vehicle.old_price_cents)}</span>
             <strong className="price">{money(vehicle.price_cents)}</strong>
           </div>
         ) : (

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
-import { exec } from "child_process";
-import path from "path";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 type SyncRun = {
   id: string;
@@ -79,15 +78,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Sincronização já em andamento" }, { status: 409 });
     }
 
-    const scriptPath = path.join(process.cwd(), "scripts", "sync-easycar.mjs");
-    exec(`node "${scriptPath}"`, {
-      env: { ...process.env },
-      timeout: 600_000,
-    }, (err, _stdout, stderr) => {
-      if (err) console.error("Sync error:", stderr);
-    });
-
-    return NextResponse.json({ started: true });
+    try {
+      // @ts-expect-error - módulo JS sem tipagem, resolvido em tempo de execução
+      const { runSync } = await import("../../../../../scripts/sync-easycar.mjs");
+      const summary = await runSync();
+      return NextResponse.json({ started: true, ...summary });
+    } catch (error) {
+      console.error("Sync error:", error);
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Falha na sincronização" },
+        { status: 500 }
+      );
+    }
   }
 
   return NextResponse.json({ error: "Ação inválida" }, { status: 400 });

@@ -18,7 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     name: "Dagoberto Easycar Veículos",
     url: siteUrl,
     telephone: "+55 11 93471-8276",
-    email: "meucomercioonline5@gmail.com",
+    email: "vendas@dagobertoeasycar.com.br",
     address: { "@type": "PostalAddress", streetAddress: "Avenida dos Autonomistas, 5334, Km 18", addressLocality: "Osasco", addressRegion: "SP", postalCode: "06194-060", addressCountry: "BR" },
   };
   return (

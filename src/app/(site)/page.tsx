@@ -72,7 +72,7 @@ export default async function Home() {
 
       <section className="shell split-section section"><div><p className="eyebrow dark">Sobre a Dagoberto Easycar</p><h2>Tradição, transparência e dedicação.</h2><p>Diversas marcas e modelos, qualidade e procedência, atendimento especializado e o melhor pós-venda.</p><Link className="button button-outline" href="/sobre">Conheça nossa história</Link></div><div className="notice"><strong>Crédito responsável</strong><p>Crédito sujeito à análise e aprovação das instituições financeiras. Consulte condições.</p></div></section>
 
-      <section className="contact-band"><div className="shell"><div><p className="eyebrow">Fale com a gente</p><h2>Nossa equipe está pronta para atender.</h2></div><div className="contact-links"><a href="tel:+5511934718276"><span>Telefone e WhatsApp</span><strong>(11) 93471-8276</strong></a><a href="mailto:meucomercioonline5@gmail.com"><span>E-mail</span><strong>meucomercioonline5@gmail.com</strong></a></div></div></section>
+      <section className="contact-band"><div className="shell"><div><p className="eyebrow">Fale com a gente</p><h2>Nossa equipe está pronta para atender.</h2></div><div className="contact-links"><a href="tel:+5511934718276"><span>Telefone e WhatsApp</span><strong>(11) 93471-8276</strong></a><a href="mailto:vendas@dagobertoeasycar.com.br"><span>E-mail</span><strong>vendas@dagobertoeasycar.com.br</strong></a></div></div></section>
     </>
   );
 }
