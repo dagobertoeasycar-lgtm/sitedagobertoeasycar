@@ -1,0 +1,26 @@
+name: Diagnostico da conexao com o banco
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir o formato do DATABASE_URL
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          node -e "
+          const v = process.env.DATABASE_URL || String.fromCharCode();
+          console.log('tamanho:', v.length);
+          console.log('tem espaco ou quebra de linha:', /\s/.test(v));
+          console.log('comeca com postgres:', /^postgres/.test(v));
+          console.log('12 primeiros caracteres:', JSON.stringify(v.slice(0,12)));
+          console.log('12 ultimos caracteres:', JSON.stringify(v.slice(-12)));
+          try { const u = new URL(v);
+            console.log('host:', u.hostname);
+            console.log('tem usuario:', u.username.length > 0, '| tem senha:', u.password.length > 0);
+            console.log('banco:', u.pathname);
+          } catch (e) { console.log('nao e uma URL valida:', e.message); }
+          "
