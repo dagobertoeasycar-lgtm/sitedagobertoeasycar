@@ -1,0 +1,32 @@
+name: Sincronizar estoque EasyCar
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-estoque
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Importar estoque da EasyCar
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar o repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar o Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar o driver do banco
+        run: npm install pg@8.22.0 --no-save --no-audit --no-fund
+
+      - name: Sincronizar o estoque
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/sync-easycar.mjs
