@@ -50,7 +50,7 @@ export async function getMetaFeedSettings(): Promise<{ settings: MetaFeedSetting
 
 export async function getMetaFeedSnapshot(): Promise<MetaFeedResult & { lastModified: string | null; settings: MetaFeedSettings }> {
   const [vehicles, config, lastChange] = await Promise.all([
-    query<MetaFeedVehicle>(`SELECT id,slug,title,description,status,stock_status,price_cents,image_url,images,
+    query<MetaFeedVehicle>(`SELECT id,catalog_item_id,slug,title,description,status,stock_status,price_cents,image_url,images,
       brand,model,version,year_make,year_model,mileage,transmission,fuel,body_type,color,city,updated_at
       FROM vehicles ORDER BY updated_at DESC`),
     getMetaFeedSettings(),
