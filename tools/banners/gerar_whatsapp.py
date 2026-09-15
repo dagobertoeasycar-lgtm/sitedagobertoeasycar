@@ -116,7 +116,7 @@ def capa(nome, W, H):
     d.text((x0 + sim.width + folga, meio + int(H * 0.055)),
            "AUTODRIVE", font=t_principal, fill=BRANCO, anchor="ls")
 
-    tracking(d, (0, int(H * 0.70)), "AUTOMÓVEIS", t_secundario, TEAL,
+    tracking(d, (0, int(H * 0.70)), "VEÍCULOS", t_secundario, TEAL,
              esp=int(W * 0.011), centro=cx)
 
     linha = BOLD(int(H * 0.045))
@@ -142,7 +142,7 @@ def perfil(nome, L=1000):
 
     d.text((cx, int(L * 0.655)), "AUTODRIVE", font=BLACK(int(L * 0.125)),
            fill=BRANCO, anchor="ms")
-    tracking(d, (0, int(L * 0.745)), "AUTOMÓVEIS", BOLD(int(L * 0.052)),
+    tracking(d, (0, int(L * 0.745)), "VEÍCULOS", BOLD(int(L * 0.052)),
              TEAL, esp=int(L * 0.012), centro=cx)
 
     os.makedirs(SAIDA, exist_ok=True)
@@ -152,7 +152,10 @@ def perfil(nome, L=1000):
 
 
 if __name__ == "__main__":
-    capa("capa-whatsapp.jpg", 1640, 856)          # 1,91:1, o corte padrao da Meta
-    capa("capa-whatsapp-larga.jpg", 1920, 640)    # 3:1, para app que corta mais fino
+    # 16:9 e o que o proprio WhatsApp pede na tela de recorte da capa:
+    # "use imagens de proporcao 16:9 (por exemplo, 1920 x 1080)".
+    # Em qualquer outra proporcao ele abre o recorte e come as beiradas.
+    capa("capa-whatsapp.jpg", 1920, 1080)         # 16:9, o que o WhatsApp pede
+    capa("capa-whatsapp-larga.jpg", 1920, 640)    # 3:1, para uso fora do app
     perfil("perfil-whatsapp.jpg")
     print("\nsaida em:", SAIDA)
