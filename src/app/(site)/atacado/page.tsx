@@ -1,33 +1,34 @@
 import type { Metadata } from "next";
-import { WholesaleLeadForm } from "@/components/WholesaleLeadForm";
+import { PartnerLeadForm } from "@/components/AutoDriveLeadForms";
 
-export const metadata: Metadata = { title: "Atacado" };
+export const metadata: Metadata = { title: "Parceiros" };
 
 export default function AtacadoPage() {
   return (
     <>
       <section className="page-hero">
         <div className="shell">
-          <p className="eyebrow">Atacado Auto Drive Veículos</p>
-          <h1>Veículos no atacado para lojistas e revendas.</h1>
-          <p>Cadastre sua empresa para receber oportunidades e condições de negociação em volume.</p>
+          <p className="eyebrow">Parceiros Autodrive</p>
+          <h1>Seu estoque pode gerar negócios através da nossa rede.</h1>
+          <p>Cadastre sua empresa para divulgação, geração de leads, intermediação e financiamento.</p>
         </div>
       </section>
       <section className="shell section content-grid wholesale-page">
         <div className="prose">
-          <h2>Atendimento empresarial</h2>
-          <p>O cadastro vai diretamente para a equipe de atacado da Auto Drive Veículos.</p>
+          <h2>Parceria comercial</h2>
+          <p>O cadastro vai diretamente para a equipe da Autodrive. A rota antiga de atacado foi mantida para não quebrar links já publicados.</p>
           <ul>
-            <li>Oportunidades para lojistas e revendedores.</li>
-            <li>Negociação direta com nossa equipe comercial.</li>
-            <li>Retorno pelo telefone ou e-mail informado.</li>
+            <li>Divulgação do estoque.</li>
+            <li>Geração e qualificação de leads.</li>
+            <li>Intermediação com atendimento centralizado.</li>
+            <li>Apoio para financiamento.</li>
           </ul>
           <div className="notice">
-            <strong>Dados obrigatórios</strong>
-            <p>Tenha em mãos o CNPJ, a razão social, o e-mail e o telefone da empresa.</p>
+            <strong>Sem exposição direta</strong>
+            <p>Os dados do parceiro ficam internos. O cliente fala primeiro com a Autodrive.</p>
           </div>
         </div>
-        <WholesaleLeadForm />
+        <PartnerLeadForm />
       </section>
     </>
   );

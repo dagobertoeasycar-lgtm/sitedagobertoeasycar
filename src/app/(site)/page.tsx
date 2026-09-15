@@ -46,16 +46,34 @@ export default async function Home() {
           <img src="/vehicles/hero.avif" alt="Veículo em showroom automotivo" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           <div className="hero-overlay" />
           <div className="shell hero-content">
-            <p className="eyebrow">Seu próximo carro está aqui</p>
-            <h1>Encontre o veículo ideal para você.</h1>
-            <p>Vários parceiros, vários modelos para todos os gostos e negociação fácil e rápida.</p>
-            <div className="hero-actions"><Link className="button" href="/veiculos">Ver veículos</Link><a className="button button-light" href="https://wa.me/5511934718276">Falar pelo WhatsApp</a></div>
+            <p className="eyebrow">Autodrive Veículos & Tecnologia</p>
+            <h1>Seu próximo negócio automotivo começa aqui.</h1>
+            <p>Veículos próprios, de parceiros e particulares em um só lugar. Mais opções. Um só atendimento.</p>
+            <div className="hero-actions"><Link className="button" href="/veiculos">Quero comprar um carro</Link><Link className="button button-light" href="/venda-seu-carro">Quero vender meu carro</Link><Link className="button button-outline hero-outline" href="/parceiros">Sou lojista</Link></div>
           </div>
         </section>
       )}
 
       <section className="shell search-strip">
         <form action="/veiculos"><label htmlFor="q">Buscar por marca, modelo ou veículo</label><div><input id="q" name="q" placeholder="Ex.: Corolla, SUV ou automático" /><button className="button">Buscar veículos</button></div></form>
+      </section>
+
+      <section className="shell home-funnels" aria-label="Caminhos principais">
+        <Link href="/veiculos" className="home-funnel-card">
+          <span>Quero comprar</span>
+          <strong>Ver estoque disponível</strong>
+          <small>Veículos próprios, parceiros e particulares intermediados.</small>
+        </Link>
+        <Link href="/venda-seu-carro" className="home-funnel-card">
+          <span>Quero vender meu carro</span>
+          <strong>Anunciar com a Autodrive</strong>
+          <small>Nossa equipe divulga, atende interessados e ajuda na negociação.</small>
+        </Link>
+        <Link href="/parceiros" className="home-funnel-card">
+          <span>Sou lojista</span>
+          <strong>Quero ser parceiro</strong>
+          <small>Mais exposição para o estoque e leads centralizados.</small>
+        </Link>
       </section>
 
       <section className="shell section">
@@ -97,7 +115,27 @@ export default async function Home() {
         <p className="legal-note">* Somos somente intermediadores. Garantia, laudo cautelar e procedência são de responsabilidade dos vendedores.</p>
       </section>
 
-      <section className="shell split-section section"><div><p className="eyebrow dark">Sobre a Auto Drive Veículos</p><h2>Vários parceiros, um só atendimento.</h2><p>Trabalhamos com vários parceiros para reunir vários modelos para todos os gostos, com negociação fácil e rápida do primeiro contato ao pós-venda.</p><Link className="button button-outline" href="/sobre">Conheça nossa história</Link></div><div className="notice"><strong>Crédito responsável</strong><p>Crédito sujeito à análise e aprovação das instituições financeiras. Consulte condições.</p></div></section>
+      <section className="home-action-band">
+        <div className="shell home-action-grid">
+          <div>
+            <p className="eyebrow dark">Tem um veículo para vender?</p>
+            <h2>Anuncie com a Autodrive e deixe nossa equipe cuidar dos interessados.</h2>
+            <Link className="button" href="/venda-seu-carro">Anunciar meu veículo</Link>
+          </div>
+          <div>
+            <p className="eyebrow dark">É lojista?</p>
+            <h2>Amplie a exposição do seu estoque e gere novas oportunidades.</h2>
+            <Link className="button button-outline" href="/parceiros">Quero ser parceiro</Link>
+          </div>
+          <div>
+            <p className="eyebrow dark">Não encontrou o carro que procura?</p>
+            <h2>Conte para a Autodrive. Nós procuramos em nossa rede.</h2>
+            <Link className="button" href="/encontre-seu-carro">Encontre meu carro</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="shell split-section section"><div><p className="eyebrow dark">Sobre a Autodrive Veículos</p><h2>Vários parceiros, um só atendimento.</h2><p>Trabalhamos com vários parceiros para reunir vários modelos para todos os gostos, com negociação fácil e rápida do primeiro contato ao pós-venda.</p><Link className="button button-outline" href="/sobre">Conheça nossa história</Link></div><div className="notice"><strong>Crédito responsável</strong><p>Crédito sujeito à análise e aprovação das instituições financeiras. Consulte condições.</p></div></section>
 
       <section className="contact-band"><div className="shell"><div><p className="eyebrow">Fale com a gente</p><h2>Nossa equipe está pronta para atender.</h2></div><div className="contact-links"><a href="tel:+5511934718276"><span>Telefone e WhatsApp</span><strong>(11) 93471-8276</strong></a><a href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><span>Negociação fácil e rápida</span><strong>Falar pelo WhatsApp</strong></a></div></div></section>
     </>

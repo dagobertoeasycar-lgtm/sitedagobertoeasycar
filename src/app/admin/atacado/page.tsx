@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 
 type WholesaleLeadRow = {
   id: string;
+  kind: string;
   company_name: string;
   cnpj: string;
   phone: string;
@@ -17,9 +18,9 @@ type WholesaleLeadRow = {
 export default async function AdminWholesalePage() {
   if (!(await currentSession())) redirect("/admin/login");
   const leads = await query<WholesaleLeadRow>(
-    `SELECT id, company_name, cnpj, phone, email, status, created_at
+    `SELECT id, kind, company_name, cnpj, phone, email, status, created_at
        FROM leads
-      WHERE kind = 'wholesale'
+      WHERE kind in ('wholesale', 'partner')
       ORDER BY created_at DESC`,
   );
 
@@ -27,14 +28,14 @@ export default async function AdminWholesalePage() {
     <>
       <div className="adm-header">
         <div>
-          <h1>Leads de Atacado ({leads.rows.length})</h1>
+          <h1>Leads de Parceiros ({leads.rows.length})</h1>
           <p className="adm-header-description">Cadastros enviados por lojistas e compradores empresariais.</p>
         </div>
       </div>
       <div className="adm-card">
         <div className="adm-table-wrap">
           <table className="adm-table">
-            <thead><tr><th>Razão social</th><th>CNPJ</th><th>Telefone</th><th>E-mail</th><th>Status</th><th>Recebido em</th></tr></thead>
+            <thead><tr><th>Razão social</th><th>CNPJ</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>Status</th><th>Recebido em</th></tr></thead>
             <tbody>
               {leads.rows.map((lead) => {
                 const phone = lead.phone.replace(/\D/g, "");
@@ -43,6 +44,7 @@ export default async function AdminWholesalePage() {
                   <tr key={lead.id}>
                     <td><strong>{lead.company_name}</strong></td>
                     <td>{lead.cnpj}</td>
+                    <td>{lead.kind === "partner" ? "Parceiro" : "Atacado"}</td>
                     <td><a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer">{lead.phone}</a></td>
                     <td><a href={`mailto:${lead.email}`}>{lead.email}</a></td>
                     <td><span className={`adm-badge ${lead.status}`}>{lead.status === "new" ? "Novo" : lead.status}</span></td>
@@ -50,7 +52,7 @@ export default async function AdminWholesalePage() {
                   </tr>
                 );
               })}
-              {leads.rows.length === 0 && <tr><td colSpan={6} className="adm-empty-row">Nenhum lead de atacado recebido.</td></tr>}
+              {leads.rows.length === 0 && <tr><td colSpan={7} className="adm-empty-row">Nenhum lead de parceiro recebido.</td></tr>}
             </tbody>
           </table>
         </div>

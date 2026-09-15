@@ -25,9 +25,13 @@ export function Footer() {
         {/* Col 2: Navegação */}
         <div>
           <strong>Navegação</strong>
-          <Link href="/veiculos">Veículos</Link>
-          <Link href="/financiamento">Financiamento</Link>
+          <Link href="/veiculos">Estoque</Link>
+          <Link href="/encontre-seu-carro">Encontre seu carro</Link>
           <Link href="/venda-seu-carro">Venda seu carro</Link>
+          <Link href="/financiamento">Financiamento</Link>
+          <Link href="/parceiros">Seja parceiro</Link>
+          <Link href="/sobre">Sobre</Link>
+          <Link href="/contato">Contato</Link>
           <Link href="/admin/login">Acesso administrativo</Link>
         </div>
 
@@ -57,11 +61,9 @@ export function Footer() {
       {/* CTA section */}
       <div className="shell" style={{ marginTop: 32 }}>
         <div className="footer-cta">
-          <strong>Encontre seu carro ideal</strong>
-          <p>Estoque atualizado com vários modelos e negociação fácil e rápida.</p>
-          <a className="button" href="https://wa.me/5511934718276?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20ve%C3%ADculos%20dispon%C3%ADveis." target="_blank" rel="noreferrer">
-            Fale conosco pelo WhatsApp
-          </a>
+          <strong>Não encontrou o carro certo?</strong>
+          <p>A Autodrive procura opções na rede de parceiros e centraliza o atendimento.</p>
+          <Link className="button" href="/encontre-seu-carro">Encontre meu carro</Link>
         </div>
       </div>
 
@@ -70,7 +72,7 @@ export function Footer() {
       </div>
 
       <div className="shell footer-bottom">
-        <span>&copy; {new Date().getFullYear()} Auto Drive Veículos. Todos os direitos reservados.</span>
+        <span>&copy; {new Date().getFullYear()} Autodrive Veículos. Todos os direitos reservados.</span>
         <span><Link href="/privacidade">Privacidade</Link> &middot; <Link href="/termos">Termos</Link></span>
       </div>
     </footer>

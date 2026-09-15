@@ -2,13 +2,14 @@ import nodemailer, { type Transporter } from "nodemailer";
 
 type LeadNotification = {
   id: string;
-  kind: "contact" | "financing" | "sell_car" | "wholesale";
+  kind: "contact" | "financing" | "sell_car" | "wholesale" | "partner" | "find_car" | "vehicle_interest";
   name: string;
   email: string;
   phone: string;
   message: string;
   companyName?: string;
   cnpj?: string;
+  details?: Record<string, unknown>;
 };
 
 type SmtpSettings = {
@@ -29,6 +30,9 @@ const kindLabels: Record<LeadNotification["kind"], string> = {
   financing: "Financiamento",
   sell_car: "Venda ou troca de veículo",
   wholesale: "Atacado",
+  partner: "Parceiro lojista",
+  find_car: "Autodrive Busca",
+  vehicle_interest: "Interesse em veículo",
 };
 
 function smtpSettings(): SmtpSettings | null {
@@ -73,7 +77,7 @@ export async function sendLeadNotification(lead: LeadNotification) {
     `Nome: ${lead.name}`,
     `Telefone: ${lead.phone}`,
     `E-mail: ${lead.email || "não informado"}`,
-    ...(lead.kind === "wholesale" ? [`Razão social: ${lead.companyName || lead.name}`, `CNPJ: ${lead.cnpj || "não informado"}`] : []),
+    ...(lead.companyName ? [`Razão social: ${lead.companyName}`, `CNPJ: ${lead.cnpj || "não informado"}`] : []),
     "",
     "Mensagem:",
     lead.message,

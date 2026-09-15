@@ -8,7 +8,7 @@ const NAV = [
   { href: "/admin/veiculos", icon: "🚗", label: "Veículos" },
   { href: "/admin/banners", icon: "🖼️", label: "Banners e Home" },
   { href: "/admin/leads", icon: "📋", label: "Leads / Contatos" },
-  { href: "/admin/atacado", icon: "🏢", label: "Atacado" },
+  { href: "/admin/atacado", icon: "🏢", label: "Parceiros" },
   { href: "/admin/sync", icon: "🔄", label: "Sincronização" },
   { href: "/admin/configuracoes/integracoes/meta", icon: "🛒", label: "Catálogo Meta" },
   { href: "/admin/configuracoes", icon: "⚙️", label: "Configurações" },
@@ -20,7 +20,7 @@ export function AdminLayout({ children, user }: { children: React.ReactNode; use
     <div className="adm">
       <aside className="adm-sidebar">
         <div className="adm-sidebar-brand">
-          <img src="/brand/logo-footer.png" alt="Auto Drive Veículos" />
+          <img src="/brand/logo-footer.png" alt="Autodrive Veículos" />
           <span>Painel Admin</span>
         </div>
         <nav className="adm-nav">

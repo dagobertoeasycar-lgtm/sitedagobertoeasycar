@@ -17,6 +17,16 @@ type LeadRow = {
 
 type CountRow = { total: number };
 
+const kindLabels: Record<string, string> = {
+  contact: "Contato",
+  financing: "Financiamento",
+  sell_car: "Venda de veículo",
+  wholesale: "Atacado",
+  partner: "Parceiro",
+  find_car: "Autodrive Busca",
+  vehicle_interest: "Interesse em veículo",
+};
+
 export default async function AdminLeadsPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   if (!(await currentSession())) redirect("/admin/login");
   const sp = await searchParams;
@@ -59,7 +69,7 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams: P
                   <td><strong>{l.name}</strong></td>
                   <td><a href={`https://wa.me/55${l.phone?.replace(/\D/g,"")}`} target="_blank" rel="noreferrer">{l.phone}</a></td>
                   <td>{l.email || "—"}</td>
-                  <td>{l.kind === "wholesale" ? "Atacado" : l.kind}</td>
+                  <td>{kindLabels[l.kind] || l.kind}</td>
                   <td style={{maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.message || "—"}</td>
                   <td><span className={`adm-badge ${l.status}`}>{l.status}</span></td>
                   <td>{new Date(l.created_at).toLocaleString("pt-BR")}</td>
