@@ -56,6 +56,10 @@ export function Footer() {
         </div>
       </div>
 
+      <div className="shell footer-legal">
+        <p>* Somos somente intermediadores. Garantia, laudo cautelar e procedência são de responsabilidade dos vendedores.</p>
+      </div>
+
       <div className="shell footer-bottom">
         <span>&copy; {new Date().getFullYear()} Auto Drive Veículos. Todos os direitos reservados.</span>
         <span><Link href="/privacidade">Privacidade</Link> &middot; <Link href="/termos">Termos</Link></span>

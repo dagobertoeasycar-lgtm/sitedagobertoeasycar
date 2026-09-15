@@ -70,6 +70,33 @@ export default async function Home() {
         <div><strong>Mais de 16 financeiras</strong><span>Aprovação de crédito online.</span></div>
       </div></section>
 
+      <section className="shell section">
+        <div className="section-heading"><div><p className="eyebrow dark">Como trabalhamos</p><h2>Duas formas de fazer negócio.</h2></div></div>
+        <div className="how-grid">
+          <div className="how-card">
+            <strong>Negócios com particulares</strong>
+            <p>Intermediamos a compra e a venda entre pessoas, com toda a segurança que esse tipo de negócio exige.</p>
+            <ul>
+              <li>Veículo periciado antes do negócio</li>
+              <li>Checagem de procedência</li>
+              <li>Acompanhamento da documentação e da transferência</li>
+              <li>Negociação conduzida do começo ao fim</li>
+            </ul>
+          </div>
+          <div className="how-card">
+            <strong>Veículos de parceiros lojistas</strong>
+            <p>Os veículos que vêm das lojas parceiras saem com as garantias oferecidas pelo lojista.</p>
+            <ul>
+              <li>Garantia de 90 dias</li>
+              <li>Laudo cautelar</li>
+              <li>Acompanhamento da documentação e da transferência</li>
+              <li>Procedência verificada pela loja de origem</li>
+            </ul>
+          </div>
+        </div>
+        <p className="legal-note">* Somos somente intermediadores. Garantia, laudo cautelar e procedência são de responsabilidade dos vendedores.</p>
+      </section>
+
       <section className="shell split-section section"><div><p className="eyebrow dark">Sobre a Auto Drive Veículos</p><h2>Vários parceiros, um só atendimento.</h2><p>Trabalhamos com vários parceiros para reunir vários modelos para todos os gostos, com negociação fácil e rápida do primeiro contato ao pós-venda.</p><Link className="button button-outline" href="/sobre">Conheça nossa história</Link></div><div className="notice"><strong>Crédito responsável</strong><p>Crédito sujeito à análise e aprovação das instituições financeiras. Consulte condições.</p></div></section>
 
       <section className="contact-band"><div className="shell"><div><p className="eyebrow">Fale com a gente</p><h2>Nossa equipe está pronta para atender.</h2></div><div className="contact-links"><a href="tel:+5511934718276"><span>Telefone e WhatsApp</span><strong>(11) 93471-8276</strong></a><a href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><span>Negociação fácil e rápida</span><strong>Falar pelo WhatsApp</strong></a></div></div></section>
