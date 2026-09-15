@@ -16,7 +16,7 @@ SAIDA  = os.path.normpath(os.path.join(AQUI, "..", "..", "public", "banners"))
 LOGO   = os.path.normpath(os.path.join(AQUI, "..", "..", "public", "brand", "logo-footer.png"))
 FOTOS  = os.path.join(AQUI, "fotos")          # fotos do Beto entram aqui
 
-W, H = 1920, 820
+W, H = 1920, 640
 TEAL        = (1, 168, 176)
 TEAL_ESCURO = (10, 125, 135)
 NAVY        = (7, 17, 31)
@@ -84,7 +84,7 @@ def escrever(d, xy, texto, fonte, cor, espacamento=0):
 
 
 def pilula(d, x, y, texto, fonte, preenchida=True, icone=None):
-    pad_x, alt = 38, 74
+    pad_x, alt = 34, 64
     larg = d.textlength(texto, font=fonte) + pad_x * 2 + (34 if icone else 0)
     caixa = [x, y, x + larg, y + alt]
     if preenchida:
@@ -103,17 +103,17 @@ def pilula(d, x, y, texto, fonte, preenchida=True, icone=None):
 
 def selo(img, texto_cima, texto_baixo):
     """Selo circular grande do lado direito (quando nao ha foto)."""
-    cx, cy, r = W - 470, H // 2 - 20, 210
+    cx, cy, r = W - 430, H // 2 - 6, 176
     camada = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(camada)
     d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(255, 255, 255, 12))
     d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=TEAL + (255,), width=6)
-    d.ellipse([cx - r + 26, cy - r + 26, cx + r - 26, cy + r - 26], outline=(255, 255, 255, 70), width=2)
+    d.ellipse([cx - r + 22, cy - r + 22, cx + r - 22, cy + r - 22], outline=(255, 255, 255, 70), width=2)
     img = Image.alpha_composite(img.convert("RGBA"), camada).convert("RGB")
     d = ImageDraw.Draw(img)
-    d.text((cx, cy - 34), texto_cima, font=BLACK(118), fill=BRANCO, anchor="mm")
-    escrever(d, (cx - d.textlength(texto_baixo, font=BOLD(31)) / 2 - 3 * (len(texto_baixo) - 1) / 2, cy + 74),
-             texto_baixo, BOLD(31), TEAL, espacamento=3)
+    d.text((cx, cy - 28), texto_cima, font=BLACK(100), fill=BRANCO, anchor="mm")
+    escrever(d, (cx - d.textlength(texto_baixo, font=BOLD(27)) / 2 - 3 * (len(texto_baixo) - 1) / 2, cy + 62),
+             texto_baixo, BOLD(27), TEAL, espacamento=3)
     return img
 
 
@@ -137,7 +137,7 @@ def banner(nome, olho, linhas, sub, badges=None, selo_txt=None, foto=None):
         img = selo(img, *selo_txt)
 
     if foto and os.path.exists(foto):
-        f = foto_recortada(foto, 700)
+        f = foto_recortada(foto, 560)
         mold = Image.new("RGBA", (f.width + 16, f.height + 16), (0, 0, 0, 0))
         ImageDraw.Draw(mold).rounded_rectangle([0, 0, f.width + 15, f.height + 15], radius=26, outline=TEAL + (255,), width=5)
         px_, py_ = W - f.width - 150, (H - f.height) // 2
@@ -150,29 +150,35 @@ def banner(nome, olho, linhas, sub, badges=None, selo_txt=None, foto=None):
 
     d = ImageDraw.Draw(img)
     x = 108
+    LIMITE = W - 430 - 176 - 46          # onde comeca o selo, menos uma folga
 
     logo = Image.open(LOGO).convert("RGBA")
-    lw = 300
+    lw = 280
     logo = logo.resize((lw, round(logo.height * lw / logo.width)), Image.LANCZOS)
-    img.paste(logo, (x, 72), logo)
+    img.paste(logo, (x, 54), logo)
 
-    # O carrossel do site tem largura maxima de 840px e no celular cai para
-    # ~375px. Tudo o que for menor que ~30px aqui simplesmente some la.
-    # Por isso o titulo e grande e nao ha faixa de selos pequenos: o que
-    # precisa ser lido esta no titulo.
-    escrever(d, (x, 268), olho, BOLD(27), TEAL, espacamento=6)
+    escrever(d, (x, 206), olho, BOLD(25), TEAL, espacamento=6)
 
-    y = 372 if len(linhas) == 3 else 424
+    # O carrossel ocupa a largura toda e no celular cai para ~375px, ou
+    # seja, a arte encolhe 5x. O titulo por isso e o maior possivel que
+    # ainda cabe sem encostar no selo - daqui sai o tamanho da fonte.
+    tam = 88
+    while tam > 52 and max(d.textlength(t, font=BLACK(tam)) for t, _ in linhas) > LIMITE - x:
+        tam -= 2
+    entrelinha = round(tam * 1.10)
+
+    y = 300 if len(linhas) == 2 else 268
     for texto, destaque in linhas:
-        d.text((x, y), texto, font=BLACK(92), fill=(TEAL if destaque else BRANCO), anchor="ls")
-        y += 104
+        d.text((x, y), texto, font=BLACK(tam), fill=(TEAL if destaque else BRANCO), anchor="ls")
+        y += entrelinha
+    y -= entrelinha
 
-    y += (-38 if len(linhas) == 3 else 6)
-    d.text((x, y), sub, font=NORMAL(34), fill=CINZA, anchor="ls")
+    y += 52
+    d.text((x, y), sub, font=NORMAL(28), fill=CINZA, anchor="ls")
 
-    y += 54
-    larg = pilula(d, x, y, "VER ESTOQUE", BOLD(26), True)
-    pilula(d, x + larg + 20, y, "FALE NO WHATSAPP", BOLD(26), False, icone=True)
+    y += 42
+    larg = pilula(d, x, y, "VER ESTOQUE", BOLD(24), True)
+    pilula(d, x + larg + 18, y, "FALE NO WHATSAPP", BOLD(24), False, icone=True)
 
     os.makedirs(SAIDA, exist_ok=True)
     destino = os.path.join(SAIDA, nome)
@@ -186,7 +192,7 @@ BANNERS = [
     dict(
         nome="ad-01-parceiros.jpg",
         olho="VÁRIOS PARCEIROS, UM SÓ ATENDIMENTO",
-        linhas=[("VÁRIOS MODELOS", False), ("PARA TODOS", False), ("OS GOSTOS.", True)],
+        linhas=[("VÁRIOS MODELOS PARA", False), ("TODOS OS GOSTOS.", True)],
         sub="Estoque atualizado todo dia, de vários parceiros, num lugar só.",
         badges=["Periciados", "Procedência conferida", "Documentação acompanhada"],
         selo_txt=("+100", "VEÍCULOS"),
@@ -194,15 +200,15 @@ BANNERS = [
     dict(
         nome="ad-02-garantia.jpg",
         olho="VEÍCULOS DE PARCEIROS LOJISTAS",
-        linhas=[("GARANTIA DE", False), ("90 DIAS E", False), ("LAUDO CAUTELAR.", True)],
-        sub="Você leva o carro com garantia do lojista e a papelada acompanhada.",
+        linhas=[("GARANTIA DE 90 DIAS", False), ("E LAUDO CAUTELAR.", True)],
+        sub="Veículos de lojistas parceiros, com documentação acompanhada até a transferência.",
         badges=["Garantia de 90 dias", "Laudo cautelar", "Transferência acompanhada"],
         selo_txt=("90", "DIAS"),
     ),
     dict(
         nome="ad-03-negociacao.jpg",
         olho="DO PRIMEIRO CONTATO À CHAVE NA MÃO",
-        linhas=[("NEGOCIAÇÃO", False), ("FÁCIL", False), ("E RÁPIDA.", True)],
+        linhas=[("NEGOCIAÇÃO", False), ("FÁCIL E RÁPIDA.", True)],
         sub="Fale direto no WhatsApp e receba as opções que cabem no seu bolso.",
         badges=["Resposta rápida", "Crédito online", "Sem enrolação"],
         selo_txt=("24h", "NO WHATSAPP"),
@@ -210,7 +216,7 @@ BANNERS = [
     dict(
         nome="ad-04-particulares.jpg",
         olho="TAMBÉM INTERMEDIAMOS COM PARTICULARES",
-        linhas=[("COMPRE DE", False), ("PARTICULAR", False), ("COM SEGURANÇA.", True)],
+        linhas=[("COMPRE DE PARTICULAR", False), ("COM SEGURANÇA.", True)],
         sub="Veículo periciado, procedência conferida e documentação do começo ao fim.",
         badges=["Periciado antes do negócio", "Procedência conferida", "Transferência acompanhada"],
         selo_txt=("100%", "ACOMPANHADO"),
@@ -231,7 +237,7 @@ BANNERS_COM_FOTO = [
         arquivo="beto-02.jpg",
         nome="ad-06-confianca.jpg",
         olho="AUTO DRIVE VEÍCULOS",
-        linhas=[("SEU PRÓXIMO", False), ("CARRO COMEÇA", False), ("NUMA CONVERSA.", True)],
+        linhas=[("SEU PRÓXIMO CARRO", False), ("COMEÇA NUMA CONVERSA.", True)],
         sub="Chame no WhatsApp e diga o que você procura. O resto a gente resolve.",
         badges=["Resposta rápida", "Sem compromisso"],
     ),
@@ -239,7 +245,7 @@ BANNERS_COM_FOTO = [
         arquivo="beto-03.jpg",
         nome="ad-07-experiencia.jpg",
         olho="EXPERIÊNCIA DE QUEM VIVE DISSO",
-        linhas=[("A GENTE CUIDA", False), ("DE CADA", False), ("DETALHE.", True)],
+        linhas=[("A GENTE CUIDA DE", False), ("CADA DETALHE.", True)],
         sub="Perícia, procedência e documentação acompanhada em cada negócio.",
         badges=["Periciados", "Documentação acompanhada"],
     ),

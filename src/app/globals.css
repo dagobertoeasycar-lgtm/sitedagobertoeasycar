@@ -960,15 +960,22 @@ th { background: var(--soft); }
 /* ── Banner Carousel ────────────────────────────────────── */
 .banner-band {
   width: 100%;
-  background: #0a0a14;
+  background: #071726;
 }
+/* O carrossel e a primeira dobra: ocupa a largura toda, como o hero que
+   ele substituiu. Antes estava preso em 840px dentro de uma faixa preta
+   de largura total, o que deixava ~290px de barra preta de cada lado em
+   tela de 1440 e um banner de so 360px de altura.
+   A arte e 1920x640, exatamente 3:1 como o quadro. Sem max-height de
+   proposito: com o limite de altura o object-fit: cover voltava a cortar
+   a imagem em monitor ultralargo, comendo o logo em cima e os botoes
+   embaixo. Assim a altura acompanha a largura e nunca ha corte. */
 .banner-carousel {
   position: relative;
-  width: min(100%, 840px);
-  margin-inline: auto;
-  aspect-ratio: 1916 / 821;
+  width: 100%;
+  aspect-ratio: 3 / 1;
   overflow: hidden;
-  background: #0a0a14;
+  background: #071726;
 }
 .banner-slide {
   display: block;
@@ -978,22 +985,19 @@ th { background: var(--soft); }
 .banner-slide img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
-.banner-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 30px 40px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.6));
-  color: white;
+/* No celular o 3:1 vira uma tira de 125px de altura, fraca demais para
+   primeira dobra. Aqui o quadro fica 2:1 e a imagem e ancorada a
+   ESQUERDA: o selo do lado direito e cortado de proposito e sobra a
+   parte que importa - logo, titulo, frase e botoes -, que assim aparece
+   quase 60% maior do que apareceria espremendo a arte inteira. */
+@media (max-width: 760px) {
+  .banner-carousel { aspect-ratio: 2 / 1; }
+  .banner-slide img { object-position: left center; }
 }
-.banner-overlay h2 {
-  margin: 0;
-  font-size: clamp(1.4rem, 3vw, 2.4rem);
-  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
-}
+
+/* .banner-overlay foi removido: a arte ja traz o texto. */
 .banner-nav {
   position: absolute;
   top: 50%;

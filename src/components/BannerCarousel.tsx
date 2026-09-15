@@ -29,16 +29,11 @@ export function BannerCarousel({ banners, intervalSeconds = 5 }: { banners: Bann
 
   if (count === 0) return null;
   const banner = banners[current];
-  const slide = (
-    <>
-      <img src={banner.image_url} alt={banner.title || "Banner"} />
-      {banner.title && (
-        <div className="banner-overlay">
-          <h2>{banner.title}</h2>
-        </div>
-      )}
-    </>
-  );
+  // O titulo NAO e desenhado por cima da arte: as artes ja trazem o texto
+  // queimado na imagem, e a faixa escura repetia a mesma frase embaixo.
+  // Ele continua servindo para identificar o banner no /admin/banners e
+  // como texto alternativo da imagem.
+  const slide = <img src={banner.image_url} alt={banner.title || "Banner"} />;
 
   return (
     <div
