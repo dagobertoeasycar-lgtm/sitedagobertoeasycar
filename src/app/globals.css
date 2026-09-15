@@ -997,6 +997,10 @@ th { background: var(--soft); }
   .banner-slide img { object-position: left center; }
 }
 
+.mapa-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 18px; }
+.mapa-embutido { border: 0; border-radius: 14px; display: block; }
+.footer-mapas { display: flex; gap: 14px; font-size: .86rem; }
+.footer-mapas a { color: var(--brand-bright); font-weight: 700; text-decoration: underline; }
 /* .banner-overlay foi removido: a arte ja traz o texto. */
 .banner-nav {
   position: absolute;

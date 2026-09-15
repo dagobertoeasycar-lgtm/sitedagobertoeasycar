@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ENDERECO } from "@/lib/endereco";
 
 const siteUrl = "https://www.dagobertoeasycar.com.br";
 
@@ -18,6 +19,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     name: "Auto Drive Veículos",
     url: siteUrl,
     telephone: "+55 11 93471-8276",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: `${ENDERECO.linha1}, ${ENDERECO.complemento}`,
+      addressLocality: ENDERECO.cidade,
+      addressRegion: ENDERECO.estado,
+      postalCode: ENDERECO.cep,
+      addressCountry: "BR",
+    },
     areaServed: { "@type": "State", name: "São Paulo" },
   };
   return (
