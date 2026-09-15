@@ -4,7 +4,7 @@ import { VehicleCard } from "@/components/VehicleCard";
 import { listVehicles, countVehicles, getFilterOptions, type VehicleFilters } from "@/lib/vehicles";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Veículos", description: "Consulte carros usados e seminovos periciados em Osasco." };
+export const metadata: Metadata = { title: "Veículos", description: "Vários modelos para todos os gostos, de vários parceiros, com negociação fácil e rápida." };
 
 const PAGE_SIZE = 20;
 const PRICE_OPTIONS = [
@@ -47,7 +47,7 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <section className="page-hero"><div className="shell"><p className="eyebrow">Estoque Dagoberto Easycar</p><h1>Encontre seu próximo veículo</h1><p>Use a busca e os filtros para encontrar o carro ideal.</p></div></section>
+      <section className="page-hero"><div className="shell"><p className="eyebrow">Estoque Auto Drive Veículos</p><h1>Encontre seu próximo veículo</h1><p>Use a busca e os filtros para encontrar o carro ideal.</p></div></section>
       <section className="shell section">
         {/* Search + Filter + Sort bar */}
         <div className="filter-bar">

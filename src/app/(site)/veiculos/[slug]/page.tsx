@@ -132,13 +132,9 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
                 <span className="detail-contact-icon">📱</span>
                 <span>(11) 93471-8276</span>
               </MetaTrackedAnchor>
-              <a href="https://www.google.com/maps?q=dagoberto+easycar+osasco" className="detail-contact-item" target="_blank" rel="noreferrer">
-                <span className="detail-contact-icon">📍</span>
-                <span>Onde estamos</span>
-              </a>
               {vehicle.store && (
                 <p className="detail-store-info">
-                  <strong>Este veículo está na loja</strong><br/>
+                  <strong>Este veículo está disponível em</strong><br/>
                   <span>📍 {vehicle.store}</span>
                 </p>
               )}

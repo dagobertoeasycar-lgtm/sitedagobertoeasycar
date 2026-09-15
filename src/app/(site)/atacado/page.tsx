@@ -8,7 +8,7 @@ export default function AtacadoPage() {
     <>
       <section className="page-hero">
         <div className="shell">
-          <p className="eyebrow">Atacado Dagoberto Easycar</p>
+          <p className="eyebrow">Atacado Auto Drive Veículos</p>
           <h1>Veículos no atacado para lojistas e revendas.</h1>
           <p>Cadastre sua empresa para receber oportunidades e condições de negociação em volume.</p>
         </div>
@@ -16,7 +16,7 @@ export default function AtacadoPage() {
       <section className="shell section content-grid wholesale-page">
         <div className="prose">
           <h2>Atendimento empresarial</h2>
-          <p>O cadastro vai diretamente para a equipe de atacado da Dagoberto Easycar.</p>
+          <p>O cadastro vai diretamente para a equipe de atacado da Auto Drive Veículos.</p>
           <ul>
             <li>Oportunidades para lojistas e revendedores.</li>
             <li>Negociação direta com nossa equipe comercial.</li>

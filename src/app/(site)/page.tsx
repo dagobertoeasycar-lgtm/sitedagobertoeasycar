@@ -48,7 +48,7 @@ export default async function Home() {
           <div className="shell hero-content">
             <p className="eyebrow">Seu próximo carro está aqui</p>
             <h1>Encontre o veículo ideal para você.</h1>
-            <p>Diversas marcas e modelos, qualidade e procedência para comprar com segurança e transparência.</p>
+            <p>Vários parceiros, vários modelos para todos os gostos e negociação fácil e rápida.</p>
             <div className="hero-actions"><Link className="button" href="/veiculos">Ver veículos</Link><a className="button button-light" href="https://wa.me/5511934718276">Falar pelo WhatsApp</a></div>
           </div>
         </section>
@@ -70,9 +70,9 @@ export default async function Home() {
         <div><strong>Mais de 16 financeiras</strong><span>Aprovação de crédito online.</span></div>
       </div></section>
 
-      <section className="shell split-section section"><div><p className="eyebrow dark">Sobre a Dagoberto Easycar</p><h2>Tradição, transparência e dedicação.</h2><p>Diversas marcas e modelos, qualidade e procedência, atendimento especializado e o melhor pós-venda.</p><Link className="button button-outline" href="/sobre">Conheça nossa história</Link></div><div className="notice"><strong>Crédito responsável</strong><p>Crédito sujeito à análise e aprovação das instituições financeiras. Consulte condições.</p></div></section>
+      <section className="shell split-section section"><div><p className="eyebrow dark">Sobre a Auto Drive Veículos</p><h2>Vários parceiros, um só atendimento.</h2><p>Trabalhamos com vários parceiros para reunir vários modelos para todos os gostos, com negociação fácil e rápida do primeiro contato ao pós-venda.</p><Link className="button button-outline" href="/sobre">Conheça nossa história</Link></div><div className="notice"><strong>Crédito responsável</strong><p>Crédito sujeito à análise e aprovação das instituições financeiras. Consulte condições.</p></div></section>
 
-      <section className="contact-band"><div className="shell"><div><p className="eyebrow">Fale com a gente</p><h2>Nossa equipe está pronta para atender.</h2></div><div className="contact-links"><a href="tel:+5511934718276"><span>Telefone e WhatsApp</span><strong>(11) 93471-8276</strong></a><a href="mailto:vendas@dagobertoeasycar.com.br"><span>E-mail</span><strong>vendas@dagobertoeasycar.com.br</strong></a></div></div></section>
+      <section className="contact-band"><div className="shell"><div><p className="eyebrow">Fale com a gente</p><h2>Nossa equipe está pronta para atender.</h2></div><div className="contact-links"><a href="tel:+5511934718276"><span>Telefone e WhatsApp</span><strong>(11) 93471-8276</strong></a><a href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><span>Negociação fácil e rápida</span><strong>Falar pelo WhatsApp</strong></a></div></div></section>
     </>
   );
 }

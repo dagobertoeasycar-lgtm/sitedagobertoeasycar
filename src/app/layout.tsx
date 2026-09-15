@@ -5,21 +5,20 @@ const siteUrl = "https://www.dagobertoeasycar.com.br";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "Carros usados e seminovos em Osasco | Dagoberto Easycar", template: "%s | Dagoberto Easycar" },
-  description: "Veículos usados e seminovos periciados em Osasco, financiamento e atendimento especializado.",
+  title: { default: "Carros usados e seminovos | Auto Drive Veículos", template: "%s | Auto Drive Veículos" },
+  description: "Vários parceiros, vários modelos para todos os gostos e negociação fácil e rápida. Veículos com procedência e financiamento.",
   alternates: { canonical: "/" },
-  openGraph: { type: "website", locale: "pt_BR", url: siteUrl, siteName: "Dagoberto Easycar", title: "Dagoberto Easycar Veículos", description: "Veículos periciados, com procedência." },
+  openGraph: { type: "website", locale: "pt_BR", url: siteUrl, siteName: "Auto Drive Veículos", title: "Auto Drive Veículos", description: "Vários parceiros, vários modelos para todos os gostos e negociação fácil e rápida." },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": ["AutoDealer", "LocalBusiness"],
-    name: "Dagoberto Easycar Veículos",
+    name: "Auto Drive Veículos",
     url: siteUrl,
     telephone: "+55 11 93471-8276",
-    email: "vendas@dagobertoeasycar.com.br",
-    address: { "@type": "PostalAddress", streetAddress: "Avenida dos Autonomistas, 5334, Km 18", addressLocality: "Osasco", addressRegion: "SP", postalCode: "06194-060", addressCountry: "BR" },
+    areaServed: { "@type": "State", name: "São Paulo" },
   };
   return (
     <html lang="pt-BR">

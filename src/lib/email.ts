@@ -66,7 +66,7 @@ export async function sendLeadNotification(lead: LeadNotification) {
   const settings = smtpSettings();
   if (!settings) return "disabled" as const;
   const text = [
-    "Novo lead recebido pelo site Dagoberto Easycar.",
+    "Novo lead recebido pelo site Auto Drive Veículos.",
     "",
     `Protocolo: ${lead.id}`,
     `Tipo: ${kindLabels[lead.kind]}`,

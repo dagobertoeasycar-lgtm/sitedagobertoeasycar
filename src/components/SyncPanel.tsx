@@ -74,7 +74,7 @@ export function SyncPanel() {
   return (
     <div className="sync-panel">
       <div className="sync-header">
-        <h2>Sincronização EasyCar</h2>
+        <h2>Sincronização do estoque (parceiro EasyCar)</h2>
         <span className={`sync-badge ${status.enabled ? "active" : "inactive"}`}>
           {status.enabled ? "Ativa" : "Pausada"}
         </span>

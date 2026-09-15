@@ -20,7 +20,7 @@ export function AdminLayout({ children, user }: { children: React.ReactNode; use
     <div className="adm">
       <aside className="adm-sidebar">
         <div className="adm-sidebar-brand">
-          <img src="/brand/logo-horizontal.png" alt="Dagoberto Easycar" />
+          <img src="/brand/logo-footer.png" alt="Auto Drive Veículos" />
           <span>Painel Admin</span>
         </div>
         <nav className="adm-nav">

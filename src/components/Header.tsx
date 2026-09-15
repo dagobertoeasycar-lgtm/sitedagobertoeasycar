@@ -5,8 +5,8 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="shell header-inner">
-        <Link href="/" className="brand" aria-label="Dagoberto Easycar - início">
-          <img src="/brand/logo-horizontal.png" alt="Dagoberto Easycar Veículos" width={220} height={72} />
+        <Link href="/" className="brand" aria-label="Auto Drive Veículos - início">
+          <img src="/brand/logo-horizontal.png" alt="Auto Drive Veículos" width={220} height={72} />
         </Link>
         <nav className="desktop-nav" aria-label="Navegação principal">
           <Link href="/">Início</Link>
