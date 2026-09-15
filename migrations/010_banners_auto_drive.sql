@@ -1,4 +1,4 @@
--- Banners da home na identidade Auto Drive Veiculos.
+-- Banners da home na identidade Autodrive Veiculos.
 -- As artes ficam versionadas em public/banners/ad-*.jpg, entao basta a
 -- linha no banco apontar para o caminho. Isso evita depender do upload
 -- pelo painel, que nao funciona na Vercel (sistema de arquivos efemero).

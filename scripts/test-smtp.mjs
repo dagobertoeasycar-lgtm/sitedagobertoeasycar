@@ -38,7 +38,7 @@ if (process.argv.includes("--send")) {
   const info = await transport.sendMail({
     from,
     to,
-    subject: "[Dagoberto Easycar] Teste de SMTP",
+    subject: "[Autodrive] Teste de SMTP",
     text: `Teste de entrega SMTP concluído em ${new Date().toISOString()}.`,
   });
   console.log(`OK mensagem de teste aceita pelo servidor id=${info.messageId}`);

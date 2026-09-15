@@ -1,18 +1,16 @@
-// Endereço do escritório, num lugar só: rodapé, página de contato e os
-// dados estruturados do Google liam valores duplicados antes e saíram de
-// sincronia na troca de marca. Mudou aqui, mudou no site inteiro.
+// Base pública de atendimento. Não expor endereço residencial em páginas,
+// mapas ou dados estruturados.
 export const ENDERECO = {
-  linha1: "Av. Henrique Gonçalves Baptista, 2245",
-  complemento: "Torre 5, apto 145",
-  bairro: "Jardim Belval",   // grafia oficial dos Correios para o CEP 06420-130
+  linha1: "Barueri/SP",
+  complemento: "Atendimento mediante agendamento",
+  bairro: "",
   cidade: "Barueri",
   estado: "SP",
-  cep: "06420-130",
+  cep: "",
 } as const;
 
 /** Texto corrido, usado em buscas de mapa e no schema.org. */
-export const ENDERECO_BUSCA =
-  `${ENDERECO.linha1}, ${ENDERECO.bairro}, ${ENDERECO.cidade} - ${ENDERECO.estado}, ${ENDERECO.cep}`;
+export const ENDERECO_BUSCA = `${ENDERECO.cidade} - ${ENDERECO.estado}`;
 
 const q = encodeURIComponent(ENDERECO_BUSCA);
 

@@ -158,7 +158,7 @@ export function MetaCatalogPanel() {
             <label>Número oficial<input value={settings.phoneNumber} onChange={event => setSettings({ ...settings, phoneNumber: event.target.value })} /></label>
             <label>ID da fonte de dados<input value={settings.dataSourceId} onChange={event => setSettings({ ...settings, dataSourceId: event.target.value })} /></label>
           </div>
-          <p className="meta-flow">Estoque do site → feed automático → catálogo “Auto Drive Veículos” → WhatsApp Business → +55 11 93471-8276</p>
+          <p className="meta-flow">Estoque do site → feed automático → catálogo “Autodrive Veículos” → WhatsApp Business → +55 11 93471-8276</p>
         </section>
       </div>
 

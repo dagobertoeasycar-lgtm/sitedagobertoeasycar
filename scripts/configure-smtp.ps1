@@ -18,7 +18,7 @@ foreach ($line in $original) {
 $hostName = Read-Default "Servidor SMTP" $(if ($settings["SMTP_HOST"]) { $settings["SMTP_HOST"] } else { "smtp.gmail.com" })
 $portText = Read-Default "Porta SMTP" $(if ($settings["SMTP_PORT"]) { $settings["SMTP_PORT"] } else { "587" })
 $smtpUser = Read-Default "Usuário SMTP" $(if ($settings["SMTP_USER"]) { $settings["SMTP_USER"] } else { "meucomercioonline5@gmail.com" })
-$smtpFrom = Read-Default "Remetente" $(if ($settings["SMTP_FROM"]) { $settings["SMTP_FROM"] } else { "Dagoberto Easycar <meucomercioonline5@gmail.com>" })
+$smtpFrom = Read-Default "Remetente" $(if ($settings["SMTP_FROM"]) { $settings["SMTP_FROM"] } else { "Autodrive <meucomercioonline5@gmail.com>" })
 $adminEmail = Read-Default "Destinatário dos leads" $(if ($settings["ADMIN_EMAIL"]) { $settings["ADMIN_EMAIL"] } else { "meucomercioonline5@gmail.com" })
 $port = 0
 if (-not [int]::TryParse($portText, [ref]$port) -or $port -lt 1 -or $port -gt 65535) { throw "Porta SMTP inválida" }

@@ -8,7 +8,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <Header />
       <main>{children}</main>
       <Footer />
-      <a className="whatsapp-float" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer" aria-label="Falar pelo WhatsApp">WhatsApp</a>
+      <a className="whatsapp-float" href="https://wa.me/5511934718276?text=Olá!%20Vim%20pelo%20site%20da%20Autodrive%20e%20gostaria%20de%20atendimento." target="_blank" rel="noreferrer" aria-label="Falar pelo WhatsApp">WhatsApp</a>
     </MetaPixelProvider>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * sync-easycar.mjs
- * Sincroniza o estoque da EasyCar (easycarveiculos.com.br) com o banco do
- * Dagoberto Easycar usando a API pública de estoque do site de origem.
+ * Sincroniza o estoque da EasyCar (easycarveiculos.com.br) com o banco da
+ * Autodrive usando a API pública de estoque do site de origem.
  *
  * Substitui a raspagem de HTML anterior: o site da EasyCar passou a renderizar
  * a listagem no cliente, então o HTML servido não contém mais os veículos.
@@ -148,7 +148,7 @@ function mapVehicle(v) {
 }
 
 async function upsertPartner(client, vehicle, cache) {
-  const name = cleanText(vehicle.store) || "Parceiro AutoDrive";
+  const name = cleanText(vehicle.store) || "Parceiro Autodrive";
   const externalId = vehicle.revendaId || (vehicle.store ? `store:${slugify(vehicle.store)}` : "");
   if (!externalId) return null;
   const cacheKey = `${SOURCE_ID}:${externalId}`;

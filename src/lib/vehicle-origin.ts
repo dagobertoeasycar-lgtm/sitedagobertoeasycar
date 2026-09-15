@@ -23,7 +23,7 @@ const ORIGIN_FILTERS: Record<string, VehicleOriginType> = {
 };
 
 export const VEHICLE_ORIGIN_OPTIONS = [
-  { value: "autodrive", label: "AutoDrive" },
+  { value: "autodrive", label: "Autodrive" },
   { value: "parceiros", label: "Lojistas parceiros" },
   { value: "particulares", label: "Particulares" },
 ] as const;
