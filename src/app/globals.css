@@ -22,10 +22,10 @@ img { max-width: 100%; height: auto; }
 button, input, select, textarea { font: inherit; }
 .shell { width: min(1180px, calc(100% - 40px)); margin-inline: auto; }
 .site-header { position: sticky; top: 0; z-index: 40; background: rgba(255,255,255,.96); border-bottom: 1px solid var(--line); backdrop-filter: blur(14px); }
-.header-inner { min-height: 82px; display: flex; align-items: center; gap: 28px; }
+.header-inner { min-height: 82px; display: flex; align-items: center; gap: 20px; }
 .brand { display: inline-flex; align-items: center; flex: 0 0 auto; }
-.brand img { width: 190px; height: auto; object-fit: contain; }
-.desktop-nav { display: flex; align-items: center; justify-content: center; gap: clamp(16px, 2vw, 30px); margin-left: auto; white-space: nowrap; }
+.brand img { width: 175px; height: auto; object-fit: contain; }
+.desktop-nav { display: flex; align-items: center; justify-content: center; gap: clamp(16px, 1.5vw, 20px); margin-left: auto; white-space: nowrap; }
 .desktop-nav a { font-weight: 700; font-size: .92rem; }
 .desktop-nav a:hover { color: var(--blue); }
 .mobile-menu { display: none; margin-left: auto; position: relative; }
@@ -165,9 +165,14 @@ th { background: var(--soft); }
 .footer-legal { margin-top: 30px; }
 .footer-legal p { margin: 0; color: #93a6ba; font-size: .8rem; line-height: 1.55; }
 
-@media (max-width: 1050px) {
+/* O cabecalho completo (logo + links + telefone + CTA) so cabe quando a
+   .shell esta na largura cheia; abaixo disso vai para o menu compacto. */
+@media (max-width: 1219px) {
   .desktop-nav, .header-cta { display: none; }
   .mobile-menu { display: block; }
+}
+
+@media (max-width: 1050px) {
   .vehicle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .benefit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .benefit-grid div:nth-child(even) { border-right: 1px solid rgba(255,255,255,.16); }
@@ -1104,7 +1109,7 @@ th { background: var(--soft); }
   background: #0a0a14;
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 1219px) {
   .header-actions { display: none; }
 }
 @media (max-width: 760px) {
