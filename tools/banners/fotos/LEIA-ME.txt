@@ -1,0 +1,24 @@
+FOTOS DO BETO PARA OS BANNERS
+
+Coloque as fotos aqui com estes nomes exatos:
+
+    beto-01.jpg     beto-02.jpg     beto-03.jpg
+
+Depois rode, dentro de tools/banners:
+
+    python gerar.py
+
+O script recorta a foto no rosto/busto e monta o banner. O rosto NAO e
+alterado em nenhum momento: o unico tratamento e o enquadramento
+(recorte e redimensionamento). Nada de filtro, retoque ou geracao de
+imagem por IA em cima do seu rosto.
+
+Como escolher a foto:
+  - de preferencia na vertical, com voce do peito para cima;
+  - rosto bem iluminado e nitido;
+  - olhando para a camera funciona melhor em banner;
+  - fundo qualquer serve, mas fundo mais limpo fica melhor.
+
+Estes arquivos NAO vao para o GitHub (estao no .gitignore): sao fotos
+pessoais e o repositorio so precisa do banner ja montado, que fica em
+public/banners/.

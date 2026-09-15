@@ -23,3 +23,7 @@ scripts/healthcheck.exe
 .DS_Store
 
 logs/
+
+# fotos pessoais usadas para gerar banner: ficam so na maquina
+tools/banners/fotos/*
+!tools/banners/fotos/LEIA-ME.txt
