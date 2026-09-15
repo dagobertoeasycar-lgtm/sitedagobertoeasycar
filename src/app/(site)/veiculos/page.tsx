@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { VehicleCard } from "@/components/VehicleCard";
-import { listVehicles, countVehicles, getFilterOptions, type VehicleFilters } from "@/lib/vehicles";
+import { VEHICLE_ORIGIN_OPTIONS, listVehicles, countVehicles, getFilterOptions, type VehicleFilters } from "@/lib/vehicles";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Veículos", description: "Vários modelos para todos os gostos, de vários parceiros, com negociação fácil e rápida." };
@@ -33,7 +33,7 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
     q: sp.q || "", brand: sp.brand || "", fuel: sp.fuel || "", transmission: sp.transmission || "",
     yearMin: sp.yearMin ? parseInt(sp.yearMin) : undefined, yearMax: sp.yearMax ? parseInt(sp.yearMax) : undefined,
     priceMin: sp.priceMin ? parseInt(sp.priceMin) : undefined, priceMax: sp.priceMax ? parseInt(sp.priceMax) : undefined,
-    sort: sp.sort || "recent", page: parseInt(sp.p || "1"),
+    origin: sp.origin || "", sort: sp.sort || "recent", page: parseInt(sp.p || "1"),
   };
 
   const [vehicles, total, opts] = await Promise.all([
@@ -43,7 +43,7 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
   ]);
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const page = filters.page || 1;
-  const hasActiveFilters = !!(filters.brand || filters.fuel || filters.transmission || filters.yearMin || filters.yearMax || filters.priceMin || filters.priceMax);
+  const hasActiveFilters = !!(filters.brand || filters.fuel || filters.transmission || filters.yearMin || filters.yearMax || filters.priceMin || filters.priceMax || filters.origin);
 
   return (
     <>
@@ -60,6 +60,11 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
             {filters.brand && <input type="hidden" name="brand" value={filters.brand} />}
             {filters.fuel && <input type="hidden" name="fuel" value={filters.fuel} />}
             {filters.transmission && <input type="hidden" name="transmission" value={filters.transmission} />}
+            {filters.origin && <input type="hidden" name="origin" value={filters.origin} />}
+            {filters.yearMin && <input type="hidden" name="yearMin" value={filters.yearMin} />}
+            {filters.yearMax && <input type="hidden" name="yearMax" value={filters.yearMax} />}
+            {filters.priceMin && <input type="hidden" name="priceMin" value={filters.priceMin} />}
+            {filters.priceMax && <input type="hidden" name="priceMax" value={filters.priceMax} />}
             {filters.sort && filters.sort !== "recent" && <input type="hidden" name="sort" value={filters.sort} />}
           </form>
           <details className="filter-dropdown">
@@ -76,6 +81,13 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
                   <select name="brand" defaultValue={filters.brand}>
                     <option value="">Todas</option>
                     {opts.brands.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Origem</label>
+                  <select name="origin" defaultValue={filters.origin}>
+                    <option value="">Todos</option>
+                    {VEHICLE_ORIGIN_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
                 <div className="filter-group">

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { VehicleGallery } from "@/components/VehicleGallery";
-import { findVehicle, money, listVehicles } from "@/lib/vehicles";
+import { findVehicle, money, listVehicles, vehicleOriginBadgeLabel, vehicleOriginPublicLabel, vehiclePublicLocation } from "@/lib/vehicles";
 import { VehicleCard } from "@/components/VehicleCard";
 import { MetaTrackedAnchor, VehicleViewContent } from "@/components/MetaPixelEvents";
 
@@ -25,7 +25,10 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const vehicle = await findVehicle(slug).catch(() => null);
   if (!vehicle) notFound();
-  const message = encodeURIComponent(`Olá! Tenho interesse no ${vehicle.title}. Gostaria de mais informações.`);
+  const originBadge = vehicleOriginBadgeLabel(vehicle);
+  const originPublicLabel = vehicleOriginPublicLabel(vehicle);
+  const publicLocation = vehiclePublicLocation(vehicle);
+  const message = encodeURIComponent(`Olá! Vi o ${vehicle.title} (${vehicle.catalog_item_id}) no site da Autodrive e gostaria de mais informações.`);
   const options = parseOptions(vehicle.options);
   const descParagraphs = parseDescription(vehicle.description);
   const pixelVehicle = {
@@ -39,7 +42,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
   const pixelParameters = {
     content_ids: [vehicle.catalog_item_id], content_type: "product", content_name: vehicle.title,
     value: vehicle.price_cents / 100, currency: "BRL", marca: vehicle.brand, modelo: vehicle.model,
-    ano: vehicle.year_model || vehicle.year_make,
+    ano: vehicle.year_model || vehicle.year_make, origem: originBadge,
   };
 
   // Suggestions: same brand or similar price
@@ -60,6 +63,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
         {/* Badges row */}
         <div className="detail-badges">
           {vehicle.featured && <div className="detail-badge"><span className="detail-badge-icon">⭐</span><span>Oportunidade</span></div>}
+          <div className="detail-badge"><span className="detail-badge-icon">AD</span><span>{originPublicLabel}</span></div>
           <div className="detail-badge"><span className="detail-badge-icon">🔍</span><span>Periciado</span></div>
           {vehicle.promotion && <div className="detail-badge"><span className="detail-badge-icon">🏷️</span><span>Promoção</span></div>}
           <div className="detail-badge"><span className="detail-badge-icon">🔄</span><span>Aceita troca</span></div>
@@ -132,14 +136,13 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
                 <span className="detail-contact-icon">📱</span>
                 <span>(11) 93471-8276</span>
               </MetaTrackedAnchor>
-              {vehicle.store && (
-                <p className="detail-store-info">
-                  <strong>Este veículo está disponível em</strong><br/>
-                  <span>📍 {vehicle.store}</span>
-                </p>
-              )}
+              <p className="detail-store-info">
+                <strong>{originPublicLabel}</strong><br/>
+                <span>📍 {publicLocation}</span>
+                <small>O atendimento e o lead passam sempre pela Autodrive.</small>
+              </p>
               <MetaTrackedAnchor className="button" href={`https://wa.me/5511934718276?text=${message}`} target="_blank" rel="noreferrer" style={{ width: "100%" }} eventName="Contact" eventParameters={pixelParameters}>
-                Enviar mensagem
+                Tenho interesse
               </MetaTrackedAnchor>
               <MetaTrackedAnchor className="button button-outline" href={`https://wa.me/5511934718276?text=${encodeURIComponent(`Olá! Quero agendar uma visita para conhecer o ${vehicle.title}.`)}`} target="_blank" rel="noreferrer" style={{ width: "100%" }} eventName="Schedule" eventParameters={pixelParameters}>
                 Agendar visita

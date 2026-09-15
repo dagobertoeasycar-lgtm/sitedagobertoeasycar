@@ -143,7 +143,37 @@ function mapVehicle(v) {
     options,
     store: cleanText(v.revenda_nome),
     revendaId: v.revenda_id != null ? String(v.revenda_id) : "",
+    originType: "PARTNER",
   };
+}
+
+async function upsertPartner(client, vehicle, cache) {
+  const name = cleanText(vehicle.store) || "Parceiro AutoDrive";
+  const externalId = vehicle.revendaId || (vehicle.store ? `store:${slugify(vehicle.store)}` : "");
+  if (!externalId) return null;
+  const cacheKey = `${SOURCE_ID}:${externalId}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const result = await client.query(
+    `insert into partners(source_id, external_id, name, city, notes, active, updated_at)
+     values($1,$2,$3,$4,$5,true,now())
+     on conflict (source_id, external_id) do update set
+       name=excluded.name,
+       city=excluded.city,
+       active=true,
+       updated_at=now()
+     returning id`,
+    [
+      SOURCE_ID,
+      externalId,
+      name,
+      CITY.split("/")[0],
+      "Parceiro sincronizado automaticamente pela API da EasyCar.",
+    ],
+  );
+  const partnerId = result.rows[0]?.id ?? null;
+  cache.set(cacheKey, partnerId);
+  return partnerId;
 }
 
 async function collectVehicles() {
@@ -227,20 +257,22 @@ export async function runSync() {
   try {
     const vehicles = await collectVehicles();
     console.log(`Veículos válidos para importar: ${vehicles.length}`);
+    const partnerCache = new Map();
 
     for (const vehicle of vehicles) {
       processed++;
       try {
+        const partnerId = await upsertPartner(client, vehicle, partnerCache);
         const result = await client.query(
           `insert into vehicles(
             source_id, external_id, slug, title, brand, model, version,
             year_make, year_model, price_cents, old_price_cents, mileage,
             fuel, transmission, body_type, city, color, doors,
-            description, image_url, images, options, store,
+            description, image_url, images, options, store, origin_type, partner_id, partner_external_id,
             status, stock_status, featured, promotion
           ) values (
-            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
-            $24, 'available', false, $25
+            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,
+            $27, 'available', false, $28
           )
           on conflict (source_id, external_id) do update set
             slug=excluded.slug, title=excluded.title, brand=excluded.brand, model=excluded.model,
@@ -249,7 +281,9 @@ export async function runSync() {
             mileage=excluded.mileage, fuel=excluded.fuel, transmission=excluded.transmission,
             body_type=excluded.body_type, color=excluded.color, doors=excluded.doors,
             description=excluded.description, image_url=excluded.image_url, images=excluded.images,
-            options=excluded.options, store=excluded.store, promotion=excluded.promotion,
+            options=excluded.options, store=excluded.store, origin_type=excluded.origin_type,
+            partner_id=excluded.partner_id, partner_external_id=excluded.partner_external_id,
+            promotion=excluded.promotion,
             status=excluded.status, stock_status='available', updated_at=now()
           returning (xmax = 0) as inserted`,
           [
@@ -276,6 +310,9 @@ export async function runSync() {
             JSON.stringify(vehicle.media),
             JSON.stringify(vehicle.options),
             vehicle.store,
+            vehicle.originType,
+            partnerId,
+            vehicle.revendaId || "",
             vehicle.status,
             vehicle.promotion,
           ]

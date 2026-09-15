@@ -26,6 +26,11 @@ jobs:
       - name: Instalar o driver do banco
         run: npm install pg@8.22.0 --no-save --no-audit --no-fund
 
+      - name: Aplicar migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/migrate.mjs
+
       - name: Sincronizar o estoque
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

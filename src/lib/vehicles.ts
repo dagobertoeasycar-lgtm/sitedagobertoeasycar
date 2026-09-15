@@ -1,26 +1,32 @@
 import { query } from "@/lib/db";
+import type { VehicleOriginType } from "./vehicle-origin";
+import { normalizeVehicleOrigin } from "./vehicle-origin";
+export { VEHICLE_ORIGIN_OPTIONS, normalizeVehicleOrigin, resolveVehicleOrigin, vehicleOriginBadgeLabel, vehicleOriginPublicLabel, vehiclePublicLocation } from "./vehicle-origin";
 
 export type MediaItem = { type: "video" | "image"; url: string };
 
 export type Vehicle = {
   id: string; catalog_item_id: string; slug: string; title: string; brand: string; model: string; version: string;
+  source_id?: string | null; external_id?: string | null;
   year_model: number; year_make: number; price_cents: number; old_price_cents: number | null;
   mileage: number; fuel: string; transmission: string; body_type: string; city: string;
   color: string; doors: number; status: string; featured: boolean; promotion: boolean;
   image_url: string | null; images: MediaItem[] | string[]; options: string[];
   store: string; video_url: string; description: string;
+  origin_type?: VehicleOriginType | null; partner_id?: string | null; private_owner_id?: string | null;
+  partner_external_id?: string | null;
 };
 
 export type VehicleFilters = {
   q?: string; brand?: string; fuel?: string; transmission?: string;
   yearMin?: number; yearMax?: number; priceMin?: number; priceMax?: number;
-  sort?: string; page?: number;
+  origin?: string; sort?: string; page?: number;
 };
 
 const PAGE_SIZE = 20;
 
 export async function listVehicles(filters: VehicleFilters = {}) {
-  const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax, sort = "recent", page = 1 } = filters;
+  const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax, origin, sort = "recent", page = 1 } = filters;
   const conditions: string[] = ["status = 'published'"];
   const params: unknown[] = [];
   let paramIdx = 1;
@@ -37,6 +43,8 @@ export async function listVehicles(filters: VehicleFilters = {}) {
   if (yearMax) { conditions.push(`year_model <= $${paramIdx}`); params.push(yearMax); paramIdx++; }
   if (priceMin) { conditions.push(`price_cents >= $${paramIdx}`); params.push(priceMin * 100); paramIdx++; }
   if (priceMax) { conditions.push(`price_cents <= $${paramIdx}`); params.push(priceMax * 100); paramIdx++; }
+  const normalizedOrigin = normalizeVehicleOrigin(origin);
+  if (normalizedOrigin) { conditions.push(`origin_type = $${paramIdx}`); params.push(normalizedOrigin); paramIdx++; }
 
   const where = conditions.join(" AND ");
   const orderMap: Record<string, string> = {
@@ -62,7 +70,7 @@ export async function listVehicles(filters: VehicleFilters = {}) {
 }
 
 export async function countVehicles(filters: VehicleFilters = {}) {
-  const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax } = filters;
+  const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax, origin } = filters;
   const conditions: string[] = ["status = 'published'"];
   const params: unknown[] = [];
   let paramIdx = 1;
@@ -75,6 +83,8 @@ export async function countVehicles(filters: VehicleFilters = {}) {
   if (yearMax) { conditions.push(`year_model <= $${paramIdx}`); params.push(yearMax); paramIdx++; }
   if (priceMin) { conditions.push(`price_cents >= $${paramIdx}`); params.push(priceMin * 100); paramIdx++; }
   if (priceMax) { conditions.push(`price_cents <= $${paramIdx}`); params.push(priceMax * 100); paramIdx++; }
+  const normalizedOrigin = normalizeVehicleOrigin(origin);
+  if (normalizedOrigin) { conditions.push(`origin_type = $${paramIdx}`); params.push(normalizedOrigin); paramIdx++; }
 
   const where = conditions.join(" AND ");
   const result = await query<{ count: string }>(`SELECT count(*)::text as count FROM vehicles WHERE ${where}`, params);

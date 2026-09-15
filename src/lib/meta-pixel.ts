@@ -10,6 +10,7 @@ const ALLOWED_PARAMETER_KEYS = new Set([
   "modelo",
   "ano",
   "lead_type",
+  "origem",
 ]);
 
 export function isValidMetaPixelId(value: unknown): boolean {
