@@ -7,22 +7,95 @@ import { useMetaPixel } from "@/components/MetaPixelProvider";
 type FormState = "idle" | "sending" | "done" | "error";
 type LeadKind = "sell_car" | "partner" | "find_car";
 
+const SELL_CAR_PHOTO_FIELDS = [
+  { name: "photoDashboard", label: "Painel", required: true },
+  { name: "photoFrontSeats", label: "Interno - bancos dianteiros", required: true },
+  { name: "photoRearSeats", label: "Interno - bancos traseiros", required: true },
+  { name: "photoFront", label: "Frente", required: true },
+  { name: "photoEngine", label: "Motor", required: true },
+  { name: "photoRoof", label: "Teto", required: true },
+  { name: "photoFrontDetails", label: "Detalhes da frente, se tiver" },
+  { name: "photoRightSide", label: "Lateral direita", required: true },
+  { name: "photoRightTires", label: "Pneus lado direito", required: true },
+  { name: "photoRightDetails", label: "Detalhes do lado direito, se tiver" },
+  { name: "photoRear", label: "Traseira", required: true },
+  { name: "photoRearTrunkOpen", label: "Traseira com porta-malas aberto", required: true },
+  { name: "photoSpareTire", label: "Estepe", required: true },
+  { name: "photoSafetyItems", label: "Itens de segurança", required: true },
+  { name: "photoLeftSide", label: "Lado esquerdo", required: true },
+  { name: "photoLeftTires", label: "Pneus lado esquerdo", required: true },
+  { name: "photoLeftDetails", label: "Detalhes do lado esquerdo, se tiver" },
+] as const;
+
+const EXTRA_PHOTO_FIELD = { name: "photoExtraDetails", label: "Fotos de mais detalhes, se quiser" } as const;
+const photoFieldNames = new Set<string>([...SELL_CAR_PHOTO_FIELDS.map((field) => field.name), EXTRA_PHOTO_FIELD.name]);
+const photoMaxEdge = 1400;
+const photoQuality = 0.78;
+
+function trackingPayload() {
+  const url = new URL(window.location.href);
+  return {
+    pageUrl: url.href,
+    leadSource: "site",
+    utmSource: url.searchParams.get("utm_source") || "",
+    utmMedium: url.searchParams.get("utm_medium") || "",
+    utmCampaign: url.searchParams.get("utm_campaign") || "",
+  };
+}
+
 function payloadFromForm(form: HTMLFormElement, kind: LeadKind) {
   const data = new FormData(form);
-  const payload: Record<string, unknown> = { kind };
+  const payload: Record<string, unknown> = { kind, ...trackingPayload() };
   for (const [key, value] of data.entries()) {
     if (value instanceof File) continue;
     const current = payload[key];
     if (current) payload[key] = Array.isArray(current) ? [...current, value] : [current, value];
     else payload[key] = value;
   }
-  const url = new URL(window.location.href);
-  payload.pageUrl = url.href;
-  payload.leadSource = "site";
-  payload.utmSource = url.searchParams.get("utm_source") || "";
-  payload.utmMedium = url.searchParams.get("utm_medium") || "";
-  payload.utmCampaign = url.searchParams.get("utm_campaign") || "";
   return payload;
+}
+
+async function canvasToBlob(canvas: HTMLCanvasElement) {
+  return await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", photoQuality));
+}
+
+async function compressPhoto(file: File) {
+  if (!file.type.startsWith("image/")) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, photoMaxEdge / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    const blob = await canvasToBlob(canvas);
+    if (!blob || blob.size >= file.size) return file;
+    const basename = file.name.replace(/\.[^.]+$/, "") || "foto";
+    return new File([blob], `${basename}.jpg`, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
+async function multipartPayloadFromForm(form: HTMLFormElement, kind: LeadKind) {
+  const source = new FormData(form);
+  const target = new FormData();
+  for (const [key, value] of source.entries()) {
+    if (value instanceof File) {
+      if (!photoFieldNames.has(key) || value.size === 0) continue;
+      target.append(key, await compressPhoto(value));
+      continue;
+    }
+    target.append(key, value);
+  }
+  target.set("kind", kind);
+  for (const [key, value] of Object.entries(trackingPayload())) target.set(key, value);
+  return target;
 }
 
 function useLeadSubmit(kind: LeadKind, successMessage: string, eventName: string) {
@@ -36,10 +109,12 @@ function useLeadSubmit(kind: LeadKind, successMessage: string, eventName: string
     setMessage("");
     const form = event.currentTarget;
     try {
+      const hasUploads = kind === "sell_car";
       const response = await fetch("/api/leads", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payloadFromForm(form, kind)),
+        ...(hasUploads
+          ? { body: await multipartPayloadFromForm(form, kind) }
+          : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(payloadFromForm(form, kind)) }),
       });
       const result = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(result.error || "Não foi possível enviar agora.");
@@ -60,14 +135,14 @@ function useLeadSubmit(kind: LeadKind, successMessage: string, eventName: string
 export function SellCarLeadForm() {
   const { state, message, submit } = useLeadSubmit(
     "sell_car",
-    "Recebemos seu veículo. Nossa equipe analisará as informações e entrará em contato pelo WhatsApp.",
+    "Recebemos sua pré-avaliação. Nossa equipe analisará as fotos e informações e entrará em contato pelo WhatsApp.",
     "SubmitSellCar",
   );
 
   return (
-    <form className="lead-form structured-form" onSubmit={submit}>
-      <h2>Quero vender meu carro</h2>
-      <p className="form-help">Campos com * são obrigatórios.</p>
+    <form className="lead-form structured-form" encType="multipart/form-data" onSubmit={submit}>
+      <h2>Pré-avaliação do veículo</h2>
+      <p className="form-help">Campos com * são obrigatórios. As fotos são enviadas em tamanho otimizado para pré-avaliação.</p>
       <h3>Proprietário</h3>
       <label>Nome *<input name="name" required maxLength={120} autoComplete="name" /></label>
       <div className="form-row">
@@ -104,10 +179,23 @@ export function SellCarLeadForm() {
         <label><input type="checkbox" name="vehicleStatus" value="Possui sinistro" />Possui sinistro</label>
         <label><input type="checkbox" name="vehicleStatus" value="Possui leilão" />Possui leilão</label>
       </div>
-      <label>Fotos<textarea name="photoLinks" rows={3} maxLength={1200} placeholder="Cole links das fotos, um por linha" /></label>
+      <h3>Fotos para pré-avaliação</h3>
+      <p className="form-help">Use fotos reais e recentes. Os campos “detalhes” são opcionais e servem para riscos, amassados, avarias ou pontos importantes.</p>
+      <div className="photo-upload-grid">
+        {SELL_CAR_PHOTO_FIELDS.map((field) => (
+          <label key={field.name} className="photo-upload-card">
+            <span>{field.label}{"required" in field && field.required ? " *" : ""}</span>
+            <input name={field.name} type="file" accept="image/*" capture="environment" required={"required" in field && field.required} />
+          </label>
+        ))}
+        <label className="photo-upload-card photo-upload-card-wide">
+          <span>{EXTRA_PHOTO_FIELD.label}</span>
+          <input name={EXTRA_PHOTO_FIELD.name} type="file" accept="image/*" capture="environment" multiple />
+        </label>
+      </div>
       <label>Observações<textarea name="message" rows={4} maxLength={2000} /></label>
       <label className="consent"><input name="consent" type="checkbox" value="yes" required /> Autorizo o contato sobre esta solicitação e li a <a href="/privacidade">Política de Privacidade</a>.</label>
-      <button className="button" disabled={state === "sending"}>{state === "sending" ? "Enviando..." : "Enviar meu veículo"}</button>
+      <button className="button" disabled={state === "sending"}>{state === "sending" ? "Enviando fotos..." : "Enviar pré-avaliação"}</button>
       <p className={`form-status ${state}`} role="status" aria-live="polite">{message}</p>
     </form>
   );

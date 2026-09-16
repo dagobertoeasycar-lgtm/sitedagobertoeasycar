@@ -1,10 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { NextResponse } from "next/server";
+import { imageUploadContentTypes, uploadsRoot } from "@/lib/image-upload";
 
 export const runtime = "nodejs";
-const types: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", avif: "image/avif" };
-const uploadsRoot = "C:\\Sites\\DagobertoEasycar\\data\\uploads";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
@@ -15,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ nam
   try {
     const file = await readFile(filePath);
     const extension = name.split(".").pop() ?? "";
-    return new NextResponse(file, { headers: { "Content-Type": types[extension], "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" } });
+    return new NextResponse(file, { headers: { "Content-Type": imageUploadContentTypes[extension], "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" } });
   } catch {
     return new NextResponse("Não encontrado", { status: 404 });
   }
