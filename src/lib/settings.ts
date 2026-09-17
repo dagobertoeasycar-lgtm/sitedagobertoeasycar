@@ -1,12 +1,15 @@
+/** Leitura e gravação de app_settings. SOMENTE SERVIDOR (importa lib/db). */
 import { query } from "@/lib/db";
-import { DEFAULT_PRICING_RULE, normalizePricingRule, type PricingRule } from "@/lib/pricing";
+import {
+  DEFAULT_PRICING_RULE,
+  DEFAULT_STOCK_RULE,
+  normalizePricingRule,
+  type PricingRule,
+  type StockRule,
+} from "@/lib/pricing";
 
-export type StockRule = {
-  /** Execuções seguidas sem encontrar o veículo antes de marcá-lo indisponível. */
-  missing_checks_before_inactive: number;
-};
-
-export const DEFAULT_STOCK_RULE: StockRule = { missing_checks_before_inactive: 2 };
+export { DEFAULT_STOCK_RULE };
+export type { StockRule };
 
 async function readSetting(key: string): Promise<unknown> {
   try {

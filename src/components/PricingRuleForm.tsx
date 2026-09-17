@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { computePublishedPriceCents, formatCents, resolveMarkupCents, type PricingRule } from "@/lib/pricing";
-import type { StockRule } from "@/lib/settings";
+// Tudo de @/lib/pricing, que não importa banco. Ver comentário em pricing.ts.
+import {
+  computePublishedPriceCents,
+  formatCents,
+  resolveMarkupCents,
+  type PricingRule,
+  type StockRule,
+} from "@/lib/pricing";
 
 type Props = { pricing: PricingRule; stock: StockRule };
 

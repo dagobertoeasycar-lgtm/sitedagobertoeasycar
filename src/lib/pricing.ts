@@ -12,6 +12,21 @@ import type { VehicleOriginType } from "./vehicle-origin";
  */
 export type PricingMode = "range" | "fixed" | "none";
 
+/**
+ * Carência antes de considerar um veículo indisponível.
+ *
+ * Mora aqui, e não em lib/settings, porque o formulário da regra de preço é um
+ * componente de cliente: qualquer import — mesmo de tipo — apontando para
+ * lib/settings aproxima o bundle do driver `pg`. Manter o tipo neste módulo,
+ * que não toca banco, elimina o risco de vez.
+ */
+export type StockRule = {
+  /** Execuções seguidas sem encontrar o veículo antes de marcá-lo indisponível. */
+  missing_checks_before_inactive: number;
+};
+
+export const DEFAULT_STOCK_RULE: StockRule = { missing_checks_before_inactive: 2 };
+
 export type PricingRule = {
   mode: PricingMode;
   /** Piso do acréscimo, em centavos. Usado no modo "range". */
