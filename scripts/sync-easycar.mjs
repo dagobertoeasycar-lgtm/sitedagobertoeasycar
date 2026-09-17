@@ -12,6 +12,12 @@
  *            EASYCAR_REVENDAS (opcional, ids separados por vírgula p/ filtrar lojas)
  */
 import pg from "pg";
+import {
+  DEFAULT_PRICING_RULE,
+  computePublishedPriceCents,
+  normalizePricingRule,
+  resolveMarkupCents,
+} from "../src/lib/pricing.ts";
 
 const BASE = process.env.EASYCAR_BASE_URL || "https://easycarveiculos.com.br";
 const PER_PAGE = 100;
@@ -147,6 +153,20 @@ function mapVehicle(v) {
   };
 }
 
+/** Regra comercial de preço e carência de indisponibilidade, vindas do painel. */
+async function loadRules(client) {
+  const result = await client
+    .query("select key, value from app_settings where key in ('pricing_rule','stock_rule')")
+    .catch(() => ({ rows: [] }));
+  const byKey = new Map(result.rows.map((row) => [row.key, row.value]));
+  const stock = byKey.get("stock_rule") || {};
+  const checks = Math.trunc(Number(stock.missing_checks_before_inactive));
+  return {
+    pricing: byKey.has("pricing_rule") ? normalizePricingRule(byKey.get("pricing_rule")) : DEFAULT_PRICING_RULE,
+    missingChecksBeforeInactive: Number.isFinite(checks) && checks >= 1 ? checks : 2,
+  };
+}
+
 async function upsertPartner(client, vehicle, cache) {
   const name = cleanText(vehicle.store) || "Parceiro Autodrive";
   const externalId = vehicle.revendaId || (vehicle.store ? `store:${slugify(vehicle.store)}` : "");
@@ -252,7 +272,13 @@ export async function runSync() {
     created = 0,
     updated = 0,
     skipped = 0,
-    errors = 0;
+    errors = 0,
+    priceChanged = 0,
+    unchanged = 0,
+    missing = 0;
+
+  const rules = await loadRules(client);
+  const partnerStats = new Map();
 
   try {
     const vehicles = await collectVehicles();
@@ -263,16 +289,46 @@ export async function runSync() {
       processed++;
       try {
         const partnerId = await upsertPartner(client, vehicle, partnerCache);
+
+        // Estado atual do veículo, para classificar novo/alterado/sem alteração
+        // e preservar override manual de preço feito no painel.
+        const existing = await client.query(
+          `select id, origin_price_cents, price_cents, price_markup_cents, price_markup_mode
+             from vehicles where source_id = $1 and external_id = $2 limit 1`,
+          [SOURCE_ID, vehicle.externalId]
+        );
+        const before = existing.rows[0] || null;
+
+        const originPriceCents = vehicle.priceCents;
+        const markupCents = resolveMarkupCents(rules.pricing, {
+          originPriceCents,
+          originType: vehicle.originType,
+          mode: before?.price_markup_mode,
+          manualMarkupCents: before?.price_markup_cents,
+        });
+        const publishedPriceCents = computePublishedPriceCents(originPriceCents, markupCents);
+        const publishedOldPriceCents =
+          vehicle.oldPriceCents != null
+            ? computePublishedPriceCents(vehicle.oldPriceCents, markupCents)
+            : null;
+
+        const originChanged =
+          before != null &&
+          before.origin_price_cents != null &&
+          Number(before.origin_price_cents) !== originPriceCents;
+
         const result = await client.query(
           `insert into vehicles(
             source_id, external_id, slug, title, brand, model, version,
             year_make, year_model, price_cents, old_price_cents, mileage,
             fuel, transmission, body_type, city, color, doors,
             description, image_url, images, options, store, origin_type, partner_id, partner_external_id,
-            status, stock_status, featured, promotion
+            status, stock_status, featured, promotion,
+            origin_price_cents, price_markup_cents, availability_status, missing_checks, last_seen_at
           ) values (
             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,
-            $27, 'available', false, $28
+            $27, 'available', false, $28,
+            $29, $30, 'DISPONIVEL', 0, now()
           )
           on conflict (source_id, external_id) do update set
             slug=excluded.slug, title=excluded.title, brand=excluded.brand, model=excluded.model,
@@ -284,8 +340,11 @@ export async function runSync() {
             options=excluded.options, store=excluded.store, origin_type=excluded.origin_type,
             partner_id=excluded.partner_id, partner_external_id=excluded.partner_external_id,
             promotion=excluded.promotion,
+            origin_price_cents=excluded.origin_price_cents,
+            price_markup_cents=excluded.price_markup_cents,
+            availability_status='DISPONIVEL', missing_checks=0, last_seen_at=now(),
             status=excluded.status, stock_status='available', updated_at=now()
-          returning (xmax = 0) as inserted`,
+          returning id, (xmax = 0) as inserted`,
           [
             SOURCE_ID,
             vehicle.externalId,
@@ -296,8 +355,8 @@ export async function runSync() {
             vehicle.version,
             vehicle.yearMake,
             vehicle.yearModel,
-            vehicle.priceCents,
-            vehicle.oldPriceCents,
+            publishedPriceCents,
+            publishedOldPriceCents,
             vehicle.mileage,
             vehicle.fuel,
             vehicle.transmission,
@@ -315,28 +374,113 @@ export async function runSync() {
             vehicle.revendaId || "",
             vehicle.status,
             vehicle.promotion,
+            originPriceCents,
+            markupCents,
           ]
         );
-        if (result.rows[0].inserted) created++;
-        else updated++;
+
+        const vehicleId = result.rows[0].id;
+        if (result.rows[0].inserted) {
+          created++;
+        } else if (originChanged) {
+          updated++;
+          priceChanged++;
+          await client.query(
+            `insert into vehicle_price_history(
+               vehicle_id, previous_origin_price_cents, new_origin_price_cents,
+               previous_published_price_cents, new_published_price_cents, markup_cents, changed_by
+             ) values ($1,$2,$3,$4,$5,$6,'sync')`,
+            [
+              vehicleId,
+              before.origin_price_cents,
+              originPriceCents,
+              before.price_cents,
+              publishedPriceCents,
+              markupCents,
+            ]
+          );
+          console.log(
+            `  preço alterado ${vehicle.externalId}: origem ${before.origin_price_cents} → ${originPriceCents}`
+          );
+        } else {
+          updated++;
+          unchanged++;
+        }
+
+        if (partnerId) {
+          const stats = partnerStats.get(partnerId) || { found: 0, imported: 0, changed: 0, removed: 0 };
+          stats.found++;
+          if (result.rows[0].inserted) stats.imported++;
+          else if (originChanged) stats.changed++;
+          partnerStats.set(partnerId, stats);
+        }
       } catch (e) {
         errors++;
         console.error(`Erro no veículo ${vehicle.externalId}:`, e.message);
       }
     }
 
-    // Veículos que saíram do estoque de origem deixam de ser publicados.
+    // Veículo que sumiu do estoque de origem NÃO é removido de imediato: uma
+    // falha momentânea no site do parceiro tiraria carro bom do ar. Ele ganha
+    // carência — só vira indisponível após N execuções seguidas sem aparecer.
     if (vehicles.length > 10) {
       const activeIds = vehicles.map((v) => v.externalId);
-      const removed = await client.query(
-        `update vehicles set status='paused', stock_status='sold', updated_at=now()
-          where source_id=$1 and external_id is not null
+      const limite = rules.missingChecksBeforeInactive;
+
+      const ausentes = await client.query(
+        `update vehicles
+            set missing_checks = missing_checks + 1,
+                availability_status = case
+                  when missing_checks + 1 >= $3 then 'INDISPONIVEL'
+                  else 'POSSIVELMENTE_INDISPONIVEL'
+                end,
+                updated_at = now()
+          where source_id = $1
+            and external_id is not null
             and external_id != all($2::text[])
-            and status in ('published','draft')`,
-        [SOURCE_ID, activeIds]
+            and status in ('published','draft')
+          returning id, missing_checks, partner_id`,
+        [SOURCE_ID, activeIds, limite]
       );
-      skipped = removed.rowCount || 0;
-      if (skipped > 0) console.log(`${skipped} veículo(s) fora do estoque foram pausados.`);
+      missing = ausentes.rowCount || 0;
+
+      // Só agora, confirmada a ausência, o veículo sai do ar.
+      const removidos = await client.query(
+        `update vehicles
+            set status='paused', stock_status='sold', updated_at=now()
+          where source_id = $1
+            and availability_status = 'INDISPONIVEL'
+            and status in ('published','draft')
+          returning id, partner_id`,
+        [SOURCE_ID]
+      );
+      skipped = removidos.rowCount || 0;
+
+      for (const row of removidos.rows) {
+        if (!row.partner_id) continue;
+        const stats = partnerStats.get(row.partner_id) || { found: 0, imported: 0, changed: 0, removed: 0 };
+        stats.removed++;
+        partnerStats.set(row.partner_id, stats);
+      }
+
+      if (missing > 0) {
+        console.log(
+          `${missing} veículo(s) não encontrados nesta execução (carência de ${limite}). ${skipped} inativado(s).`
+        );
+      }
+    }
+
+    // Contadores por parceiro, exibidos na tela de Parceiros.
+    for (const [partnerId, stats] of partnerStats) {
+      await client
+        .query(
+          `update partners
+              set last_sync_at = now(), last_found = $2, last_imported = $3,
+                  last_changed = $4, last_removed = $5, updated_at = now()
+            where id = $1`,
+          [partnerId, stats.found, stats.imported, stats.changed, stats.removed]
+        )
+        .catch((e) => console.error(`Falha ao atualizar contadores do parceiro ${partnerId}:`, e.message));
     }
   } catch (e) {
     errors++;
@@ -344,15 +488,26 @@ export async function runSync() {
   } finally {
     await client
       .query(
-        "update sync_runs set finished_at=now(), processed=$2, created=$3, updated=$4, skipped=$5, errors=$6 where id=$1",
-        [runId, processed, created, updated, skipped, errors]
+        `update sync_runs
+            set finished_at=now(), processed=$2, created=$3, updated=$4, skipped=$5, errors=$6,
+                price_changed=$7, unchanged=$8, missing=$9
+          where id=$1`,
+        [runId, processed, created, updated, skipped, errors, priceChanged, unchanged, missing]
       )
-      .catch(() => {});
+      .catch(async () => {
+        // Banco sem a migration 012: grava ao menos os contadores antigos.
+        await client
+          .query(
+            "update sync_runs set finished_at=now(), processed=$2, created=$3, updated=$4, skipped=$5, errors=$6 where id=$1",
+            [runId, processed, created, updated, skipped, errors]
+          )
+          .catch(() => {});
+      });
     await client.query("select pg_advisory_unlock(hashtext('easycar_sync'))").catch(() => {});
     await client.end();
   }
 
-  const summary = { processed, created, updated, skipped, errors };
+  const summary = { processed, created, updated, skipped, errors, priceChanged, unchanged, missing };
   console.log(JSON.stringify(summary));
   return summary;
 }
