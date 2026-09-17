@@ -1,9 +1,22 @@
-# Cria tarefa agendada para sync do estoque a cada 10 minutos
+# Cria tarefa agendada para sync do estoque a cada 10 minutos.
+#
+# PREFIRA setup-sync-scheduler.ps1: ele confere Node, .env.production e o
+# formato da DATABASE_URL antes de agendar. Este aqui e a versao enxuta.
+#
+# Execute o ARQUIVO, nao cole o conteudo no prompt: colado, $PSScriptRoot vem
+# vazio e os caminhos saem nulos.
 $taskName = "DagobertoEasycar-SyncEstoque"
 
-# Caminho derivado da localizacao do script, nao fixo. Ver nota em
-# setup-sync-scheduler.ps1.
-$projectDir = Split-Path -Parent $PSScriptRoot
+$base = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+$projectDir = $null
+foreach ($c in @((Split-Path -Parent $base), $base, (Get-Location).Path) | Where-Object { $_ }) {
+  if (Test-Path (Join-Path $c "scripts\sync-partners.mjs")) { $projectDir = $c; break }
+}
+if (-not $projectDir) {
+  Write-Host "Nao encontrei a raiz do projeto. Rode: .\scripts\sync-scheduler.ps1" -ForegroundColor Red
+  exit 1
+}
+Write-Host "Projeto detectado em: $projectDir" -ForegroundColor Cyan
 
 # Script inline que carrega .env.production e roda o sync
 $scriptBlock = @"
