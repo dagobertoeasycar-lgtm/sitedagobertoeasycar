@@ -15,6 +15,16 @@ type DashboardStatsRow = {
   last_sync: string | null;
 };
 
+type OriginStatsRow = {
+  own: number;
+  partner: number;
+  private: number;
+  active_partners: number;
+  new_today: number;
+  price_changed: number;
+  unavailable: number;
+};
+
 type RecentVehicleRow = {
   id: string;
   title: string;
@@ -52,6 +62,22 @@ export default async function AdminDashboard() {
     stats = { vehicles: row.vehicles, published: row.published, leads: row.leads, leadsToday: row.leads_today, banners: row.banners, users: row.users, lastSync: row.last_sync || "Nunca" };
   } catch {}
 
+  // Resumo multiorigem. Se a migration 012 ainda não rodou, os cards somem em
+  // vez de derrubar o dashboard inteiro.
+  let origin: OriginStatsRow | null = null;
+  try {
+    const r = await query<OriginStatsRow>(`SELECT
+      (SELECT count(*) FROM vehicles WHERE origin_type='OWN' AND status='published')::int as own,
+      (SELECT count(*) FROM vehicles WHERE origin_type='PARTNER' AND status='published')::int as partner,
+      (SELECT count(*) FROM vehicles WHERE origin_type='PRIVATE' AND status='published')::int as private,
+      (SELECT count(*) FROM partners WHERE active)::int as active_partners,
+      (SELECT count(*) FROM vehicles WHERE created_at >= CURRENT_DATE)::int as new_today,
+      (SELECT count(*) FROM vehicle_price_history WHERE created_at >= CURRENT_DATE)::int as price_changed,
+      (SELECT count(*) FROM vehicles WHERE availability_status <> 'DISPONIVEL')::int as unavailable
+    `);
+    origin = r.rows[0] ?? null;
+  } catch {}
+
   let recentVehicles: RecentVehicleRow[] = [];
   let recentLeads: RecentLeadRow[] = [];
   try {
@@ -75,6 +101,20 @@ export default async function AdminDashboard() {
         <div className="adm-stat"><span className="adm-stat-icon">🖼️</span><div><strong>{stats.banners}</strong><span>Banners ativos</span></div></div>
         <div className="adm-stat"><span className="adm-stat-icon">👥</span><div><strong>{stats.users}</strong><span>Usuários</span></div></div>
       </div>
+      {origin && (
+        <>
+          <h2 className="adm-section-title">Estoque por origem</h2>
+          <div className="adm-stats">
+            <div className="adm-stat"><span className="adm-stat-icon">🏠</span><div><strong>{origin.own}</strong><span>Estoque próprio</span></div></div>
+            <div className="adm-stat"><span className="adm-stat-icon">🤝</span><div><strong>{origin.partner}</strong><span>Lojas parceiras</span></div></div>
+            <div className="adm-stat"><span className="adm-stat-icon">👤</span><div><strong>{origin.private}</strong><span>Venda particular</span></div></div>
+            <div className="adm-stat"><span className="adm-stat-icon">🔗</span><div><strong>{origin.active_partners}</strong><span>Parceiros ativos</span></div></div>
+            <div className="adm-stat"><span className="adm-stat-icon">🆕</span><div><strong>{origin.new_today}</strong><span>Novos hoje</span></div></div>
+            <div className="adm-stat"><span className="adm-stat-icon">💲</span><div><strong>{origin.price_changed}</strong><span>Preços alterados hoje</span></div></div>
+            <div className="adm-stat"><span className="adm-stat-icon">⚠️</span><div><strong>{origin.unavailable}</strong><span>Possivelmente indisponíveis</span></div></div>
+          </div>
+        </>
+      )}
       <div className="adm-grid-2">
         <div className="adm-card">
           <div className="adm-card-header"><h2>Veículos recentes</h2><Link href="/admin/veiculos" className="adm-link">Ver todos →</Link></div>
