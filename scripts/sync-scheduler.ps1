@@ -23,7 +23,9 @@ $scriptBlock = @"
 Set-Location '$projectDir'
 Get-Content '.env.production' | ForEach-Object {
     if (`$_ -match '^([^#=]+)=(.*)$') {
-        [System.Environment]::SetEnvironmentVariable(`$Matches[1].Trim(), `$Matches[2].Trim(), 'Process')
+        # Tira < > e aspas das pontas do valor (ver setup-sync-scheduler.ps1).
+        `$valor = `$Matches[2].Trim().Trim([char[]]@('<', '>', '"', "'")).Trim()
+        [System.Environment]::SetEnvironmentVariable(`$Matches[1].Trim(), `$valor, 'Process')
     }
 }
 node scripts/sync-partners.mjs >> logs/sync.log 2>&1

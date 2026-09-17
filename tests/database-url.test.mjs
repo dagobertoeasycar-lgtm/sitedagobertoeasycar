@@ -53,3 +53,29 @@ test("recusa vazia, protocolo errado, sem host e sem banco", () => {
   assert.match(validarDatabaseUrl("postgresql://db.exemplo.com").motivo, /sem o nome do banco/);
   assert.equal(validarDatabaseUrl("isso nao e url").ok, false);
 });
+
+// Caso real: o valor foi colado no .env.production com os sinais < > que a
+// documentacao usa para dizer "troque por seu valor". A URL estava correta
+// por dentro, mas o script abortava com "nao e um endereco valido", que nao
+// ajudava em nada. Agora a mensagem nomeia o sinal e manda tirar.
+test("recusa endereço embrulhado em < > e explica qual sinal tirar", () => {
+  const r = validarDatabaseUrl("<postgresql://u:p@db.exemplo.com/banco?sslmode=require>");
+  assert.equal(r.ok, false);
+  assert.match(r.motivo, /menor e maior/);
+  assert.match(r.motivo, /o resto do valor está correto/i);
+});
+
+test("recusa endereço entre aspas, simples ou duplas", () => {
+  assert.match(validarDatabaseUrl('"postgresql://u:p@db.exemplo.com/banco"').motivo, /aspas duplas/);
+  assert.match(validarDatabaseUrl("'postgresql://u:p@db.exemplo.com/banco'").motivo, /aspas simples/);
+  assert.match(validarDatabaseUrl("`postgresql://u:p@db.exemplo.com/banco`").motivo, /acentos graves/);
+});
+
+test("pega o embrulho mesmo com só um dos lados", () => {
+  assert.match(validarDatabaseUrl("<postgresql://u:p@db.exemplo.com/banco").motivo, /esse sinal/);
+  assert.match(validarDatabaseUrl("postgresql://u:p@db.exemplo.com/banco>").motivo, /esse sinal/);
+});
+
+test("não confunde endereço bom com embrulhado", () => {
+  assert.equal(validarDatabaseUrl("postgresql://u:p@db.exemplo.com/banco?sslmode=require").ok, true);
+});

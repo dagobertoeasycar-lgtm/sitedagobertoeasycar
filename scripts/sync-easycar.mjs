@@ -18,6 +18,7 @@ import {
   normalizePricingRule,
   resolveMarkupCents,
 } from "../src/lib/pricing.ts";
+import { DEFAULT_PRICE_SANITY, motivoPrecoImplausivel } from "./connectors/shared.mjs";
 
 const BASE = process.env.EASYCAR_BASE_URL || "https://easycarveiculos.com.br";
 const PER_PAGE = 100;
@@ -156,13 +157,14 @@ function mapVehicle(v) {
 /** Regra comercial de preço e carência de indisponibilidade, vindas do painel. */
 async function loadRules(client) {
   const result = await client
-    .query("select key, value from app_settings where key in ('pricing_rule','stock_rule')")
+    .query("select key, value from app_settings where key in ('pricing_rule','stock_rule','price_sanity')")
     .catch(() => ({ rows: [] }));
   const byKey = new Map(result.rows.map((row) => [row.key, row.value]));
   const stock = byKey.get("stock_rule") || {};
   const checks = Math.trunc(Number(stock.missing_checks_before_inactive));
   return {
     pricing: byKey.has("pricing_rule") ? normalizePricingRule(byKey.get("pricing_rule")) : DEFAULT_PRICING_RULE,
+    priceSanity: byKey.get("price_sanity") || DEFAULT_PRICE_SANITY,
     missingChecksBeforeInactive: Number.isFinite(checks) && checks >= 1 ? checks : 2,
   };
 }
@@ -196,7 +198,7 @@ async function upsertPartner(client, vehicle, cache) {
   return partnerId;
 }
 
-async function collectVehicles() {
+async function collectVehicles(precoFaixa = DEFAULT_PRICE_SANITY) {
   const first = await fetchStockPage(1);
   const total = Number(first.total) || (first.data || []).length;
   const totalPages = Number(first.total_paginas) || Math.ceil(total / PER_PAGE) || 1;
@@ -226,7 +228,17 @@ async function collectVehicles() {
     // Todo veículo do estoque de origem é publicado, inclusive os que ainda
     // estão em preparação ou aguardando fotos — o site mostra o cartão com
     // "Imagem em breve" até a loja subir as imagens.
-    mapped.status = "published";
+    //
+    // A exceção é preço fora da faixa plausível: entra como rascunho para não
+    // anunciar valor errado no site nem no catálogo da Meta. Ver
+    // motivoPrecoImplausivel em connectors/shared.mjs.
+    const recusa = motivoPrecoImplausivel(mapped.priceCents, precoFaixa);
+    if (recusa) {
+      console.warn(`  rascunho ${id}: ${recusa} — "${mapped.title}"`);
+      mapped.status = "draft";
+    } else {
+      mapped.status = "published";
+    }
     vehicles.push(mapped);
   }
   return vehicles;
@@ -281,7 +293,7 @@ export async function runSync() {
   const partnerStats = new Map();
 
   try {
-    const vehicles = await collectVehicles();
+    const vehicles = await collectVehicles(rules.priceSanity);
     console.log(`Veículos válidos para importar: ${vehicles.length}`);
     const partnerCache = new Map();
 

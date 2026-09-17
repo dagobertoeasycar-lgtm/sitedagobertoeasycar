@@ -74,7 +74,11 @@ if (-not (Test-Path $envFile)) {
 Write-Host "Conferindo a DATABASE_URL..." -ForegroundColor DarkGray
 Get-Content $envFile | ForEach-Object {
   if ($_ -match '^([^#=]+)=(.*)$') {
-    [Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim(), 'Process')
+    # Tira sinais de embrulho das pontas: < > dos exemplos de documentacao e
+    # as aspas que vem do botao de copiar da Vercel. Sem isso o valor chega
+    # como "<postgresql://...>" e o endereco fica invalido.
+    $valor = $matches[2].Trim().Trim([char[]]@('<', '>', '"', "'")).Trim()
+    [Environment]::SetEnvironmentVariable($matches[1].Trim(), $valor, 'Process')
   }
 }
 Push-Location $sitePath
@@ -95,7 +99,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 if (Test-Path `$envFile) {
   Get-Content `$envFile | ForEach-Object {
     if (`$_ -match '^([^#=]+)=(.*)$') {
-      [Environment]::SetEnvironmentVariable(`$matches[1].Trim(), `$matches[2].Trim(), 'Process')
+      `$valor = `$matches[2].Trim().Trim([char[]]@('<', '>', '"', "'")).Trim()
+      [Environment]::SetEnvironmentVariable(`$matches[1].Trim(), `$valor, 'Process')
     }
   }
 }

@@ -43,6 +43,32 @@ export function validarDatabaseUrl(valor = process.env.DATABASE_URL) {
     };
   }
 
+  // Valor embrulhado. Os sinais < > vêm dos exemplos de documentação, onde
+  // significam "troque por seu valor"; as aspas vêm do botão de copiar da
+  // Vercel. Em qualquer dos casos o `new URL()` abaixo falha com uma mensagem
+  // genérica que não diz o que está errado, então nomeamos os sinais aqui.
+  const EMBRULHOS = [
+    ["<", ">", "sinais de menor e maior (< >)"],
+    ['"', '"', "aspas duplas"],
+    ["'", "'", "aspas simples"],
+    ["`", "`", "acentos graves (`)"],
+  ];
+  for (const [abre, fecha, nome] of EMBRULHOS) {
+    const soAbre = bruto.startsWith(abre);
+    const soFecha = bruto.endsWith(fecha);
+    if (soAbre || soFecha) {
+      const limpo = bruto.replace(/^[<"'`]+/, "").replace(/[>"'`]+$/, "");
+      return {
+        ok: false,
+        motivo:
+          `O endereço está entre ${nome}. Remova ${soAbre && soFecha ? "os dois" : "esse sinal"} e guarde só o endereço.\n` +
+          `  Errado:  DATABASE_URL=${abre}postgresql://...${fecha}\n` +
+          "  Certo:   DATABASE_URL=postgresql://..." +
+          (limpo.startsWith("postgres") ? "\n  O resto do valor está correto — é só tirar os sinais das pontas." : ""),
+      };
+    }
+  }
+
   let url;
   try {
     url = new URL(bruto);

@@ -36,6 +36,7 @@ const PRECO_MINIMO_CENTS = 100000; // R$ 1.000
 const ANO_MINIMO = 1950;
 
 import { exigirDatabaseUrl } from "./check-database-url.mjs";
+import { DEFAULT_PRICE_SANITY, motivoPrecoImplausivel } from "./connectors/shared.mjs";
 
 const { resumo } = exigirDatabaseUrl();
 const connectionString = process.env.DATABASE_URL;
@@ -48,13 +49,14 @@ function log(...args) {
 
 async function carregarRegras(client) {
   const r = await client
-    .query("select key, value from app_settings where key in ('pricing_rule','stock_rule')")
+    .query("select key, value from app_settings where key in ('pricing_rule','stock_rule','price_sanity')")
     .catch(() => ({ rows: [] }));
   const porChave = new Map(r.rows.map((row) => [row.key, row.value]));
   const stock = porChave.get("stock_rule") || {};
   const checks = Math.trunc(Number(stock.missing_checks_before_inactive));
   return {
     pricing: porChave.has("pricing_rule") ? normalizePricingRule(porChave.get("pricing_rule")) : DEFAULT_PRICING_RULE,
+    priceSanity: porChave.get("price_sanity") || DEFAULT_PRICE_SANITY,
     carencia: Number.isFinite(checks) && checks >= 1 ? checks : 2,
   };
 }
@@ -132,6 +134,13 @@ async function importarParceiro(client, parceiro, regras) {
         anterior.origin_price_cents != null &&
         Number(anterior.origin_price_cents) !== v.originPriceCents;
 
+      // Preço fora da faixa plausível entra como rascunho, não publicado: o
+      // veículo continua visível no painel, mas não vai ao site nem ao
+      // catálogo da Meta com um valor de espaço reservado da origem.
+      const recusaPreco = motivoPrecoImplausivel(publicado, regras.priceSanity);
+      const statusDesejado = recusaPreco ? "draft" : "published";
+      if (recusaPreco) log(`  rascunho ${v.externalId}: ${recusaPreco} — "${v.title}"`);
+
       const r = await client.query(
         `insert into vehicles(
            source_id, external_id, slug, title, brand, model, version,
@@ -146,7 +155,7 @@ async function importarParceiro(client, parceiro, regras) {
          ) values (
            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
            'PARTNER',$24,$25,
-           'published','available',false,$26,
+           $32,'available',false,$26,
            $27,$28,
            'DISPONIVEL',0,now(),
            $29,$30,$31
@@ -171,7 +180,7 @@ async function importarParceiro(client, parceiro, regras) {
            price_markup_cents=excluded.price_markup_cents,
            availability_status='DISPONIVEL', missing_checks=0, last_seen_at=now(),
            plate=excluded.plate, source_url=excluded.source_url, vehicle_type=excluded.vehicle_type,
-           status='published', stock_status='available', updated_at=now()
+           status=$32, stock_status='available', updated_at=now()
          returning id, (xmax = 0) as inserido`,
         [
           parceiro.sync_source_id, v.externalId, v.slug, v.title, v.brand, v.model, v.version,
@@ -182,6 +191,7 @@ async function importarParceiro(client, parceiro, regras) {
           v.promotion,
           v.originPriceCents, markup,
           v.plate, v.sourceUrl, v.vehicleType,
+          statusDesejado,
         ],
       );
 

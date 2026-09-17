@@ -60,6 +60,31 @@ export function toCents(value) {
   return Math.min(Math.round(n * 100), MAX_CENTS);
 }
 
+/**
+ * Faixa de preço aceitável para um carro usado, em centavos.
+ *
+ * Existe porque o estoque de origem tem valores de espaço reservado digitados
+ * à mão quando a loja não quer publicar o preço. Em 17/09/2026 havia sete
+ * veículos no ar assim: três Fiorino e um Onix a R$ 3.333.333,33, e um Onix,
+ * um Cronos e uma Strada a R$ 1.000.000. A mediana do estoque é R$ 79.000.
+ *
+ * Preço fora da faixa não vira erro nem some: o veículo entra como rascunho,
+ * fica visível no painel e não vai para o site nem para o catálogo da Meta.
+ */
+export const DEFAULT_PRICE_SANITY = { min_cents: 300000, max_cents: 90000000 };
+
+/** Devolve null se o preço serve, ou o motivo da recusa. */
+export function motivoPrecoImplausivel(priceCents, faixa = DEFAULT_PRICE_SANITY) {
+  const v = Number(priceCents);
+  const min = Number(faixa?.min_cents ?? DEFAULT_PRICE_SANITY.min_cents);
+  const max = Number(faixa?.max_cents ?? DEFAULT_PRICE_SANITY.max_cents);
+  if (!Number.isFinite(v) || v <= 0) return "sem preço";
+  const reais = (c) => `R$ ${(c / 100).toLocaleString("pt-BR")}`;
+  if (v < min) return `preço ${reais(v)} abaixo do mínimo aceitável (${reais(min)})`;
+  if (v > max) return `preço ${reais(v)} acima do máximo aceitável (${reais(max)})`;
+  return null;
+}
+
 export function toInt(value) {
   const n = Number.parseInt(String(value ?? "").replace(/\D/g, ""), 10);
   return Number.isFinite(n) ? n : 0;
