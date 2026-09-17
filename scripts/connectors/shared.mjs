@@ -79,7 +79,21 @@ async function pedir(url, { accept = "text/html", timeout = 30000 } = {}) {
       headers: { "User-Agent": UA, Accept: accept, "Accept-Language": "pt-BR,pt;q=0.9" },
       redirect: "follow",
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status} em ${url}`);
+    if (!res.ok) {
+      // 403/429 atrás de CDN quase nunca é erro de código: é bloqueio por
+      // reputação do IP de origem. Os runners do GitHub Actions ficam em
+      // faixas muito usadas para raspagem, e a Cloudflare barra por padrão.
+      // A mesma URL responde 200 de um IP comum.
+      const cdn = res.headers.get("cf-ray") ? "Cloudflare" : res.headers.get("server") || "CDN";
+      if (res.status === 403 || res.status === 429) {
+        throw new Error(
+          `HTTP ${res.status} em ${url} — ${cdn} bloqueou a requisição. ` +
+            `Não é erro do conector: o site responde normalmente de um IP comum. ` +
+            `Rode a sincronização de um servidor próprio, ou peça ao parceiro para liberar o acesso.`,
+        );
+      }
+      throw new Error(`HTTP ${res.status} em ${url}`);
+    }
     return res;
   } finally {
     clearTimeout(timer);
