@@ -1,0 +1,24 @@
+# Normaliza a quebra de linha para acabar com os "112 arquivos modificados"
+# que apareciam no git status sem nenhuma alteração real de conteúdo.
+#
+# No repositório tudo fica em LF. No Windows, os arquivos que precisam de CRLF
+# para funcionar (PowerShell, cmd) são convertidos na hora do checkout.
+
+* text=auto eol=lf
+
+# Scripts do Windows precisam de CRLF
+*.ps1  text eol=crlf
+*.psm1 text eol=crlf
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+
+# Binários: nunca converter
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.avif binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
