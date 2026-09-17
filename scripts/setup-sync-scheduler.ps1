@@ -2,7 +2,10 @@
 $taskName = "DagobertoEasycar-SyncEstoque"
 $sitePath = "C:\sites\dagobertoeasycar"
 $envFile  = Join-Path $sitePath ".env.production"
-$script   = Join-Path $sitePath "scripts\sync-easycar.mjs"
+# Motor multi-parceiro. Rodar da VM, e nao do GitHub Actions, resolve o HTTP 403:
+# Justo Car e Now Car estao atras de Cloudflare, que bloqueia as faixas de IP dos
+# runners do GitHub. De um IP comum as mesmas URLs respondem 200.
+$script   = Join-Path $sitePath "scripts\sync-partners.mjs"
 $logFile  = Join-Path $sitePath "logs\sync.log"
 
 # Ensure logs dir
@@ -25,7 +28,9 @@ node '$script' >> '$logFile' 2>&1
 
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -NonInteractive -Command `"$cmd`""
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 10) -RepetitionDuration (New-TimeSpan -Days 9999)
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 5)
+# 15 minutos de limite: o Now Car nao tem API e precisa visitar cada anuncio,
+# o que levou 42s na medicao com 53 carros. Com 5 parceiros sobra folga.
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 15) -MultipleInstances IgnoreNew
 
 # Remove old task if exists
 Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue

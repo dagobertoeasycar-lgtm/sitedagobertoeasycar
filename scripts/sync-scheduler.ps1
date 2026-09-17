@@ -10,7 +10,7 @@ Get-Content '.env.production' | ForEach-Object {
         [System.Environment]::SetEnvironmentVariable(`$Matches[1].Trim(), `$Matches[2].Trim(), 'Process')
     }
 }
-node scripts/sync-easycar.mjs >> logs/sync.log 2>&1
+node scripts/sync-partners.mjs >> logs/sync.log 2>&1
 "@
 
 $action = New-ScheduledTaskAction `
@@ -24,7 +24,7 @@ $settings = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries `
     -DontStopIfGoingOnBatteries `
     -StartWhenAvailable `
-    -ExecutionTimeLimit (New-TimeSpan -Minutes 8) `
+    -ExecutionTimeLimit (New-TimeSpan -Minutes 15) `
     -MultipleInstances IgnoreNew
 
 # Remove existing task if exists
