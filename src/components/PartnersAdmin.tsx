@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
-import { PARTNER_CONNECTORS, PARTNER_ORIGIN_KINDS, VEHICLE_FILTERS, whatsappLink, type Partner } from "@/lib/partners";
+// Importa de partners-shared, e não de partners: este é um componente de
+// cliente, e lib/partners puxa o driver do Postgres para o bundle.
+import { PARTNER_CONNECTORS, PARTNER_ORIGIN_KINDS, VEHICLE_FILTERS, whatsappLink, type Partner } from "@/lib/partners-shared";
 
 type Props = { partners: Partner[] };
 
