@@ -33,7 +33,10 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: node scripts/migrate.mjs
 
-      - name: Sincronizar o estoque
+      - name: Sincronizar o estoque dos parceiros
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: node scripts/sync-easycar.mjs
+        # Motor multi-parceiro: lê a lista de parceiros-fonte do banco, importa
+        # o estoque de cada um que estiver ativo e retira do site o estoque dos
+        # que foram desativados. A EasyCar é um desses parceiros.
+        run: node scripts/sync-partners.mjs
