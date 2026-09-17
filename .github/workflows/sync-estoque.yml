@@ -21,7 +21,9 @@ jobs:
       - name: Preparar o Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          # 24 é o exigido em package.json engines. O sync importa
+          # src/lib/pricing.ts direto, e o Node precisa saber remover os tipos.
+          node-version: "24"
 
       - name: Instalar o driver do banco
         run: npm install pg@8.22.0 --no-save --no-audit --no-fund
