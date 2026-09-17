@@ -1,6 +1,11 @@
 # Setup 10-minute auto-sync via Windows Task Scheduler
 $taskName = "DagobertoEasycar-SyncEstoque"
-$sitePath = "C:\sites\dagobertoeasycar"
+
+# O caminho vem da propria localizacao do script (pasta acima de \scripts),
+# em vez de ficar fixo. Antes estava "C:\sites\dagobertoeasycar", que nao existe
+# nesta maquina — o projeto mora em D:\sitedagobertoeasycar\_envio_github\repo.
+$sitePath = Split-Path -Parent $PSScriptRoot
+Write-Host "Projeto detectado em: $sitePath" -ForegroundColor Cyan
 $envFile  = Join-Path $sitePath ".env.production"
 # Motor multi-parceiro. Rodar da VM, e nao do GitHub Actions, resolve o HTTP 403:
 # Justo Car e Now Car estao atras de Cloudflare, que bloqueia as faixas de IP dos

@@ -1,6 +1,9 @@
 # Cria tarefa agendada para sync do estoque a cada 10 minutos
 $taskName = "DagobertoEasycar-SyncEstoque"
-$projectDir = "C:\Sites\DagobertoEasycar"
+
+# Caminho derivado da localizacao do script, nao fixo. Ver nota em
+# setup-sync-scheduler.ps1.
+$projectDir = Split-Path -Parent $PSScriptRoot
 
 # Script inline que carrega .env.production e roda o sync
 $scriptBlock = @"
