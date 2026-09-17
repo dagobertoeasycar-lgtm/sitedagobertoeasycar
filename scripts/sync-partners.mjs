@@ -157,7 +157,12 @@ async function importarParceiro(client, parceiro, regras) {
            price_cents=excluded.price_cents, old_price_cents=excluded.old_price_cents,
            mileage=excluded.mileage, fuel=excluded.fuel, transmission=excluded.transmission,
            body_type=excluded.body_type, color=excluded.color, doors=excluded.doors,
-           description=excluded.description, image_url=excluded.image_url, images=excluded.images,
+           description=excluded.description,
+           -- Veículo com fotos travadas mantém as tratadas. Sem esta guarda, o
+           -- sync devolveria as fotos da origem a cada 15 minutos e o trabalho
+           -- de tratamento se repetiria para sempre.
+           image_url = case when vehicles.photos_locked then vehicles.image_url else excluded.image_url end,
+           images    = case when vehicles.photos_locked then vehicles.images    else excluded.images    end,
            options=excluded.options, store=excluded.store,
            origin_type='PARTNER', partner_id=excluded.partner_id,
            partner_external_id=excluded.partner_external_id,
