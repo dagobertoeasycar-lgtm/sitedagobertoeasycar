@@ -1,6 +1,11 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
+import { exigirDatabaseUrl } from "./check-database-url.mjs";
+
+// Valida antes de conectar: sem isso, uma URL malformada falha com
+// "getaddrinfo EAI_AGAIN", que parece problema de rede e esconde a causa.
+exigirDatabaseUrl();
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL não configurada");

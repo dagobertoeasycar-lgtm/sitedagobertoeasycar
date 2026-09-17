@@ -28,6 +28,13 @@ jobs:
       - name: Instalar o driver do banco
         run: npm install pg@8.22.0 --no-save --no-audit --no-fund
 
+      # Falha aqui com mensagem em português e explica o que corrigir, em vez
+      # de deixar o `pg` estourar com "getaddrinfo EAI_AGAIN".
+      - name: Conferir a DATABASE_URL
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/check-database-url.mjs
+
       - name: Aplicar migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

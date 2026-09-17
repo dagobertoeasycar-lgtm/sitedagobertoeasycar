@@ -35,8 +35,10 @@ const CONECTORES = {
 const PRECO_MINIMO_CENTS = 100000; // R$ 1.000
 const ANO_MINIMO = 1950;
 
+import { exigirDatabaseUrl } from "./check-database-url.mjs";
+
+const { resumo } = exigirDatabaseUrl();
 const connectionString = process.env.DATABASE_URL;
-if (!connectionString) throw new Error("DATABASE_URL é obrigatória");
 
 const somenteEstes = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 
@@ -251,6 +253,7 @@ async function importarParceiro(client, parceiro, regras) {
 async function main() {
   const client = new pg.Client({ connectionString, application_name: "autodrive_sync_partners" });
   await client.connect();
+  log(`Banco: ${resumo}`);
 
   const lock = await client.query("select pg_try_advisory_lock(hashtext('autodrive_sync_partners')) as locked");
   if (!lock.rows[0]?.locked) {
