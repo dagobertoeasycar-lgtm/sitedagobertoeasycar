@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
-import { normalizePartnerOriginKind, validatePartnerInput, type PartnerInput } from "@/lib/partners";
+import {
+  mergeConnectorConfig,
+  normalizePartnerConnector,
+  normalizePartnerOriginKind,
+  validatePartnerInput,
+  type ConnectorConfig,
+  type PartnerInput,
+} from "@/lib/partners";
 
 const UUID = /^[0-9a-f-]{36}$/;
 
@@ -20,6 +27,9 @@ function readBody(body: Record<string, unknown>): PartnerInput {
     stockUrlAlt: text("stockUrlAlt"),
     originKind: text("originKind"),
     notes: text("notes"),
+    connector: text("connector"),
+    baseUrl: text("baseUrl"),
+    vehicleFilter: text("vehicleFilter"),
   };
 }
 
@@ -54,12 +64,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const problem = validatePartnerInput(input);
   if (problem) return NextResponse.json({ error: problem }, { status: 400 });
 
+  // Preserva os ajustes finos do adaptador (listPath, pageParam, startPage…)
+  // que a tela não edita, sobrescrevendo apenas o que veio do formulário.
+  const atual = await query<{ connector_config: ConnectorConfig; sync_source_id: string | null }>(
+    "SELECT connector_config, sync_source_id FROM partners WHERE id = $1",
+    [id],
+  );
+  if (!atual.rowCount) return NextResponse.json({ error: "Parceiro não encontrado" }, { status: 404 });
+
+  const connector = normalizePartnerConnector(input.connector);
+  const config = mergeConnectorConfig(atual.rows[0].connector_config, input);
+  // Só ganha identidade de fonte quem tem adaptador configurado.
+  const syncSourceId = connector
+    ? atual.rows[0].sync_source_id || `partner_${id.slice(0, 8)}`
+    : atual.rows[0].sync_source_id;
+
   const result = await query<{ id: string }>(
     `UPDATE partners SET
        name = $1, trade_name = $2, legal_name = $3, cnpj = $4, phone = $5,
        whatsapp = $6, email = $7, city = $8, stock_url = $9, stock_url_alt = $10,
-       origin_kind = $11, notes = $12, updated_at = now()
-     WHERE id = $13
+       origin_kind = $11, notes = $12,
+       connector = $13, connector_config = $14::jsonb, sync_source_id = $15,
+       updated_at = now()
+     WHERE id = $16
      RETURNING id`,
     [
       input.name,
@@ -74,6 +101,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       input.stockUrlAlt || null,
       normalizePartnerOriginKind(input.originKind),
       input.notes || "",
+      connector,
+      JSON.stringify(config),
+      syncSourceId,
       id,
     ],
   );

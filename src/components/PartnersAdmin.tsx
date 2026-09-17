@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
-import { PARTNER_ORIGIN_KINDS, whatsappLink, type Partner } from "@/lib/partners";
+import { PARTNER_CONNECTORS, PARTNER_ORIGIN_KINDS, VEHICLE_FILTERS, whatsappLink, type Partner } from "@/lib/partners";
 
 type Props = { partners: Partner[] };
 
@@ -19,6 +19,9 @@ const EMPTY = {
   stockUrlAlt: "",
   originKind: "PARTNER",
   notes: "",
+  connector: "",
+  baseUrl: "",
+  vehicleFilter: "cars",
 };
 
 type FormState = typeof EMPTY;
@@ -38,6 +41,9 @@ function toForm(partner: Partner): FormState {
     stockUrlAlt: partner.stock_url_alt ?? "",
     originKind: partner.origin_kind ?? "PARTNER",
     notes: partner.notes ?? "",
+    connector: partner.connector ?? "",
+    baseUrl: partner.connector_config?.baseUrl ?? "",
+    vehicleFilter: partner.connector_config?.vehicleFilter ?? "cars",
   };
 }
 
@@ -110,6 +116,17 @@ export function PartnersAdmin({ partners }: Props) {
   }
 
   async function toggleActive(partner: Partner) {
+    // Desligar tem consequência visível no site: o estoque do parceiro sai do
+    // ar na próxima sincronização. Vale confirmar antes.
+    if (partner.active && partner.connector) {
+      const publicados = partner.vehicles_published ?? 0;
+      const ok = window.confirm(
+        `Desativar "${partner.name}"?\n\n` +
+          `Na próxima atualização de estoque, ${publicados} veículo(s) deste parceiro ` +
+          `serão retirados do site. Reativando, eles voltam na sincronização seguinte.`,
+      );
+      if (!ok) return;
+    }
     setBusy(true);
     setError("");
     const response = await fetch(`/api/admin/partners/${partner.id}`, {
@@ -158,7 +175,8 @@ export function PartnersAdmin({ partners }: Props) {
         <div>
           <h1>Parceiros ({partners.length})</h1>
           <p className="adm-header-description">
-            {activeCount} ativo(s). Só parceiros ativos entram na atualização de estoque.
+            {activeCount} ativo(s). Só parceiros ativos entram na atualização de estoque — ao
+            desativar, o estoque daquele parceiro sai do site na próxima sincronização.
           </p>
         </div>
         <div className="adm-header-actions">
@@ -238,6 +256,48 @@ export function PartnersAdmin({ partners }: Props) {
               <span>URL alternativa</span>
               <input value={form.stockUrlAlt} onChange={(e) => set("stockUrlAlt", e.target.value)} />
             </label>
+            <fieldset className="pricing-apply">
+              <legend>Sincronização automática do estoque</legend>
+              <p className="form-help">
+                Escolhendo um adaptador, o estoque deste parceiro passa a ser importado a cada
+                execução da sincronização. Deixando em branco, o parceiro funciona apenas como
+                rótulo de origem para veículos cadastrados à mão.
+              </p>
+              <label>
+                <span>Adaptador da plataforma</span>
+                <select value={form.connector} onChange={(e) => set("connector", e.target.value)}>
+                  <option value="">Não sincronizar automaticamente</option>
+                  {PARTNER_CONNECTORS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </label>
+              {form.connector && (
+                <p className="form-help">
+                  {PARTNER_CONNECTORS.find((c) => c.value === form.connector)?.hint}
+                </p>
+              )}
+              {form.connector && (
+                <div className="form-row">
+                  <label>
+                    <span>Endereço base do site *</span>
+                    <input
+                      value={form.baseUrl}
+                      onChange={(e) => set("baseUrl", e.target.value)}
+                      placeholder="https://site-do-parceiro.com.br"
+                    />
+                  </label>
+                  <label>
+                    <span>O que importar</span>
+                    <select value={form.vehicleFilter} onChange={(e) => set("vehicleFilter", e.target.value)}>
+                      {VEHICLE_FILTERS.map((f) => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
+            </fieldset>
             <label>
               <span>Observações</span>
               <textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
@@ -266,6 +326,7 @@ export function PartnersAdmin({ partners }: Props) {
               <tr>
                 <th>Parceiro</th>
                 <th>Origem</th>
+                <th>Sincronização</th>
                 <th>Contato</th>
                 <th>Estoque</th>
                 <th>Última atualização</th>
@@ -285,6 +346,27 @@ export function PartnersAdmin({ partners }: Props) {
                       {partner.city && <><br /><small>{partner.city}</small></>}
                     </td>
                     <td>{kind?.label ?? "Loja parceira"}</td>
+                    <td className="adm-lead-origin">
+                      {partner.connector ? (
+                        <>
+                          <strong>{PARTNER_CONNECTORS.find((c) => c.value === partner.connector)?.label ?? partner.connector}</strong>
+                          <br />
+                          <small>fonte: {partner.sync_source_id}</small>
+                          {partner.connector_config?.vehicleFilter === "all" && (
+                            <><br /><small>importa tudo, inclusive moto</small></>
+                          )}
+                          {partner.last_error && (
+                            <>
+                              <br />
+                              <span className="adm-badge paused">erro</span>{" "}
+                              <small title={partner.last_error}>{partner.last_error.slice(0, 60)}</small>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <small>manual</small>
+                      )}
+                    </td>
                     <td>
                       {wa ? <a href={wa} target="_blank" rel="noreferrer">{partner.whatsapp}</a> : partner.phone || "—"}
                       {partner.stock_url && (
@@ -333,7 +415,7 @@ export function PartnersAdmin({ partners }: Props) {
               })}
               {!visible.length && (
                 <tr>
-                  <td colSpan={7} className="adm-empty-row">
+                  <td colSpan={8} className="adm-empty-row">
                     {partners.length ? "Nenhum parceiro encontrado para essa busca." : "Nenhum parceiro cadastrado ainda."}
                   </td>
                 </tr>
