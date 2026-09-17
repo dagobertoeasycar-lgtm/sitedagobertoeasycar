@@ -26,11 +26,17 @@ export type PricingRule = {
   apply_to: VehicleOriginType[];
 };
 
+/**
+ * Padrão comercial da casa: R$ 2.000 a mais em todo veículo de terceiro.
+ * Valor fixo, sem arredondamento — se o parceiro pede R$ 67.900, publica-se
+ * R$ 69.900, sempre. A faixa mínimo/máximo continua disponível no painel para
+ * quem quiser variar a margem depois.
+ */
 export const DEFAULT_PRICING_RULE: PricingRule = {
-  mode: "range",
+  mode: "fixed",
   min_cents: 200000,
   max_cents: 300000,
-  fixed_cents: 250000,
+  fixed_cents: 200000,
   round_to_cents: 10000,
   apply_to: ["PARTNER", "PRIVATE"],
 };
@@ -47,7 +53,7 @@ export function normalizePricingRule(value: unknown): PricingRule {
   const raw = (value && typeof value === "object" ? value : {}) as Record<string, unknown>;
   const mode: PricingMode =
     raw.mode === "fixed" || raw.mode === "none" || raw.mode === "range"
-      ? raw.mode
+      ? (raw.mode as PricingMode)
       : DEFAULT_PRICING_RULE.mode;
 
   const min = toInt(raw.min_cents, DEFAULT_PRICING_RULE.min_cents);

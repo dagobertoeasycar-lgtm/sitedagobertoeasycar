@@ -13,7 +13,18 @@ test("normaliza regra vinda do banco e corrige faixa invertida", () => {
   assert.equal(rule.min_cents, 200000);
   assert.equal(rule.max_cents, 300000);
   assert.deepEqual(normalizePricingRule(null), DEFAULT_PRICING_RULE);
-  assert.equal(normalizePricingRule({ mode: "coisa" }).mode, "range");
+  assert.equal(normalizePricingRule({ mode: "coisa" }).mode, DEFAULT_PRICING_RULE.mode);
+});
+
+test("padrão da casa: todo veículo de terceiro sai R$ 2.000 acima do preço de origem", () => {
+  const rule = DEFAULT_PRICING_RULE;
+  for (const origem of [6790000, 10890000, 11590000, 19898000, 5432100]) {
+    const markup = resolveMarkupCents(rule, { originPriceCents: origem, originType: "PARTNER" });
+    assert.equal(markup, 200000, `acréscimo deveria ser R$ 2.000 para origem ${origem}`);
+    assert.equal(computePublishedPriceCents(origem, markup), origem + 200000);
+  }
+  // Vale igual para venda particular.
+  assert.equal(resolveMarkupCents(rule, { originPriceCents: 6790000, originType: "PRIVATE" }), 200000);
 });
 
 test("acréscimo do parceiro fica dentro da faixa e arredonda o preço final", () => {

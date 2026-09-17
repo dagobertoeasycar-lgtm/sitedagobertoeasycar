@@ -138,13 +138,13 @@ CREATE TABLE IF NOT EXISTS app_settings (
 );
 
 -- Regra comercial de preço. mode:
---   range  → sorteia/aplica entre min e max (usa min como piso previsível)
---   fixed  → sempre o valor de fixed_cents
+--   fixed  → sempre o valor de fixed_cents (padrão da casa: R$ 2.000)
+--   range  → entre min e max, arredondando o preço final
 --   none   → não aplica acréscimo
 INSERT INTO app_settings(key, value)
 VALUES (
   'pricing_rule',
-  '{"mode":"range","min_cents":200000,"max_cents":300000,"fixed_cents":250000,"round_to_cents":10000,"apply_to":["PARTNER","PRIVATE"]}'::jsonb
+  '{"mode":"fixed","min_cents":200000,"max_cents":300000,"fixed_cents":200000,"round_to_cents":10000,"apply_to":["PARTNER","PRIVATE"]}'::jsonb
 )
 ON CONFLICT (key) DO NOTHING;
 
