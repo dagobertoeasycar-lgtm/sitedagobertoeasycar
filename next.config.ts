@@ -16,6 +16,13 @@ const nextConfig: NextConfig = {
         hostname: "static.autoconf.com.br",
         pathname: "/**",
       },
+      // CDNs de foto dos parceiros sincronizados. Hoje os cards usam <img>
+      // simples, então quem manda é a CSP abaixo; isto fica registrado para
+      // o dia em que alguém trocar por next/image.
+      { protocol: "https", hostname: "autoconf-production.s3.amazonaws.com", pathname: "/**" },
+      { protocol: "https", hostname: "cdn-sistema-lojistas.bndv.com.br", pathname: "/**" },
+      { protocol: "https", hostname: "*.blob.core.windows.net", pathname: "/**" },
+      { protocol: "https", hostname: "*.supabase.co", pathname: "/**" },
     ],
   },
   async headers() {
@@ -30,7 +37,25 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; img-src 'self' data: https://www.facebook.com https://resized-images.autoconf.com.br https://static.autoconf.com.br https://autoconf-production.s3.amazonaws.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://connect.facebook.net; connect-src 'self' https://www.facebook.com https://connect.facebook.net; frame-src https://www.google.com https://www.youtube.com; form-action 'self'; frame-ancestors 'self'; base-uri 'self'",
+            // img-src precisa listar o CDN de foto de CADA parceiro
+            // sincronizado, senão o navegador bloqueia a imagem e o card fica
+            // vazio. Hosts por parceiro:
+            //   EasyCar e Tchesco Car → autoconf (s3 e resized-images)
+            //   Justo Car e Now Car   → bndv.com.br e blob.core.windows.net
+            //   Guiotti               → supabase.co
+            // Curinga no subdomínio porque esses CDNs trocam de bucket sem aviso.
+            value:
+              "default-src 'self'; " +
+              "img-src 'self' data: https://www.facebook.com " +
+              "https://resized-images.autoconf.com.br https://static.autoconf.com.br " +
+              "https://autoconf-production.s3.amazonaws.com " +
+              "https://cdn-sistema-lojistas.bndv.com.br https://*.bndv.com.br " +
+              "https://*.blob.core.windows.net https://*.supabase.co; " +
+              "style-src 'self' 'unsafe-inline'; " +
+              "script-src 'self' 'unsafe-inline' https://connect.facebook.net; " +
+              "connect-src 'self' https://www.facebook.com https://connect.facebook.net; " +
+              "frame-src https://www.google.com https://www.youtube.com; " +
+              "form-action 'self'; frame-ancestors 'self'; base-uri 'self'",
           },
         ],
       },
