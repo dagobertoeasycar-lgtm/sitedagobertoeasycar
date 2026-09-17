@@ -15,6 +15,12 @@ export default async function AdminConfigPage() {
         <Link className="adm-card config-link-card" href="/admin/configuracoes/integracoes/meta">
           <span className="config-link-icon">🛒</span><div><h2>Integrações → Catálogo Meta</h2><p>Feed automático do estoque para o catálogo conectado ao WhatsApp Business.</p></div>
         </Link>
+        <Link className="adm-card config-link-card" href="/admin/configuracoes/precificacao">
+          <span className="config-link-icon">💰</span><div><h2>Regra de preço</h2><p>Acréscimo comercial entre o preço do parceiro e o preço publicado, com margem de negociação.</p></div>
+        </Link>
+        <Link className="adm-card config-link-card" href="/admin/parceiros">
+          <span className="config-link-icon">🤝</span><div><h2>Parceiros</h2><p>Cadastro, ativação e desativação das lojas parceiras que alimentam o estoque.</p></div>
+        </Link>
         <Link className="adm-card config-link-card" href="/admin/trocar-senha">
           <span className="config-link-icon">🔐</span><div><h2>Trocar senha</h2><p>Atualize com segurança a senha da sua conta administrativa.</p></div>
         </Link>
