@@ -3,8 +3,17 @@ import { VehicleCard } from "@/components/VehicleCard";
 import { BannerCarousel } from "@/components/BannerCarousel";
 import { listVehicles } from "@/lib/vehicles";
 import { query } from "@/lib/db";
+import { ArrowRight, BadgeCheck, CarFront, CheckCircle2, CircleDollarSign, Handshake, MessageCircle, Search, ShieldCheck } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+const journeys = [
+  { icon: CarFront, title: "Quero comprar um carro", text: "Estoque próprio, parceiros e particulares em um só lugar.", label: "Ver veículos", href: "/veiculos" },
+  { icon: BadgeCheck, title: "Quero vender ou trocar", text: "Conte com nossa equipe para avaliar e anunciar seu veículo.", label: "Avaliar meu carro", href: "/venda-seu-carro" },
+  { icon: Search, title: "Procuro um carro específico", text: "Nós procuramos o modelo que você quer na nossa rede.", label: "Pedir uma busca", href: "/encontre-seu-carro" },
+  { icon: Handshake, title: "Quero ser parceiro", text: "Mais oportunidades para lojistas e profissionais do setor.", label: "Conhecer a parceria", href: "/parceiros" },
+  { icon: CircleDollarSign, title: "Financiamento fácil", text: "Para veículos do site ou comprados de amigos e conhecidos.", label: "Fazer uma simulação", href: "/financiamento" },
+];
 
 async function getBanners() {
   try {
@@ -42,50 +51,58 @@ export default async function Home() {
           <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
         </div>
       ) : (
-        <section className="hero">
+        <section className="hero home-hero">
           <img src="/vehicles/hero.avif" alt="Veículo em showroom automotivo" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           <div className="hero-overlay" />
           <div className="shell hero-content">
-            <p className="eyebrow">Autodrive Veículos & Tecnologia</p>
-            <h1>Seu próximo negócio automotivo começa aqui.</h1>
-            <p>Veículos próprios, de parceiros e particulares em um só lugar. Mais opções. Um só atendimento.</p>
-            <div className="hero-actions"><Link className="button" href="/veiculos">Quero comprar um carro</Link><Link className="button button-light" href="/venda-seu-carro">Quero vender meu carro</Link><Link className="button button-outline hero-outline" href="/parceiros">Sou lojista</Link></div>
+            <p className="eyebrow">Centenas de opções. Um só atendimento.</p>
+            <h1>Autodrive Veículos</h1>
+            <p>Modelos para todos os gostos. Compare veículos próprios, de parceiros e particulares, com atendimento humano em cada etapa da negociação.</p>
+            <div className="hero-actions">
+              <Link className="button" href="/veiculos"><CarFront size={19} aria-hidden="true" />Ver carros disponíveis</Link>
+              <a className="button button-outline hero-outline" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><MessageCircle size={19} aria-hidden="true" />Falar com a equipe</a>
+            </div>
+            <div className="hero-trust">
+              <span><CheckCircle2 size={16} aria-hidden="true" />Atendimento personalizado</span>
+              <span><CheckCircle2 size={16} aria-hidden="true" />Opções de financiamento</span>
+              <span><CheckCircle2 size={16} aria-hidden="true" />Rede de parceiros</span>
+            </div>
           </div>
         </section>
       )}
 
-      <section className="shell search-strip">
-        <form action="/veiculos"><label htmlFor="q">Buscar por marca, modelo ou veículo</label><div><input id="q" name="q" placeholder="Ex.: Corolla, SUV ou automático" /><button className="button">Buscar veículos</button></div></form>
+      <section className="home-search">
+        <form className="shell" action="/veiculos">
+          <label htmlFor="q">Buscar por marca, modelo ou veículo<span className="home-search-field"><Search size={19} aria-hidden="true" /><input id="q" name="q" placeholder="Ex.: Corolla, SUV ou automático" /></span></label>
+          <button className="button button-dark" type="submit">Buscar veículos<ArrowRight size={18} aria-hidden="true" /></button>
+        </form>
       </section>
 
-      <section className="shell home-funnels" aria-label="Caminhos principais">
-        <Link href="/veiculos" className="home-funnel-card">
-          <span>Quero comprar</span>
-          <strong>Ver estoque disponível</strong>
-          <small>Veículos próprios, parceiros e particulares intermediados.</small>
-        </Link>
-        <Link href="/venda-seu-carro" className="home-funnel-card">
-          <span>Quero vender meu carro</span>
-          <strong>Anunciar com a Autodrive</strong>
-          <small>Nossa equipe divulga, atende interessados e ajuda na negociação.</small>
-        </Link>
-        <Link href="/parceiros" className="home-funnel-card">
-          <span>Sou lojista</span>
-          <strong>Quero ser parceiro</strong>
-          <small>Mais exposição para o estoque e leads centralizados.</small>
-        </Link>
+      <section className="shell home-journeys" aria-label="Caminhos principais">
+        {journeys.map(({ icon: Icon, title, text, label, href }) => (
+          <Link href={href} className="journey-card" key={href}>
+            <span className="journey-icon"><Icon size={23} aria-hidden="true" /></span>
+            <h2>{title}</h2><p>{text}</p>
+            <span className="journey-link">{label}<ArrowRight size={16} aria-hidden="true" /></span>
+          </Link>
+        ))}
       </section>
 
-      <section className="shell section">
-        <div className="section-heading"><div><p className="eyebrow dark">Estoque selecionado</p><h2>Veículos em destaque</h2></div><Link href="/veiculos">Ver todos os veículos →</Link></div>
+      <section className="featured-showcase">
+        <div className="shell">
+        <div className="featured-heading">
+          <div><p className="eyebrow dark">Seleção Autodrive</p><h2>Encontre o carro certo para o seu momento.</h2><p>Compare as oportunidades da nossa rede e fale com a equipe para consultar disponibilidade e condições.</p></div>
+          <Link className="button button-dark" href="/veiculos">Ver todo o estoque<ArrowRight size={18} aria-hidden="true" /></Link>
+        </div>
         {vehicles.length ? <div className="vehicle-grid">{vehicles.slice(0, 8).map((vehicle, index) => <VehicleCard key={vehicle.id} vehicle={vehicle} index={index} />)}</div> : <div className="empty-state"><h3>Estoque em atualização</h3><p>Os anúncios serão publicados pelo painel administrativo.</p><a className="button" href="https://wa.me/5511934718276">Consultar pelo WhatsApp</a></div>}
+        </div>
       </section>
 
       <section className="benefits"><div className="shell benefit-grid">
-        <div><strong>Veículos periciados</strong><span>Procedência e verificação antes da venda.</span></div>
-        <div><strong>Entrada em até 21x</strong><span>Entrada facilitada. Consulte condições.</span></div>
-        <div><strong>Financiamento em até 60x</strong><span>Com ou sem entrada. Consulte condições.</span></div>
-        <div><strong>Mais de 16 financeiras</strong><span>Aprovação de crédito online.</span></div>
+        <div><ShieldCheck size={28} aria-hidden="true" /><strong>Veículos periciados</strong><span>Procedência e verificação antes da venda.</span></div>
+        <div><CircleDollarSign size={28} aria-hidden="true" /><strong>Entrada em até 21x</strong><span>Entrada facilitada. Consulte condições.</span></div>
+        <div><CarFront size={28} aria-hidden="true" /><strong>Financiamento em até 60x</strong><span>Com ou sem entrada. Consulte condições.</span></div>
+        <div><BadgeCheck size={28} aria-hidden="true" /><strong>Mais de 16 financeiras</strong><span>Aprovação de crédito online.</span></div>
       </div></section>
 
       <section className="shell section">

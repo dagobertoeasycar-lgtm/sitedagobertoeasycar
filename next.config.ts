@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn-sistema-lojistas.bndv.com.br", pathname: "/**" },
       { protocol: "https", hostname: "*.blob.core.windows.net", pathname: "/**" },
       { protocol: "https", hostname: "*.supabase.co", pathname: "/**" },
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com", pathname: "/**" },
     ],
   },
   async headers() {
@@ -50,7 +51,8 @@ const nextConfig: NextConfig = {
               "https://resized-images.autoconf.com.br https://static.autoconf.com.br " +
               "https://autoconf-production.s3.amazonaws.com " +
               "https://cdn-sistema-lojistas.bndv.com.br https://*.bndv.com.br " +
-              "https://*.blob.core.windows.net https://*.supabase.co; " +
+              "https://*.blob.core.windows.net https://*.supabase.co " +
+              "https://*.public.blob.vercel-storage.com; " +
               "style-src 'self' 'unsafe-inline'; " +
               "script-src 'self' 'unsafe-inline' https://connect.facebook.net; " +
               "connect-src 'self' https://www.facebook.com https://connect.facebook.net; " +

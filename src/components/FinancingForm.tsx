@@ -1,9 +1,9 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
 import { useMemo, useState, type FormEvent } from "react";
 import { useMetaPixel } from "@/components/MetaPixelProvider";
 import type { VehicleChoice } from "@/lib/vehicles";
+import { VehicleImage } from "@/components/VehicleImage";
 
 type FinancingTarget = "site" | "network";
 
@@ -152,7 +152,7 @@ export function FinancingForm({ vehicles }: { vehicles: VehicleChoice[] }) {
                 onClick={() => setSelectedVehicleId(vehicle.id)}
                 aria-pressed={vehicle.id === selectedVehicleId}
               >
-                <img src={vehicle.image_url || "/em-breve.jpg"} alt="" loading="lazy" />
+                <VehicleImage src={vehicle.image_url || "/em-breve.jpg"} alt="" />
                 <span>
                   <strong>{vehicle.title}</strong>
                   <small>{vehicle.year_make}/{vehicle.year_model} · {money(vehicle.price_cents)}</small>

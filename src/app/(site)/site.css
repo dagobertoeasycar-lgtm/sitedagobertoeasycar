@@ -1,0 +1,244 @@
+/* The reference theme is scoped to public pages to keep admin styles independent. */
+.autodrive-site {
+  --ink: #071c29;
+  --muted: #64737b;
+  --blue: #057780;
+  --blue-dark: #061b29;
+  --brand: #079ca6;
+  --brand-hover: #057780;
+  --brand-bright: #09b6bf;
+  --soft: #eef5f6;
+  --line: #d4e1e4;
+  --radius: 8px;
+  --shadow: 0 14px 40px rgba(7, 28, 41, .08);
+  min-height: 100vh;
+  background: #f5f8f9;
+  line-height: 1.5;
+}
+
+.autodrive-site * { letter-spacing: 0; }
+.autodrive-site .shell { width: min(1180px, calc(100% - 32px)); }
+.autodrive-site :focus-visible { outline: 3px solid #079ca6; outline-offset: 3px; }
+.autodrive-site svg { flex-shrink: 0; }
+
+.autodrive-site .site-header {
+  top: 10px;
+  width: min(1280px, calc(100% - 32px));
+  margin: 10px auto;
+  padding: 10px 16px;
+  border: 1px solid rgba(7, 82, 96, .14);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 14px 45px rgba(2, 30, 42, .1);
+  backdrop-filter: none;
+}
+.autodrive-site .header-inner { width: 100%; min-height: 50px; gap: 14px; }
+.autodrive-site .brand img { display: block; width: 202px; }
+.autodrive-site .desktop-nav {
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid #e2edee;
+  border-radius: 12px;
+  background: #eef5f6;
+}
+.autodrive-site .desktop-nav a { padding: 9px 8px; font-size: .79rem; border-radius: 8px; color: #163744; }
+.autodrive-site .desktop-nav a:hover,
+.autodrive-site .desktop-nav a[aria-current] { background: white; color: #057780; }
+.autodrive-site .header-actions { display: flex; margin-left: auto; }
+.autodrive-site .header-whatsapp { padding-inline: 14px; font-size: .85rem; }
+.autodrive-site .mobile-menu summary { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 8px; }
+.autodrive-site .mobile-menu summary::-webkit-details-marker { display: none; }
+.autodrive-site .mobile-menu nav { top: 56px; max-height: calc(100dvh - 115px); overflow-y: auto; }
+.autodrive-site .mobile-menu nav a { display: flex; align-items: center; gap: 8px; }
+.autodrive-site .mobile-menu nav a[aria-current] { color: #057780; background: var(--soft); }
+
+.autodrive-site .button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: .94rem;
+  line-height: 1.3;
+}
+.autodrive-site .button-dark { color: white; background: #061b29; }
+.autodrive-site .button-dark:hover { background: #163744; }
+.autodrive-site .button-outline { color: var(--ink); background: white; border-color: #a9c2c8; box-shadow: none; }
+.autodrive-site .button-outline:hover { background: var(--soft); border-color: #057780; }
+.autodrive-site .button-light { color: #061b29; background: white; }
+.autodrive-site .hero-outline { background: transparent; color: white; border-color: rgba(255,255,255,.65); }
+.autodrive-site .hero-outline:hover { color: white; background: rgba(255,255,255,.1); }
+.autodrive-site input, .autodrive-site select, .autodrive-site textarea { border-radius: 6px; border-color: #a9c2c8; }
+.autodrive-site .eyebrow { color: var(--blue); font-size: .76rem; }
+
+.autodrive-site .home-hero { min-height: 480px; }
+.autodrive-site .hero-overlay { background: linear-gradient(90deg, rgba(4,22,36,.9), rgba(4,22,36,.48) 60%, rgba(4,22,36,.08)); }
+.autodrive-site .hero-content { padding-block: 58px; }
+.autodrive-site .hero-content h1 { max-width: 650px; font-size: 3.25rem; line-height: 1.1; margin: 12px 0 18px; }
+.autodrive-site .hero-content > p:not(.eyebrow) { max-width: 560px; font-size: 1.08rem; }
+.autodrive-site .hero-content .eyebrow { color: #8fe3e8; }
+.autodrive-site .hero-trust { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-top: 26px; color: #d6e7ea; font-size: .84rem; }
+.autodrive-site .hero-trust span { display: inline-flex; align-items: center; gap: 6px; }
+.autodrive-site .hero-trust svg { color: #45d2c2; }
+.autodrive-site .home-search { background: white; border-bottom: 1px solid var(--line); }
+.autodrive-site .home-search form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px; padding-block: 24px; }
+.autodrive-site .home-search label { display: grid; gap: 7px; font-size: .9rem; font-weight: 700; }
+.autodrive-site .home-search-field { position: relative; }
+.autodrive-site .home-search-field svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.autodrive-site .home-search-field input { padding-left: 44px; min-height: 46px; }
+.autodrive-site .home-search .button { min-height: 46px; }
+
+.autodrive-site .section { padding-block: 38px; }
+.autodrive-site .section-heading { margin-bottom: 22px; gap: 20px; }
+.autodrive-site .section-heading h2,
+.autodrive-site .split-section h2,
+.autodrive-site .contact-band h2 { font-size: 1.9rem; line-height: 1.2; }
+.autodrive-site .section-heading > a { display: inline-flex; gap: 8px; align-items: center; }
+.autodrive-site .home-journeys { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; padding-block: 32px; }
+.autodrive-site .journey-card { min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; border: 1px solid var(--line); border-radius: 8px; background: white; transition: border-color .16s, transform .16s; }
+.autodrive-site .journey-card:hover { border-color: #079ca6; transform: translateY(-2px); }
+.autodrive-site .journey-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 8px; color: white; background: #061b29; }
+.autodrive-site .journey-card:nth-child(2) .journey-icon { background: #079ca6; }
+.autodrive-site .journey-card:nth-child(3) .journey-icon { background: #397164; }
+.autodrive-site .journey-card:nth-child(4) .journey-icon { background: #806237; }
+.autodrive-site .journey-card:nth-child(5) .journey-icon { background: #057780; }
+.autodrive-site .journey-card h2 { margin: 0; font-size: 1rem; line-height: 1.3; }
+.autodrive-site .journey-card p { margin: 0; color: var(--muted); font-size: .85rem; }
+.autodrive-site .journey-link { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 8px; font-size: .85rem; font-weight: 700; color: #057780; }
+.autodrive-site .featured-showcase { padding-block: 36px 46px; border-block: 1px solid var(--line); background: #eef5f6; }
+.autodrive-site .featured-heading { display: flex; justify-content: space-between; align-items: end; gap: 32px; margin-bottom: 26px; }
+.autodrive-site .featured-heading h2 { max-width: 680px; margin: 8px 0; font-size: 2rem; line-height: 1.2; }
+.autodrive-site .featured-heading p:not(.eyebrow) { max-width: 680px; margin: 0; color: var(--muted); font-size: .96rem; }
+.autodrive-site .featured-heading > a { flex-shrink: 0; }
+
+.autodrive-site .vehicle-grid { gap: 20px; }
+.autodrive-site .vehicle-card { border-radius: 8px; box-shadow: 0 5px 18px rgba(7,28,41,.04); }
+.autodrive-site .vehicle-content { padding: 14px; gap: 9px; }
+.autodrive-site .vehicle-content h2 { margin: 0; min-height: 3.9em; font-size: 1rem; line-height: 1.3; }
+.autodrive-site .vehicle-content h2 a { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.autodrive-site .vehicle-content p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: 2.8em; font-size: .84rem; line-height: 1.4; }
+.autodrive-site .badges { min-height: 24px; gap: 5px; }
+.autodrive-site .badges span { padding: 3px 7px; font-size: .68rem; text-transform: none; color: #344b56; background: var(--soft); }
+.autodrive-site .badges span:first-child { color: white; background: #202124; }
+.autodrive-site .vehicle-year-badge { left: 10px; right: auto; bottom: 10px; color: #071c29; background: white; border-radius: 6px; font-size: .76rem; }
+.autodrive-site .vehicle-origin-tag { top: 10px; left: 10px; padding: 5px 8px; color: #344b56; border-radius: 6px; font-size: .64rem; }
+.autodrive-site .price { margin: 3px 0; color: #071c29; font-size: 1.28rem; }
+.autodrive-site .vehicle-meta { gap: 8px; font-size: .78rem; color: #344b56; }
+.autodrive-site .vehicle-meta span { display: inline-flex; gap: 4px; align-items: center; }
+.autodrive-site .vehicle-meta span:last-child { text-align: left; }
+.autodrive-site .card-actions { gap: 8px; padding-top: 10px; }
+.autodrive-site .card-actions .button { min-width: 0; min-height: 38px; padding: 8px; font-size: .82rem; }
+
+.autodrive-site .benefits { color: var(--ink); background: white; border-bottom: 1px solid var(--line); }
+.autodrive-site .benefit-grid div { padding: 28px 20px; border-color: var(--line); }
+.autodrive-site .benefit-grid svg { color: #079ca6; margin-bottom: 10px; }
+.autodrive-site .benefit-grid strong { font-size: 1rem; }
+.autodrive-site .benefit-grid span { color: var(--muted); font-size: .85rem; }
+.autodrive-site .how-grid { gap: 32px; }
+.autodrive-site .how-card { padding: 0; border: 0; box-shadow: none; background: transparent; }
+.autodrive-site .how-card > strong { font-size: 1.25rem; }
+.autodrive-site .how-card p, .autodrive-site .how-card li { font-size: .94rem; }
+.autodrive-site .home-action-band { padding-block: 36px; background: white; border-block: 1px solid var(--line); }
+.autodrive-site .home-action-grid > div { padding: 0 24px 0 0; border: 0; border-right: 1px solid var(--line); border-radius: 0; box-shadow: none; background: transparent; }
+.autodrive-site .home-action-grid > div:last-child { border: 0; padding-right: 0; }
+.autodrive-site .home-action-grid h2 { font-size: 1.3rem; line-height: 1.35; }
+.autodrive-site .notice { border-radius: 8px; background: #061b29; box-shadow: none; }
+.autodrive-site .contact-band { padding-block: 36px; background: #061b29; }
+.autodrive-site .contact-band .eyebrow { color: #8fe3e8; }
+.autodrive-site .contact-links a { border-radius: 8px; }
+
+.autodrive-site .page-hero { padding: 36px 0 28px; color: var(--ink); background: white; border-bottom: 1px solid var(--line); }
+.autodrive-site .page-hero h1 { margin: 8px 0 12px; font-size: 2.5rem; line-height: 1.15; }
+.autodrive-site .page-hero p:not(.eyebrow) { color: var(--muted); font-size: 1rem; }
+.autodrive-site .content-grid { gap: 32px; }
+.autodrive-site .prose h2 { font-size: 1.6rem; }
+.autodrive-site .lead-form { padding: 24px; box-shadow: 0 6px 24px rgba(7,28,41,.04); }
+.autodrive-site .lead-form h2 { font-size: 1.5rem; }
+.autodrive-site .finance-choice label,
+.autodrive-site .finance-vehicle-option,
+.autodrive-site .finance-empty,
+.autodrive-site .photo-upload-card,
+.autodrive-site .checkbox-grid label { border-radius: 8px; }
+.autodrive-site .success-panel h2 { font-size: 1.8rem; }
+.autodrive-site .filter-bar { padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: white; }
+.autodrive-site .search-box input,
+.autodrive-site .filter-dropdown > summary,
+.autodrive-site .filter-panel { border-radius: 6px; }
+.autodrive-site .filter-dropdown > summary.active,
+.autodrive-site .sort-option.active { background: #eef5f6; }
+.autodrive-site .detail-title { font-size: 2rem; }
+.autodrive-site .detail-price { font-size: 1.8rem; }
+.autodrive-site .detail-notice { background: #061b29; }
+.autodrive-site .detail-contact-card,
+.autodrive-site .detail-contact-item,
+.autodrive-site .detail-list { border-radius: 8px; }
+
+.autodrive-site .site-footer { padding-top: 36px; color: #b9cdd2; background: #041624; }
+.autodrive-site .footer-grid { gap: 40px; }
+.autodrive-site .footer-logo { width: 210px; }
+.autodrive-site .footer-grid p, .autodrive-site .footer-grid a { font-size: .88rem; }
+.autodrive-site .footer-cta { display: flex; align-items: center; gap: 24px; padding: 22px 0; border: 0; border-block: 1px solid rgba(255,255,255,.14); border-radius: 0; background: transparent; }
+.autodrive-site .footer-cta strong { color: white; font-size: 1.1rem; }
+.autodrive-site .footer-cta p { margin: 0; max-width: 470px; font-size: .9rem; }
+.autodrive-site .footer-cta .button { flex-shrink: 0; margin-left: auto; }
+.autodrive-site .whatsapp-float { width: 52px; height: 52px; display: grid; place-items: center; padding: 0; border-radius: 50%; }
+
+@media (max-width: 1279px) {
+  .autodrive-site .desktop-nav { display: none; }
+  .autodrive-site .mobile-menu { display: block; margin-left: 0; }
+  .autodrive-site .header-actions { display: flex; }
+}
+@media (max-width: 1180px) {
+  .autodrive-site .home-journeys { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .autodrive-site .vehicle-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .autodrive-site .vehicle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .autodrive-site .featured-heading { align-items: flex-start; flex-direction: column; gap: 18px; }
+  .autodrive-site .footer-cta { flex-wrap: wrap; }
+  .autodrive-site .footer-cta .button { margin-left: 0; }
+}
+@media (max-width: 760px) {
+  .autodrive-site .site-header { top: 8px; width: calc(100% - 24px); padding: 8px 12px; margin-block: 8px; }
+  .autodrive-site .header-inner { min-height: 44px; }
+  .autodrive-site .brand img { width: 165px; }
+  .autodrive-site .header-actions { display: none; }
+  .autodrive-site .mobile-menu { margin-left: auto; }
+  .autodrive-site .home-hero { min-height: 430px; }
+  .autodrive-site .hero-content { padding-block: 40px; }
+  .autodrive-site .hero-content h1 { font-size: 2.35rem; }
+  .autodrive-site .hero-content > p:not(.eyebrow) { font-size: 1rem; }
+  .autodrive-site .hero-trust { gap: 10px; }
+  .autodrive-site .hero-actions { gap: 10px; margin-top: 22px; }
+  .autodrive-site .home-search form { grid-template-columns: 1fr; padding-block: 18px; }
+  .autodrive-site .home-journeys { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding-block: 24px; }
+  .autodrive-site .journey-card:last-child { grid-column: 1 / -1; }
+  .autodrive-site .vehicle-grid { grid-template-columns: 1fr; }
+  .autodrive-site .vehicle-content { padding: 16px; }
+  .autodrive-site .vehicle-content h2, .autodrive-site .vehicle-content p { min-height: 0; }
+  .autodrive-site .vehicle-content h2 a, .autodrive-site .vehicle-content p { display: block; }
+  .autodrive-site .section { padding-block: 28px; }
+  .autodrive-site .featured-heading h2 { font-size: 1.65rem; }
+  .autodrive-site .section-heading h2, .autodrive-site .split-section h2, .autodrive-site .contact-band h2 { font-size: 1.6rem; }
+  .autodrive-site .page-hero { padding-block: 28px; }
+  .autodrive-site .page-hero h1 { font-size: 1.9rem; }
+  .autodrive-site .filter-bar { gap: 10px; }
+  .autodrive-site .search-box { min-width: 0; width: 100%; flex: 1 1 auto; }
+  .autodrive-site .filter-dropdown > summary { width: 100%; }
+  .autodrive-site .filter-panel { max-height: 65dvh; overflow-y: auto; }
+  .autodrive-site .card-actions { grid-template-columns: 1fr 1fr; }
+  .autodrive-site .benefit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .autodrive-site .benefit-grid div { padding: 20px 12px; }
+  .autodrive-site .home-action-grid > div { padding: 0 0 22px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .autodrive-site .lead-form { padding: 20px; }
+  .autodrive-site .footer-grid { gap: 26px; }
+  .autodrive-site .footer-cta { align-items: flex-start; flex-direction: column; gap: 14px; }
+}
+@media (max-width: 380px) {
+  .autodrive-site .home-journeys { grid-template-columns: 1fr; }
+  .autodrive-site .brand img { width: 150px; }
+  .autodrive-site .hero-content h1 { font-size: 2.1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .autodrive-site *, .autodrive-site *::before, .autodrive-site *::after { transition: none; animation: none; }
+}

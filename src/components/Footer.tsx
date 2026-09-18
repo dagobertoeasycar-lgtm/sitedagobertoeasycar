@@ -7,7 +7,7 @@ export function Footer() {
       <div className="shell footer-grid">
         {/* Col 1: Logo + description */}
         <div>
-          <img src="/brand/logo-footer.png" alt="Autodrive Veículos" className="footer-logo" />
+          <img src="/brand/autodrive-logo-footer.png" alt="Autodrive Veículos" className="footer-logo" />
           <p>Autodrive Veículos & Tecnologia: veículos próprios, parceiros e particulares em um só atendimento.</p>
         </div>
 
