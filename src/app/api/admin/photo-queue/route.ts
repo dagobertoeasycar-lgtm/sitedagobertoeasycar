@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
   const parceiro = sp.get("parceiro");
   const situacao = sp.get("situacao");
 
-  const condicoes = ["v.status = 'published'", "v.photos_locked = false"];
+  const condicoes = ["v.status = 'published'"];
   const params: unknown[] = [];
   let i = 1;
 
@@ -56,8 +56,12 @@ export async function GET(request: NextRequest) {
     condicoes.push(`v.photos_status = $${i}`);
     params.push(situacao);
     i++;
+    // EM_TRATAMENTO é sempre travado — é a trava que segura a sincronização
+    // durante a hora e meia que um carro de 25 fotos leva no chat. Exigir
+    // "sem trava" aqui tornaria impossível retomar de onde parou.
+    if (situacao !== "EM_TRATAMENTO") condicoes.push("v.photos_locked = false");
   } else {
-    condicoes.push("v.photos_status = 'ORIGEM'");
+    condicoes.push("v.photos_status = 'ORIGEM'", "v.photos_locked = false");
   }
 
   if (parceiro && /^[0-9a-f-]{36}$/.test(parceiro)) {
@@ -116,6 +120,15 @@ export async function GET(request: NextRequest) {
   });
 
   const veiculos = fila.filter((v) => v.fotos.length > 0);
+
+  // Carro que ficou preso no meio do tratamento: a rodada travou o veículo,
+  // caiu antes de publicar, e ele sumiu da fila normal. Sem este número
+  // ninguém descobre que ele existe.
+  const presos = await query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM vehicles
+      WHERE status = 'published' AND photos_status = 'EM_TRATAMENTO'`,
+  ).then((r) => r.rows[0]?.n ?? 0).catch(() => 0);
+
   return NextResponse.json({
     total: veiculos.length,
     limite,
@@ -123,6 +136,7 @@ export async function GET(request: NextRequest) {
     // painel da extensão para o operador não achar que a fila sumiu.
     semFotoPropria: fila.length - veiculos.length,
     artesIgnoradas: fila.reduce((soma, v) => soma + v.artesDaLoja.length, 0),
+    emTratamento: presos,
     veiculos,
   });
 }
