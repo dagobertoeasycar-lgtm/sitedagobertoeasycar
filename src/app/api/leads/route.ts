@@ -52,6 +52,7 @@ const requiredSellCarPhotos = [
 const payloadKeys = [
   "city", "brand", "model", "version", "year", "yearMin", "mileage", "transmission", "fuel", "plate", "color",
   "targetPrice", "vehicleStatus", "photoLinks", "budget", "downPayment", "hasTrade", "wantsFinancing",
+  "financingTarget", "selectedVehicleLabel", "desiredVehicle", "installmentGoal",
   "companyName", "tradeName", "cnpj", "address", "instagram", "website", "averageInventory", "currentSystem",
   "desiredWork", "vehicleId", "vehicleTitle", "vehicleOriginType", "leadSource", "campaign", "utmSource",
   "utmMedium", "utmCampaign", "pageUrl", "vehiclePhotos",
@@ -95,6 +96,17 @@ function line(label: string, value: unknown) {
 }
 
 function buildMessage(kind: string, body: Record<string, unknown>, fallback: string) {
+  if (kind === "financing") {
+    const financingTarget = text(body, "financingTarget", 40);
+    return [
+      "Solicitação de financiamento.",
+      line("Origem do veículo", financingTarget === "site" ? "Veículo do site" : financingTarget === "network" ? "Amigos e conhecidos" : financingTarget),
+      line("Veículo", text(body, "selectedVehicleLabel", 220) || text(body, "vehicleTitle", 220) || text(body, "desiredVehicle", 220)),
+      line("Entrada aproximada", text(body, "downPayment", 40)),
+      line("Parcela desejada", text(body, "installmentGoal", 40)),
+      line("Observações", fallback),
+    ].filter(Boolean).join("\n");
+  }
   if (kind === "sell_car") {
     return [
       "Solicitação para vender veículo particular.",

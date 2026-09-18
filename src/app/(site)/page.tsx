@@ -78,7 +78,7 @@ export default async function Home() {
 
       <section className="shell section">
         <div className="section-heading"><div><p className="eyebrow dark">Estoque selecionado</p><h2>Veículos em destaque</h2></div><Link href="/veiculos">Ver todos os veículos →</Link></div>
-        {vehicles.length ? <div className="vehicle-grid">{vehicles.slice(0, 6).map((vehicle, index) => <VehicleCard key={vehicle.id} vehicle={vehicle} index={index} />)}</div> : <div className="empty-state"><h3>Estoque em atualização</h3><p>Os anúncios serão publicados pelo painel administrativo.</p><a className="button" href="https://wa.me/5511934718276">Consultar pelo WhatsApp</a></div>}
+        {vehicles.length ? <div className="vehicle-grid">{vehicles.slice(0, 8).map((vehicle, index) => <VehicleCard key={vehicle.id} vehicle={vehicle} index={index} />)}</div> : <div className="empty-state"><h3>Estoque em atualização</h3><p>Os anúncios serão publicados pelo painel administrativo.</p><a className="button" href="https://wa.me/5511934718276">Consultar pelo WhatsApp</a></div>}
       </section>
 
       <section className="benefits"><div className="shell benefit-grid">

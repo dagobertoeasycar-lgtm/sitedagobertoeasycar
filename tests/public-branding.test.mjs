@@ -9,6 +9,8 @@ const publicFiles = [
   "src/components/Footer.tsx",
   "src/app/(site)/sobre/page.tsx",
   "src/app/(site)/contato/page.tsx",
+  "src/app/(site)/financiamento/page.tsx",
+  "src/app/(site)/financiamento/sucesso/page.tsx",
   "src/app/(site)/veiculos/page.tsx",
 ];
 

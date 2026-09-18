@@ -23,7 +23,9 @@ export type VehicleFilters = {
   origin?: string; sort?: string; page?: number;
 };
 
-const PAGE_SIZE = 20;
+export type VehicleChoice = Pick<Vehicle, "id" | "catalog_item_id" | "slug" | "title" | "brand" | "model" | "version" | "year_make" | "year_model" | "price_cents" | "image_url" | "origin_type">;
+
+export const VEHICLE_PAGE_SIZE = 28;
 
 export async function listVehicles(filters: VehicleFilters = {}) {
   const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax, origin, sort = "recent", page = 1 } = filters;
@@ -59,12 +61,24 @@ export async function listVehicles(filters: VehicleFilters = {}) {
   };
   // Em breve (no image) always last, then featured first, then sort
   const orderBy = `CASE WHEN image_url IS NULL OR image_url = '' THEN 1 ELSE 0 END, featured DESC, ${orderMap[sort] || orderMap.recent}`;
-  const offset = (Math.max(1, page) - 1) * PAGE_SIZE;
+  const offset = (Math.max(1, page) - 1) * VEHICLE_PAGE_SIZE;
 
-  params.push(PAGE_SIZE, offset);
+  params.push(VEHICLE_PAGE_SIZE, offset);
   const result = await query<Vehicle>(
     `SELECT * FROM vehicles WHERE ${where} ORDER BY ${orderBy} LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
     params,
+  );
+  return result.rows;
+}
+
+export async function listVehicleChoices(limit = 180) {
+  const result = await query<VehicleChoice>(
+    `SELECT id, catalog_item_id, slug, title, brand, model, version, year_make, year_model, price_cents, image_url, origin_type
+     FROM vehicles
+     WHERE status = 'published'
+     ORDER BY CASE WHEN image_url IS NULL OR image_url = '' THEN 1 ELSE 0 END, featured DESC, created_at DESC
+     LIMIT $1`,
+    [limit],
   );
   return result.rows;
 }

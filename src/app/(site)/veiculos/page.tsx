@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { VehicleCard } from "@/components/VehicleCard";
-import { VEHICLE_ORIGIN_OPTIONS, listVehicles, countVehicles, getFilterOptions, type VehicleFilters } from "@/lib/vehicles";
+import { VEHICLE_ORIGIN_OPTIONS, VEHICLE_PAGE_SIZE, listVehicles, countVehicles, getFilterOptions, type VehicleFilters } from "@/lib/vehicles";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   description: "Estoque Autodrive com veículos próprios, lojistas parceiros e particulares intermediados em Barueri, Osasco e região.",
 };
 
-const PAGE_SIZE = 20;
 const PRICE_OPTIONS = [
   { value: "30000", label: "R$ 30 mil" }, { value: "50000", label: "R$ 50 mil" },
   { value: "70000", label: "R$ 70 mil" }, { value: "100000", label: "R$ 100 mil" },
@@ -44,7 +43,7 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
     countVehicles(filters).catch(() => 0),
     getFilterOptions().catch(() => ({ brands: [], fuels: [], transmissions: [], years: [] })),
   ]);
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(total / VEHICLE_PAGE_SIZE);
   const page = filters.page || 1;
   const hasActiveFilters = !!(filters.brand || filters.fuel || filters.transmission || filters.yearMin || filters.yearMax || filters.priceMin || filters.priceMax || filters.origin);
 
