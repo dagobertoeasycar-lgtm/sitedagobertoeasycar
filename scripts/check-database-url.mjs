@@ -73,11 +73,17 @@ export function validarDatabaseUrl(valor = process.env.DATABASE_URL) {
   try {
     url = new URL(bruto);
   } catch {
+    // Chegar aqui quase sempre quer dizer que a porta virou texto, e a porta
+    // vira texto quando o PowerShell expandiu um $ da senha dentro de aspas
+    // DUPLAS e comeu um pedaço do endereço.
     return {
       ok: false,
       motivo:
         "A variável não é um endereço válido.\n" +
-        "  Formato esperado: postgresql://usuario:senha@servidor:5432/nome_do_banco",
+        "  Formato esperado: postgresql://usuario:senha@servidor:5432/nome_do_banco\n" +
+        "  Se a senha tem $, use aspas SIMPLES no PowerShell — entre aspas duplas\n" +
+        "  ele troca $alguma-coisa por vazio e estraga o endereço:\n" +
+        "    $env:DATABASE_URL='postgresql://usuario:senha@servidor:5432/banco'",
     };
   }
 

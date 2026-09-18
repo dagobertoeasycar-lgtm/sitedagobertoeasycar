@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { pastaDoParceiro, pastaDoVeiculo, separarFotos } from "@/lib/vehicle-photos";
 
 /**
  * Fila de tratamento de fotos, consumida pela extensão do Chrome.
@@ -8,6 +9,10 @@ import { query } from "@/lib/db";
  * Devolve os veículos publicados cujas fotos ainda são as da origem e que não
  * estão travados. A extensão baixa essas fotos, trata e devolve pela API
  * /api/admin/vehicles/{id}/photos, que grava e trava.
+ *
+ * A galeria vem separada: `fotos` é o que vai para tratamento e `artesDaLoja`
+ * é o que foi descartado (logotipo do parceiro, composição com o nome da loja).
+ * A extensão não baixa arte da loja — ver src/lib/vehicle-photos.ts.
  *
  * Autenticação: usa a mesma sessão de administrador do painel. A extensão roda
  * no navegador onde você já está logado, então o cookie viaja junto e não há
@@ -27,39 +32,13 @@ type FilaRow = {
   plate: string | null;
   slug: string;
   partner_name: string | null;
+  origin_type: string | null;
   images: unknown;
   photos_status: string;
   photos_locked: boolean;
   source_url: string | null;
   created_at: Date;
 };
-
-/** Nome de pasta previsível e sem duplicata, usando a chave mais confiável. */
-function pastaDoVeiculo(v: FilaRow) {
-  const base = [v.brand, v.model, v.version, v.year_model].filter(Boolean).join(" ").trim();
-  const chave = v.plate || v.internal_code || v.id.slice(0, 8);
-  const limpo = `${base} - ${chave}`
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^A-Za-z0-9 .\-]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  return limpo.slice(0, 120);
-}
-
-function urlsDe(valor: unknown): string[] {
-  const bruto = Array.isArray(valor) ? valor : [];
-  const vistas = new Set<string>();
-  const saida: string[] = [];
-  for (const item of bruto) {
-    const url = typeof item === "string" ? item : (item as { url?: string })?.url;
-    if (typeof url !== "string" || !/^https?:\/\//.test(url)) continue;
-    if (vistas.has(url)) continue;
-    vistas.add(url);
-    saida.push(url);
-  }
-  return saida;
-}
 
 export async function GET(request: NextRequest) {
   if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -69,7 +48,7 @@ export async function GET(request: NextRequest) {
   const parceiro = sp.get("parceiro");
   const situacao = sp.get("situacao");
 
-  const condicoes = ["v.status = 'published'", "v.photos_locked = false"];
+  const condicoes = ["v.status = 'published'"];
   const params: unknown[] = [];
   let i = 1;
 
@@ -77,8 +56,12 @@ export async function GET(request: NextRequest) {
     condicoes.push(`v.photos_status = $${i}`);
     params.push(situacao);
     i++;
+    // EM_TRATAMENTO é sempre travado — é a trava que segura a sincronização
+    // durante a hora e meia que um carro de 25 fotos leva no chat. Exigir
+    // "sem trava" aqui tornaria impossível retomar de onde parou.
+    if (situacao !== "EM_TRATAMENTO") condicoes.push("v.photos_locked = false");
   } else {
-    condicoes.push("v.photos_status = 'ORIGEM'");
+    condicoes.push("v.photos_status = 'ORIGEM'", "v.photos_locked = false");
   }
 
   if (parceiro && /^[0-9a-f-]{36}$/.test(parceiro)) {
@@ -91,11 +74,10 @@ export async function GET(request: NextRequest) {
   condicoes.push("v.image_url is not null and v.image_url <> ''");
 
   let rows: FilaRow[] = [];
-  let falha = "";
   try {
     const r = await query<FilaRow>(
       `SELECT v.id, v.internal_code, v.title, v.brand, v.model, v.version, v.year_model,
-              v.plate, v.slug, p.name AS partner_name, v.images, v.photos_status,
+              v.plate, v.slug, p.name AS partner_name, v.origin_type, v.images, v.photos_status,
               v.photos_locked, v.source_url, v.created_at
          FROM vehicles v
          LEFT JOIN partners p ON p.id = v.partner_id
@@ -107,33 +89,54 @@ export async function GET(request: NextRequest) {
     rows = r.rows;
   } catch (error) {
     // Banco sem a migration 015 responde com erro claro em vez de 500 cru.
-    falha = error instanceof Error ? error.message : "erro desconhecido";
+    const falha = error instanceof Error ? error.message : "erro desconhecido";
     return NextResponse.json(
       { error: `Não foi possível ler a fila: ${falha}. Rode npm run db:migrate.` },
       { status: 503 },
     );
   }
 
-  const fila = rows.map((v) => ({
-    id: v.id,
-    codigo: v.internal_code,
-    titulo: v.title,
-    marca: v.brand,
-    modelo: v.model,
-    versao: v.version,
-    ano: v.year_model,
-    placa: v.plate,
-    parceiro: v.partner_name,
-    pasta: pastaDoVeiculo(v),
-    situacao: v.photos_status,
-    anuncioOriginal: v.source_url,
-    paginaAdmin: `/admin/veiculos?q=${encodeURIComponent(v.title)}`,
-    fotos: urlsDe(v.images),
-  }));
+  const fila = rows.map((v) => {
+    const { fotos, artesDaLoja } = separarFotos(v.images);
+    return {
+      id: v.id,
+      codigo: v.internal_code,
+      titulo: v.title,
+      marca: v.brand,
+      modelo: v.model,
+      versao: v.version,
+      ano: v.year_model,
+      placa: v.plate,
+      parceiro: v.partner_name,
+      origem: v.origin_type,
+      pastaParceiro: pastaDoParceiro(v),
+      pastaVeiculo: pastaDoVeiculo(v),
+      situacao: v.photos_status,
+      anuncioOriginal: v.source_url,
+      paginaAdmin: `/admin/veiculos?q=${encodeURIComponent(v.title)}`,
+      fotos,
+      artesDaLoja,
+    };
+  });
+
+  const veiculos = fila.filter((v) => v.fotos.length > 0);
+
+  // Carro que ficou preso no meio do tratamento: a rodada travou o veículo,
+  // caiu antes de publicar, e ele sumiu da fila normal. Sem este número
+  // ninguém descobre que ele existe.
+  const presos = await query<{ n: number }>(
+    `SELECT count(*)::int AS n FROM vehicles
+      WHERE status = 'published' AND photos_status = 'EM_TRATAMENTO'`,
+  ).then((r) => r.rows[0]?.n ?? 0).catch(() => 0);
 
   return NextResponse.json({
-    total: fila.length,
+    total: veiculos.length,
     limite,
-    veiculos: fila.filter((v) => v.fotos.length > 0),
+    // Quantos foram deixados de fora por só terem arte da loja: aparece no
+    // painel da extensão para o operador não achar que a fila sumiu.
+    semFotoPropria: fila.length - veiculos.length,
+    artesIgnoradas: fila.reduce((soma, v) => soma + v.artesDaLoja.length, 0),
+    emTratamento: presos,
+    veiculos,
   });
 }

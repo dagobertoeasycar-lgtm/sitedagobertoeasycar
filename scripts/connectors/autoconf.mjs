@@ -49,7 +49,10 @@ function mapear(v, baseUrl) {
     ].filter(Boolean).join(" · "),
     media: fotos,
     options: Array.isArray(v.acessorios) ? v.acessorios.map((a) => a?.nome) : [],
-    plate: v.placa,
+    // `placa` vem mascarada na API pública ("D**-***0"); a de verdade está em
+    // `placa_completa`. Usar a mascarada gerava placa de dois caracteres no
+    // banco ("D0") e pasta de fotos sem serventia nenhuma no painel.
+    plate: v.placa_completa || v.placa,
     vehicleType: v.tipoveiculo_nome || v.carroceria_nome,
     sourceUrl: `${baseUrl}/estoque`,
     // o dono da loja dentro da plataforma, quando houver várias

@@ -1,6 +1,8 @@
 import { query } from "@/lib/db";
 import { VehicleStatusForm } from "@/components/VehicleStatusForm";
+import { VehiclePhotosPanel } from "@/components/VehiclePhotosPanel";
 import { AdminVehicleForm } from "@/components/AdminVehicleForm";
+import { pastaDoParceiro, pastaDoVeiculo, separarFotos } from "@/lib/vehicle-photos";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +12,7 @@ type AdminVehicleRow = {
   title: string;
   brand: string;
   model: string;
+  version: string | null;
   status: string;
   stock_status: string;
   origin_type: string;
@@ -20,6 +23,10 @@ type AdminVehicleRow = {
   year_make: number;
   year_model: number;
   image_url: string | null;
+  images: unknown;
+  plate: string | null;
+  internal_code: string | null;
+  photos_locked: boolean;
   updated_at: Date;
 };
 
@@ -49,7 +56,7 @@ export default async function AdminVehiclesPage({ searchParams }: { searchParams
   const where = conditions.join(" AND ");
 
   const [vehicles, countRes] = await Promise.all([
-    query<AdminVehicleRow>(`SELECT v.id,v.title,v.brand,v.model,v.status,v.stock_status,v.origin_type,v.store,p.name as partner_name,v.price_cents,v.mileage,v.year_make,v.year_model,v.image_url,v.updated_at FROM vehicles v LEFT JOIN partners p ON p.id = v.partner_id WHERE ${where} ORDER BY v.updated_at DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, limit, offset]),
+    query<AdminVehicleRow>(`SELECT v.id,v.title,v.brand,v.model,v.version,v.status,v.stock_status,v.origin_type,v.store,p.name as partner_name,v.price_cents,v.mileage,v.year_make,v.year_model,v.image_url,v.images,v.plate,v.internal_code,v.photos_locked,v.updated_at FROM vehicles v LEFT JOIN partners p ON p.id = v.partner_id WHERE ${where} ORDER BY v.updated_at DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, limit, offset]),
     query<CountRow>(`SELECT count(*)::int as total FROM vehicles v WHERE ${where}`, params),
   ]);
   const total = countRes.rows[0]?.total || 0;
@@ -91,19 +98,28 @@ export default async function AdminVehiclesPage({ searchParams }: { searchParams
               <tr><th>Foto</th><th>Veículo</th><th>Origem</th><th>Ano</th><th>Km</th><th>Preço</th><th>Status</th><th>Atualizado</th><th>Ações</th></tr>
             </thead>
             <tbody>
-              {vehicles.rows.map((v) => (
+              {vehicles.rows.map((v) => {
+                // A mesma regra da extensão e da fila de tratamento: arte da
+                // loja parceira não conta como foto do carro.
+                const fotos = separarFotos(v.images).fotos;
+                const pasta = `${pastaDoVeiculo(v)} - ${pastaDoParceiro(v)}`;
+                return (
                 <tr key={v.id}>
                   <td><img src={v.image_url || "/em-breve.png"} alt="" className="adm-thumb" /></td>
-                  <td><strong>{v.brand} {v.model}</strong><br/><small style={{color:"#64748b"}}>{v.title}</small></td>
+                  <td><strong>{v.brand} {v.model}</strong><br/><small style={{color:"#64748b"}}>{v.title}</small>{v.plate && <><br/><small style={{color:"#0f172a",fontWeight:700}}>{v.plate}</small></>}</td>
                   <td><span className={`adm-badge origin-${v.origin_type.toLowerCase()}`}>{originLabels[v.origin_type] || v.origin_type}</span>{v.origin_type === "PARTNER" && <><br/><small>{v.partner_name || v.store || "Parceiro não identificado"}</small></>}</td>
                   <td>{v.year_make}/{v.year_model}</td>
                   <td>{v.mileage?.toLocaleString("pt-BR")} km</td>
                   <td>{(v.price_cents/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0})}</td>
-                  <td><span className={`adm-badge ${v.status}`}>{v.status}</span><br/><small>{v.stock_status}</small></td>
+                  <td><span className={`adm-badge ${v.status}`}>{v.status}</span><br/><small>{v.stock_status}</small>{v.photos_locked && <><br/><small title="A sincronização não mexe nas fotos deste veículo">🔒 fotos travadas</small></>}</td>
                   <td>{new Date(v.updated_at).toLocaleDateString("pt-BR")}</td>
-                  <td><VehicleStatusForm id={v.id} status={v.status} stockStatus={v.stock_status} /></td>
+                  <td>
+                    <VehicleStatusForm id={v.id} status={v.status} stockStatus={v.stock_status} />
+                    <VehiclePhotosPanel id={v.id} titulo={v.title} pasta={pasta} fotos={fotos.length} />
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

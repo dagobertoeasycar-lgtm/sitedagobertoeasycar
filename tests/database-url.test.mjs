@@ -79,3 +79,9 @@ test("pega o embrulho mesmo com só um dos lados", () => {
 test("não confunde endereço bom com embrulhado", () => {
   assert.equal(validarDatabaseUrl("postgresql://u:p@db.exemplo.com/banco?sslmode=require").ok, true);
 });
+
+test("porta não numérica explica o $ comido pelas aspas duplas do PowerShell", () => {
+  const r = validarDatabaseUrl("postgresql://u:p@db.exemplo.com:porta/banco");
+  assert.equal(r.ok, false);
+  assert.match(r.motivo, /aspas SIMPLES/);
+});

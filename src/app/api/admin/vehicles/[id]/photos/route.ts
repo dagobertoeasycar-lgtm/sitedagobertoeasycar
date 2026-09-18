@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { imageUploadMaxBytes, saveImageFile } from "@/lib/image-upload";
+import { normalizarFotos, separarFotos, type MediaItem } from "@/lib/vehicle-photos";
 
 /**
  * Gestão das fotos de um veículo.
  *
- * GET    → fotos atuais, originais guardadas e estado da trava
+ * GET    → fotos atuais, arte da loja descartada, originais e estado da trava
+ * POST   → sobe arquivos novos (multipart) e ACRESCENTA à galeria
  * PUT    → substitui a galeria inteira (é o que o tratamento usa)
  * PATCH  → travar, destravar ou restaurar as fotos da origem
  * DELETE → remove uma foto pela URL, ou todas com ?todas=1
  *
  * A trava existe para a sincronização não devolver as fotos do parceiro por
  * cima das tratadas. Ver migration 015 e a guarda em sync-partners.mjs.
+ *
+ * Quem sobe foto pelo painel (POST) trava o veículo: foi trabalho manual, o
+ * sync não pode desfazer no ciclo seguinte.
  */
 
-const UUID = /^[0-9a-f-]{36}$/;
+export const runtime = "nodejs";
 
-type MediaItem = { type: "image" | "video"; url: string };
+const UUID = /^[0-9a-f-]{36}$/;
+const MAX_ARQUIVOS = 40;
 
 type VehicleRow = {
   id: string;
@@ -28,18 +35,8 @@ type VehicleRow = {
   photos_status: string;
 };
 
-function normalizarLista(valor: unknown): MediaItem[] {
-  const bruto = Array.isArray(valor) ? valor : [];
-  const vistas = new Set<string>();
-  const saida: MediaItem[] = [];
-  for (const item of bruto) {
-    const url = typeof item === "string" ? item : (item as MediaItem)?.url;
-    if (typeof url !== "string" || !/^https?:\/\/|^\//.test(url)) continue;
-    if (vistas.has(url)) continue;
-    vistas.add(url);
-    saida.push({ type: "image", url });
-  }
-  return saida;
+function comoMedia(urls: string[]): MediaItem[] {
+  return urls.map((url) => ({ type: "image", url }));
 }
 
 async function carregar(id: string) {
@@ -59,46 +56,14 @@ async function registrar(vehicleId: string, acao: string, antes: number, depois:
   ).catch(() => undefined);
 }
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const { id } = await params;
-  if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
-
-  const v = await carregar(id);
-  if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
-
-  return NextResponse.json({
-    id: v.id,
-    title: v.title,
-    fotos: normalizarLista(v.images),
-    fotosOriginais: normalizarLista(v.images_original),
-    capa: v.image_url,
-    travada: v.photos_locked,
-    situacao: v.photos_status,
-  });
-}
-
-/** Substitui a galeria inteira. Guarda as originais na primeira troca. */
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
-  if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-  const { id } = await params;
-  if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
-
-  const body = (await request.json()) as { fotos?: unknown; travar?: boolean; situacao?: string };
-  const fotos = normalizarLista(body.fotos);
-  if (!fotos.length) {
-    return NextResponse.json({ error: "Envie ao menos uma foto válida." }, { status: 400 });
-  }
-
-  const v = await carregar(id);
-  if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
-
-  const antes = normalizarLista(v.images);
-  const jaGuardou = normalizarLista(v.images_original).length > 0;
-  const travar = body.travar !== false;
-  const situacao = body.situacao === "EM_TRATAMENTO" ? "EM_TRATAMENTO" : travar ? "TRATADA" : "ORIGEM";
-
+/** Grava a galeria nova mantendo a cópia das originais da primeira troca. */
+async function gravarGaleria(
+  id: string,
+  atual: VehicleRow,
+  fotos: string[],
+  opcoes: { travar: boolean; situacao: string; userId: string },
+) {
+  const jaGuardou = normalizarFotos(atual.images_original).length > 0;
   await query(
     `UPDATE vehicles SET
        images_original = CASE WHEN $2 THEN images_original ELSE images END,
@@ -110,11 +75,115 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
        photos_status = $7,
        updated_at = now()
      WHERE id = $1`,
-    [id, jaGuardou, JSON.stringify(fotos), fotos[0].url, travar, session.userId, situacao],
+    [
+      id,
+      jaGuardou,
+      JSON.stringify(comoMedia(fotos)),
+      fotos[0] ?? null,
+      opcoes.travar,
+      opcoes.userId,
+      opcoes.situacao,
+    ],
   );
+}
 
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { id } = await params;
+  if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+
+  const v = await carregar(id);
+  if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
+
+  const { fotos, artesDaLoja } = separarFotos(v.images);
+  return NextResponse.json({
+    id: v.id,
+    title: v.title,
+    fotos: comoMedia(fotos),
+    artesDaLoja: comoMedia(artesDaLoja),
+    fotosOriginais: comoMedia(normalizarFotos(v.images_original)),
+    capa: v.image_url,
+    travada: v.photos_locked,
+    situacao: v.photos_status,
+  });
+}
+
+/** Sobe arquivos do computador e acrescenta ao fim da galeria. */
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await currentSession();
+  if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { id } = await params;
+  if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+
+  const v = await carregar(id);
+  if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
+
+  const form = await request.formData();
+  const enviados = form.getAll("fotos").filter((item): item is File => item instanceof File && item.size > 0);
+  if (!enviados.length) return NextResponse.json({ error: "Nenhuma foto enviada." }, { status: 400 });
+  if (enviados.length > MAX_ARQUIVOS) {
+    return NextResponse.json({ error: `Envie no máximo ${MAX_ARQUIVOS} fotos por vez.` }, { status: 400 });
+  }
+
+  const novas: string[] = [];
+  const recusadas: string[] = [];
+  for (const arquivo of enviados) {
+    if (arquivo.size > imageUploadMaxBytes) {
+      recusadas.push(`${arquivo.name}: acima de ${Math.round(imageUploadMaxBytes / 1024 / 1024)} MB`);
+      continue;
+    }
+    try {
+      novas.push((await saveImageFile(arquivo)).url);
+    } catch (error) {
+      recusadas.push(`${arquivo.name}: ${error instanceof Error ? error.message : "falhou"}`);
+    }
+  }
+  if (!novas.length) {
+    return NextResponse.json({ error: `Nenhuma foto aceita. ${recusadas.join("; ")}` }, { status: 400 });
+  }
+
+  // Substituir: a foto que o operador subiu vale mais do que a arte do
+  // parceiro, mas a arte só sai se sobrar foto de verdade na galeria.
+  const { fotos, artesDaLoja } = separarFotos(v.images);
+  const antes = fotos.length + artesDaLoja.length;
+  const galeria = normalizarFotos([...fotos, ...novas]);
+
+  await gravarGaleria(id, v, galeria, {
+    travar: true,
+    situacao: v.photos_status === "ORIGEM" ? "EM_TRATAMENTO" : v.photos_status,
+    userId: session.userId,
+  });
+  await registrar(id, "ADICIONAR", antes, galeria.length, session.userId, `${novas.length} enviada(s) pelo painel`);
+
+  return NextResponse.json(
+    { id, fotos: comoMedia(galeria), adicionadas: novas.length, recusadas, travada: true },
+    { status: 201 },
+  );
+}
+
+/** Substitui a galeria inteira. Guarda as originais na primeira troca. */
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await currentSession();
+  if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { id } = await params;
+  if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+
+  const body = (await request.json()) as { fotos?: unknown; travar?: boolean; situacao?: string };
+  const fotos = normalizarFotos(body.fotos);
+  if (!fotos.length) {
+    return NextResponse.json({ error: "Envie ao menos uma foto válida." }, { status: 400 });
+  }
+
+  const v = await carregar(id);
+  if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
+
+  const antes = normalizarFotos(v.images);
+  const travar = body.travar !== false;
+  const situacao = body.situacao === "EM_TRATAMENTO" ? "EM_TRATAMENTO" : travar ? "TRATADA" : "ORIGEM";
+
+  await gravarGaleria(id, v, fotos, { travar, situacao, userId: session.userId });
   await registrar(id, "SUBSTITUIR", antes.length, fotos.length, session.userId, travar ? "travada" : "sem trava");
-  return NextResponse.json({ id, fotos, travada: travar, situacao });
+  return NextResponse.json({ id, fotos: comoMedia(fotos), travada: travar, situacao });
 }
 
 /** Travar, destravar ou restaurar as fotos da origem. */
@@ -144,7 +213,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   if (body.acao === "restaurar") {
-    const originais = normalizarLista(v.images_original);
+    // Restaurar volta ao que a origem mandou, mas a arte da loja continua
+    // fora: ela nunca deveria ter entrado na galeria.
+    const originais = separarFotos(v.images_original).fotos;
     if (!originais.length) {
       return NextResponse.json(
         { error: "Este veículo não tem fotos originais guardadas para restaurar." },
@@ -157,10 +228,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
          photos_locked = false, photos_locked_at = NULL, photos_locked_by = NULL,
          photos_status = 'ORIGEM', updated_at = now()
        WHERE id = $1`,
-      [id, JSON.stringify(originais), originais[0].url],
+      [id, JSON.stringify(comoMedia(originais)), originais[0]],
     );
-    await registrar(id, "RESTAURAR", normalizarLista(v.images).length, originais.length, session.userId);
-    return NextResponse.json({ id, fotos: originais, travada: false, situacao: "ORIGEM" });
+    await registrar(id, "RESTAURAR", normalizarFotos(v.images).length, originais.length, session.userId);
+    return NextResponse.json({ id, fotos: comoMedia(originais), travada: false, situacao: "ORIGEM" });
   }
 
   return NextResponse.json({ error: "Ação inválida. Use travar, destravar ou restaurar." }, { status: 400 });
@@ -176,17 +247,17 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const v = await carregar(id);
   if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
 
-  const atuais = normalizarLista(v.images);
+  const atuais = normalizarFotos(v.images);
   const url = new URL(request.url);
   const todas = url.searchParams.get("todas") === "1";
   const alvo = url.searchParams.get("url") ?? "";
 
-  const restantes = todas ? [] : atuais.filter((f) => f.url !== alvo);
+  const restantes = todas ? [] : atuais.filter((foto) => foto !== alvo);
   if (!todas && restantes.length === atuais.length) {
     return NextResponse.json({ error: "Foto não encontrada nesse veículo." }, { status: 404 });
   }
 
-  const jaGuardou = normalizarLista(v.images_original).length > 0;
+  const jaGuardou = normalizarFotos(v.images_original).length > 0;
   await query(
     `UPDATE vehicles SET
        images_original = CASE WHEN $2 THEN images_original ELSE images END,
@@ -194,9 +265,9 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
        image_url = $4,
        updated_at = now()
      WHERE id = $1`,
-    [id, jaGuardou, JSON.stringify(restantes), restantes[0]?.url ?? null],
+    [id, jaGuardou, JSON.stringify(comoMedia(restantes)), restantes[0] ?? null],
   );
 
   await registrar(id, "EXCLUIR", atuais.length, restantes.length, session.userId, todas ? "todas" : alvo);
-  return NextResponse.json({ id, fotos: restantes });
+  return NextResponse.json({ id, fotos: comoMedia(restantes) });
 }

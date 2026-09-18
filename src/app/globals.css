@@ -1472,6 +1472,123 @@ th { background: var(--soft); }
   min-width: 160px;
 }
 
+/* Botão pequeno das tabelas do painel e o formulário de status da linha */
+.button-small {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+  background: #0a4da2;
+  color: #fff;
+}
+.button-small.button-outline { background: #fff; color: #0f172a; }
+.button-small.button-perigo {
+  background: #fff;
+  color: #b42318;
+  border-color: #fecdca;
+}
+.button-small.button-perigo:hover { background: #fef3f2; }
+.button-small:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.status-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.status-form select {
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+/* Fotos do veículo na linha da tabela */
+.veiculo-fotos { margin-top: 8px; }
+.veiculo-fotos-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.veiculo-fotos-painel {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  min-width: 320px;
+}
+.veiculo-fotos-pasta { margin: 0 0 10px; font-size: 0.78rem; color: #475569; }
+.veiculo-fotos-pasta code {
+  background: #e2e8f0;
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 0.75rem;
+}
+.veiculo-fotos-aviso { margin: 10px 0 0; font-size: 0.8rem; color: #0f766e; }
+.veiculo-fotos-erro { margin: 10px 0 0; font-size: 0.8rem; color: #b42318; font-weight: 700; }
+.veiculo-fotos-nota { margin: 10px 0 0; font-size: 0.76rem; color: #92400e; }
+.veiculo-fotos-vazio { font-size: 0.8rem; color: #64748b; }
+.veiculo-fotos-grade {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.veiculo-fotos-grade li {
+  position: relative;
+  width: 84px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+.veiculo-fotos-grade li.veiculo-fotos-vazio {
+  width: auto;
+  height: auto;
+  background: none;
+  overflow: visible;
+}
+.veiculo-fotos-grade img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Foto que o CDN da origem não entregou: fica legível em vez de virar um
+   retângulo com texto derramando por cima das vizinhas. */
+.veiculo-fotos-grade img.quebrada {
+  object-fit: contain;
+  background: #fee2e2;
+  font-size: 0.6rem;
+  color: #b42318;
+  padding: 2px;
+}
+.veiculo-fotos-grade li > span {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+.veiculo-fotos-grade li > button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(180, 35, 24, 0.92);
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.veiculo-fotos-grade li > button:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* Pagination */
 .adm-pagination {
   display: flex;

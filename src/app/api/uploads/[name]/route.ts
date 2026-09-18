@@ -14,7 +14,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ nam
   try {
     const file = await readFile(filePath);
     const extension = name.split(".").pop() ?? "";
-    return new NextResponse(file, { headers: { "Content-Type": imageUploadContentTypes[extension], "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" } });
+    return new NextResponse(file, {
+      headers: {
+        "Content-Type": imageUploadContentTypes[extension],
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch {
     return new NextResponse("Não encontrado", { status: 404 });
   }

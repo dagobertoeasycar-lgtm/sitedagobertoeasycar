@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  textoSimples,
   buildMetaFeed,
   DEFAULT_META_FEED_SETTINGS,
   META_FEED_HEADERS,
@@ -99,15 +100,30 @@ test("URLs locais, Windows, HTTP e localhost são rejeitadas", () => {
 
 test("imagem principal e adicionais usam apenas HTTPS público", () => {
   const result = buildMetaFeed([vehicle({
-    image_url: "/api/uploads/main.jpg",
+    image_url: "https://blob.exemplo.com/main.jpg",
     images: [
       { type: "video", url: "https://youtu.be/test" },
       { type: "image", url: "https://images.example.com/extra.jpg" },
       { type: "image", url: "http://localhost/secret.jpg" },
     ],
   })]);
-  assert.equal(result.items[0].image_link, "https://www.dagobertoeasycar.com.br/api/uploads/main.jpg");
+  assert.equal(result.items[0].image_link, "https://blob.exemplo.com/main.jpg");
   assert.equal(result.items[0].additional_image_link, "https://images.example.com/extra.jpg");
+});
+
+test("endereço /api/uploads não entra no catálogo: aquele armazenamento morreu", () => {
+  // Os arquivos ficavam em disco temporário e a rota que os servia foi
+  // removida. Mandar para a Meta um item cuja imagem dá 404 faz ela recusar
+  // o item inteiro — melhor entrar no relatório como veículo sem imagem.
+  const result = buildMetaFeed([vehicle({
+    image_url: "/api/uploads/morta.png",
+    images: [{ type: "image", url: "https://images.example.com/boa.jpg" }],
+  })]);
+  assert.equal(result.items[0].image_link, "https://images.example.com/boa.jpg");
+  assert.equal(result.items[0].additional_image_link, "");
+
+  const soMortas = buildMetaFeed([vehicle({ image_url: "/api/uploads/morta.png", images: [] })]);
+  assert.equal(soMortas.items.length, 0, "veículo sem imagem viva não vai para o catálogo");
 });
 
 test("CSV contém somente campos comerciais e automotivos permitidos", () => {
@@ -125,4 +141,16 @@ test("ano, quilometragem, localização e atributos são exportados", () => {
   assert.equal(item.state, "SP");
   assert.equal(item.transmission, "Automático");
   assert.equal(item.fuel_type, "Flex");
+});
+
+test("descrição do catálogo sai em texto puro, sem HTML do anúncio do parceiro", () => {
+  // Caso real: 51 dos 518 veículos do feed publicado traziam <div> e <br>
+  // crus. A Meta recusa o item quando acha marcação na descrição.
+  assert.equal(
+    textoSimples("<div>Carro <b>revisado</b><br>Pneus novos</div>"),
+    "Carro revisado\nPneus novos",
+  );
+  assert.equal(textoSimples("A &amp; B &nbsp; C"), "A & B C");
+  assert.equal(textoSimples(null), "");
+  assert.match(textoSimples("<div>\nVolkswagen Amarok\n</div>"), /^Volkswagen Amarok$/);
 });

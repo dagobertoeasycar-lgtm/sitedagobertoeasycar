@@ -13,6 +13,8 @@
  *   }
  */
 
+import { separarFotos } from "../../src/lib/vehicle-photos.ts";
+
 export const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
 
@@ -202,6 +204,21 @@ export function passaFiltroTipo(vehicleType, filtro) {
   return !NAO_E_CARRO.some((p) => t.includes(p));
 }
 
+/**
+ * Placa só entra se for placa de verdade.
+ *
+ * Várias origens publicam a placa mascarada ("D**-***0", "ABC-1**4"). Limpar
+ * os caracteres especiais transformava isso em "D0" — que parecia uma placa
+ * no banco, virava nome de pasta de fotos e servia de chave de deduplicação
+ * entre parceiros. Melhor não ter placa do que ter uma inventada.
+ *
+ * Formatos aceitos: antigo ABC1234 e Mercosul ABC1D23.
+ */
+export function normalizePlate(valor) {
+  const limpa = cleanText(valor).toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return /^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(limpa) ? limpa : null;
+}
+
 /** Monta o registro normalizado, aplicando os limites do banco. */
 export function normalizeVehicle(dados) {
   const brand = cleanText(dados.brand);
@@ -211,10 +228,13 @@ export function normalizeVehicle(dados) {
   const yearModel = toInt(dados.yearModel) || toInt(dados.yearMake);
   const yearMake = toInt(dados.yearMake) || yearModel;
 
-  const media = (dados.media || [])
-    .map((url) => (typeof url === "string" ? url : url?.url))
-    .filter((url) => typeof url === "string" && /^https?:\/\//.test(url))
-    .map((url) => ({ type: "image", url }));
+  // Arte da loja de origem (logotipo do parceiro, composição de marketing com
+  // o nome da revenda) não entra no site: mostrar "TCHESCOCAR" como foto de um
+  // carro do catálogo da Auto Drive é anúncio do concorrente. A regra mora em
+  // src/lib/vehicle-photos.ts, a mesma que a fila de tratamento usa.
+  // A arte fica como último recurso — carro sem imagem nenhuma é pior.
+  const { fotos, artesDaLoja } = separarFotos(dados.media || []);
+  const media = (fotos.length ? fotos : artesDaLoja).map((url) => ({ type: "image", url }));
 
   return {
     externalId: String(dados.externalId),
@@ -238,7 +258,7 @@ export function normalizeVehicle(dados) {
     imageUrl: media[0]?.url ?? null,
     media,
     options: (dados.options || []).map((o) => cleanText(typeof o === "string" ? o : o?.nome)).filter(Boolean),
-    plate: cleanText(dados.plate).toUpperCase().replace(/[^A-Z0-9]/g, "") || null,
+    plate: normalizePlate(dados.plate),
     vehicleType: cleanText(dados.vehicleType) || null,
     sourceUrl: dados.sourceUrl || null,
   };
