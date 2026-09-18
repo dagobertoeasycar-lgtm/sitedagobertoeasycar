@@ -30,3 +30,12 @@ test("uploads usam Vercel Blob quando configurado e mantêm fallback local", () 
   assert.match(upload, /BLOB_READ_WRITE_TOKEN/);
   assert.match(upload, /api\/uploads/);
 });
+
+test("painel de fotos exige sessão antes de abrir a galeria", () => {
+  const page = readFileSync("src/app/admin/veiculos/page.tsx", "utf8");
+  const panel = readFileSync("src/components/VehiclePhotosPanel.tsx", "utf8");
+  assert.match(page, /currentSession/);
+  assert.match(page, /redirect\("\/admin\/login"\)/);
+  assert.match(panel, /resposta\.status === 401/);
+  assert.match(panel, /redirecionarParaLogin/);
+});

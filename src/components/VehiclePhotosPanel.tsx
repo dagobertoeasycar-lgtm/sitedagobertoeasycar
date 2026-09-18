@@ -32,6 +32,10 @@ const SITUACOES: Record<string, string> = {
   TRATADA: "tratada",
 };
 
+function redirecionarParaLogin() {
+  if (typeof window !== "undefined") window.location.assign("/admin/login");
+}
+
 export function VehiclePhotosPanel({
   id,
   titulo,
@@ -55,6 +59,10 @@ export function VehiclePhotosPanel({
     setOcupado("lendo");
     try {
       const resposta = await fetch(`/api/admin/vehicles/${id}/photos`);
+      if (resposta.status === 401) {
+        redirecionarParaLogin();
+        return;
+      }
       const corpo = await resposta.json();
       if (!resposta.ok) throw new Error(corpo.error || `HTTP ${resposta.status}`);
       setGaleria(corpo);
@@ -78,6 +86,10 @@ export function VehiclePhotosPanel({
     setOcupado(rotulo);
     try {
       const resposta = await executar();
+      if (resposta.status === 401) {
+        redirecionarParaLogin();
+        return;
+      }
       const corpo = await resposta.json().catch(() => ({}));
       if (!resposta.ok) throw new Error(corpo.error || `HTTP ${resposta.status}`);
       setAviso(mensagem);
@@ -113,6 +125,10 @@ export function VehiclePhotosPanel({
       dados.append("fotos", arquivo);
       try {
         const resposta = await fetch(`/api/admin/vehicles/${id}/photos`, { method: "POST", body: dados });
+        if (resposta.status === 401) {
+          redirecionarParaLogin();
+          return;
+        }
         if (resposta.status === 413) {
           falhas.push(`${arquivo.name}: grande demais (${(arquivo.size / 1024 / 1024).toFixed(1)} MB)`);
           continue;

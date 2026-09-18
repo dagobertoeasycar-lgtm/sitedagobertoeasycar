@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { VehicleStatusForm } from "@/components/VehicleStatusForm";
 import { VehiclePhotosPanel } from "@/components/VehiclePhotosPanel";
@@ -39,6 +41,8 @@ const originLabels: Record<string, string> = {
 };
 
 export default async function AdminVehiclesPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
+  if (!(await currentSession())) redirect("/admin/login");
+
   const sp = await searchParams;
   const status = sp.status || "";
   const origin = sp.origin || "";
