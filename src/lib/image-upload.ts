@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import { resolve, sep } from "node:path";
+import { put } from "@vercel/blob";
 
 export const imageUploadMaxBytes = 8 * 1024 * 1024;
 export const imageUploadContentTypes: Record<string, string> = {
@@ -9,9 +8,6 @@ export const imageUploadContentTypes: Record<string, string> = {
   webp: "image/webp",
   avif: "image/avif",
 };
-
-export const uploadsRoot =
-  process.env.UPLOAD_DIR || (process.env.VERCEL ? "/tmp/autodrive-uploads" : "C:\\Sites\\DagobertoEasycar\\data\\uploads");
 
 export function detectedImageExtension(bytes: Uint8Array) {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";
@@ -27,16 +23,18 @@ export async function saveImageFile(file: File) {
   const extension = detectedImageExtension(bytes);
   if (!extension) throw new Error("Formato não permitido");
 
-  const base = resolve(uploadsRoot);
   const filename = `${randomUUID()}.${extension}`;
-  const destination = resolve(base, /* turbopackIgnore: true */ filename);
-  if (!destination.startsWith(base + sep)) throw new Error("Destino inválido");
-  await mkdir(base, { recursive: true });
-  await writeFile(destination, bytes, { flag: "wx" });
+  const contentType = imageUploadContentTypes[extension];
+
+  const blob = await put(filename, file, {
+    access: 'public',
+    contentType: contentType,
+  });
+
   return {
     filename,
-    url: `/api/uploads/${filename}`,
+    url: blob.url,
     size: file.size,
-    contentType: imageUploadContentTypes[extension],
+    contentType,
   };
 }

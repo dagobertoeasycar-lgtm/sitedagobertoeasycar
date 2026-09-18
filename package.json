@@ -22,6 +22,8 @@
     "feed:validate": "node scripts/validate-meta-feed.mjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.0",
+    "lucide-react": "^1.47.0",
     "next": "16.2.12",
     "nodemailer": "^9.0.3",
     "pg": "8.22.0",
