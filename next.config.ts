@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "autoconf-production.s3.amazonaws.com", pathname: "/**" },
       { protocol: "https", hostname: "cdn-sistema-lojistas.bndv.com.br", pathname: "/**" },
       { protocol: "https", hostname: "*.blob.core.windows.net", pathname: "/**" },
+      { protocol: "https", hostname: "*.blob.vercel-storage.com", pathname: "/**" },
       { protocol: "https", hostname: "*.supabase.co", pathname: "/**" },
     ],
   },
@@ -50,7 +51,10 @@ const nextConfig: NextConfig = {
               "https://resized-images.autoconf.com.br https://static.autoconf.com.br " +
               "https://autoconf-production.s3.amazonaws.com " +
               "https://cdn-sistema-lojistas.bndv.com.br https://*.bndv.com.br " +
-              "https://*.blob.core.windows.net https://*.supabase.co; " +
+              "https://*.blob.core.windows.net https://*.supabase.co " +
+              // Onde as fotos TRATADAS moram (Vercel Blob). Sem este host o
+              // navegador bloqueia a foto tratada e o card fica vazio.
+              "https://*.blob.vercel-storage.com; " +
               "style-src 'self' 'unsafe-inline'; " +
               "script-src 'self' 'unsafe-inline' https://connect.facebook.net; " +
               "connect-src 'self' https://www.facebook.com https://connect.facebook.net; " +
