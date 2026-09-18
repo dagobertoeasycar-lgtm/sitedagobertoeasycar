@@ -205,6 +205,13 @@
   .autodrive-site .header-actions { display: none; }
   .autodrive-site .mobile-menu { margin-left: auto; }
   .autodrive-site .home-hero { min-height: 430px; }
+  .autodrive-site .banner-carousel { aspect-ratio: auto; }
+  .autodrive-site .banner-carousel:has(.banner-dots) { padding-bottom: 36px; }
+  .autodrive-site .banner-slide { height: auto; aspect-ratio: 3 / 1; }
+  .autodrive-site .banner-slide img { height: auto; aspect-ratio: 3 / 1; object-fit: contain; object-position: center; }
+  .autodrive-site .banner-nav { top: auto; bottom: 4px; transform: none; width: 28px; height: 28px; border-radius: 6px; font-size: 1.4rem; }
+  .autodrive-site .banner-dots { bottom: 12px; }
+  .autodrive-site .banner-dot { width: 9px; height: 9px; border-width: 1px; }
   .autodrive-site .hero-content { padding-block: 40px; }
   .autodrive-site .hero-content h1 { font-size: 2.35rem; }
   .autodrive-site .hero-content > p:not(.eyebrow) { font-size: 1rem; }
