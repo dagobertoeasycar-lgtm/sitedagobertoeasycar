@@ -12,6 +12,7 @@
  * config: { baseUrl, listPath, detailPath?, fetchDetails?, maxDetails?, vehicleFilter? }
  */
 import { cleanText, fetchText, normalizeVehicle, passaFiltroTipo, sleep, toCents, toInt } from "./shared.mjs";
+import { ehMarcaDaLoja } from "../../src/lib/vehicle-photos.ts";
 
 export const id = "bndv_html";
 export const label = "BNDV / site próprio (HTML)";
@@ -42,10 +43,22 @@ function classificarFicha(itens) {
   return out;
 }
 
+/**
+ * Fotos do carro no HTML do BNDV.
+ *
+ * O filtro por "vehicles-images/" é o que separa foto de carro de material da
+ * loja. A página de detalhe da Now Car não traz foto nenhuma no HTML do
+ * servidor — as imagens entram por JavaScript — e o que sobrava no casamento
+ * do regex era `sites-logo/clientes/766/logo.jpeg`, o logotipo da revenda.
+ * Sem este filtro, TODO veículo da Now Car ficava com o logotipo da loja no
+ * lugar das fotos.
+ */
 function imagensDe(html) {
-  const urls = [...html.matchAll(/https?:\/\/[^"'\s]*blob\.core\.windows\.net[^"'\s]*?\.(?:jpe?g|png|webp)/gi)].map((m) => m[0]);
-  const cdn = [...html.matchAll(/https?:\/\/cdn-sistema-lojistas\.bndv\.com\.br[^"'\s]*?\.(?:jpe?g|png|webp)/gi)].map((m) => m[0]);
-  return [...new Set([...urls, ...cdn])];
+  const bruto = [
+    ...[...html.matchAll(/https?:\/\/[^"'\s]*blob\.core\.windows\.net[^"'\s]*?\.(?:jpe?g|png|webp)/gi)].map((m) => m[0]),
+    ...[...html.matchAll(/https?:\/\/cdn-sistema-lojistas\.bndv\.com\.br[^"'\s]*?\.(?:jpe?g|png|webp)/gi)].map((m) => m[0]),
+  ];
+  return [...new Set(bruto.filter((url) => /\/vehicles-images\//i.test(url) && !ehMarcaDaLoja(url)))];
 }
 
 function lerListagem(html, baseUrl, detailPath) {
@@ -138,7 +151,10 @@ export async function collect(config, log = console.log) {
         descricao = d.observacoes;
         version = d.titulo || version;
         if (d.preco) precoRaw = d.preco;
-        if (d.imagens.length) imagens = d.imagens;
+        // União, nunca substituição: a página de detalhe às vezes devolve
+        // menos foto do que o cartão da listagem, e trocar uma lista boa por
+        // uma lista curta deixava o carro quase sem imagem.
+        if (d.imagens.length) imagens = [...new Set([...d.imagens, ...imagens])];
         ficha = {
           yearMake: d.ficha.yearMake || ficha.yearMake,
           yearModel: d.ficha.yearModel || ficha.yearModel,

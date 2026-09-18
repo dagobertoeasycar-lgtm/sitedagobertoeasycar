@@ -93,6 +93,24 @@ async function desligarEstoque(client, parceiro) {
   return removidos;
 }
 
+/**
+ * Ids externos que o painel excluiu de vez, para esta origem.
+ *
+ * Banco sem a migration 017 responde com erro de tabela inexistente; nesse
+ * caso o sync segue normal, só sem bloqueio nenhum.
+ */
+async function lerBloqueios(client, sourceId) {
+  try {
+    const r = await client.query(
+      "select external_id from vehicle_blocklist where source_id = $1",
+      [sourceId],
+    );
+    return new Set(r.rows.map((linha) => String(linha.external_id)));
+  } catch {
+    return new Set();
+  }
+}
+
 async function importarParceiro(client, parceiro, regras) {
   const conector = CONECTORES[parceiro.connector];
   if (!conector) throw new Error(`conector desconhecido: ${parceiro.connector}`);
@@ -100,10 +118,19 @@ async function importarParceiro(client, parceiro, regras) {
   const config = parceiro.connector_config || {};
   const veiculos = await conector.collect(config, log);
 
-  const contadores = { encontrados: veiculos.length, novos: 0, atualizados: 0, precoAlterado: 0, semAlteracao: 0, ignorados: 0, erros: 0 };
+  const contadores = { encontrados: veiculos.length, novos: 0, atualizados: 0, precoAlterado: 0, semAlteracao: 0, ignorados: 0, bloqueados: 0, erros: 0 };
   const idsVistos = [];
 
+  // Quem foi excluído no painel não volta. Sem esta consulta o upsert
+  // reimportaria o veículo publicado no ciclo seguinte. Ver migration 017.
+  const bloqueados = await lerBloqueios(client, parceiro.sync_source_id);
+
   for (const v of veiculos) {
+    if (bloqueados.has(String(v.externalId))) {
+      contadores.bloqueados++;
+      continue;
+    }
+
     const motivo = veiculoAceitavel(v);
     if (motivo) {
       contadores.ignorados++;
@@ -333,8 +360,8 @@ async function main() {
         const c = await importarParceiro(client, parceiro, regras);
         log(
           `  encontrados ${c.encontrados} · novos ${c.novos} · preço alterado ${c.precoAlterado} · ` +
-            `sem alteração ${c.semAlteracao} · ignorados ${c.ignorados} · ausentes ${c.ausentes} · ` +
-            `retirados ${c.removidos} · erros ${c.erros}`,
+            `sem alteração ${c.semAlteracao} · ignorados ${c.ignorados} · bloqueados ${c.bloqueados} · ` +
+            `ausentes ${c.ausentes} · retirados ${c.removidos} · erros ${c.erros}`,
         );
         resumo.push({ parceiro: parceiro.name, estado: "ok", ...c });
         await client.query(
