@@ -56,8 +56,44 @@ export default async function Home() {
     getHomeTestimonials(),
   ]);
 
+  const homeHero = (
+    <section className="hero home-hero">
+      <div className="shell hero-grid">
+        <div className="hero-content">
+          <p className="eyebrow">Centenas de opções. Um só atendimento.</p>
+          <h1>Modelos para todos os gostos.</h1>
+          <p>Estoque próprio, veículos de parceiros e oportunidades de particulares em um só lugar. Você escolhe o caminho e a Autodrive acompanha a negociação.</p>
+          <div className="hero-actions">
+            <Link className="button" href="/veiculos"><CarFront size={19} aria-hidden="true" />Ver carros disponíveis</Link>
+            <a className="button button-outline hero-outline" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><MessageCircle size={19} aria-hidden="true" />Falar com a equipe</a>
+          </div>
+          <div className="hero-trust">
+            <span><CheckCircle2 size={16} aria-hidden="true" />Atendimento único, humano e personalizado</span>
+            <span><CheckCircle2 size={16} aria-hidden="true" />Opções de financiamento</span>
+            <span><CheckCircle2 size={16} aria-hidden="true" />Rede de parceiros</span>
+          </div>
+        </div>
+        <div className="hero-banner-frame">
+          <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
+        </div>
+      </div>
+    </section>
+  );
+
+  const homeServices = (
+    <section className="section home-services"><div className="shell">
+      <div className="section-heading"><div><p className="eyebrow dark">Como podemos ajudar?</p><h2>Escolha o caminho certo para o seu momento.</h2><p className="section-intro">A equipe direciona cada atendimento para a solução mais adequada.</p></div></div>
+      <div className="service-panels">
+        <article className="service-panel"><p className="eyebrow dark">Para quem vai comprar</p><h3>Financiamento</h3><p>Escolha um veículo anunciado por uma loja parceira e faça sua simulação com acompanhamento da Autodrive.</p><Link className="button button-dark" href="/financiamento">Escolher veículo e simular<ArrowRight size={17} aria-hidden="true" /></Link></article>
+        <article className="service-panel service-panel-accent"><p className="eyebrow dark">Para negociações particulares</p><h3>Financia Fácil</h3><p>Encontrou um carro com um amigo, conhecido ou outro particular? Nós cuidamos do caminho com a financeira.</p><Link className="button" href="/financia-facil">Conhecer o Financia Fácil<ArrowRight size={17} aria-hidden="true" /></Link></article>
+      </div>
+    </div></section>
+  );
+
   return (
     <>
+      {homeHero}
+
       <section className="shell home-journeys" aria-label="Caminhos principais">
         {journeys.map(({ icon: Icon, title, text, label, href }) => (
           <Link href={href} className="journey-card" key={href}>
@@ -67,14 +103,6 @@ export default async function Home() {
           </Link>
         ))}
       </section>
-
-      <section className="section home-services"><div className="shell">
-        <div className="section-heading"><div><p className="eyebrow dark">Como podemos ajudar?</p><h2>Escolha o caminho certo para o seu momento.</h2><p className="section-intro">A equipe direciona cada atendimento para a solução mais adequada.</p></div></div>
-        <div className="service-panels">
-          <article className="service-panel"><p className="eyebrow dark">Para quem vai comprar</p><h3>Financiamento</h3><p>Escolha um veículo anunciado por uma loja parceira e faça sua simulação com acompanhamento da Autodrive.</p><Link className="button button-dark" href="/financiamento">Escolher veículo e simular<ArrowRight size={17} aria-hidden="true" /></Link></article>
-          <article className="service-panel service-panel-accent"><p className="eyebrow dark">Para negociações particulares</p><h3>Financia Fácil</h3><p>Encontrou um carro com um amigo, conhecido ou outro particular? Nós cuidamos do caminho com a financeira.</p><Link className="button" href="/financia-facil">Conhecer o Financia Fácil<ArrowRight size={17} aria-hidden="true" /></Link></article>
-        </div>
-      </div></section>
 
       <section className="featured-showcase">
         <div className="shell">
@@ -86,34 +114,14 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="hero home-hero">
-        <div className="shell hero-grid">
-          <div className="hero-content">
-            <p className="eyebrow">Centenas de opções. Um só atendimento.</p>
-            <h1>Modelos para todos os gostos.</h1>
-            <p>Estoque próprio, veículos de parceiros e oportunidades de particulares em um só lugar. Você escolhe o caminho e a Autodrive acompanha a negociação.</p>
-            <div className="hero-actions">
-              <Link className="button" href="/veiculos"><CarFront size={19} aria-hidden="true" />Ver carros disponíveis</Link>
-              <a className="button button-outline hero-outline" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><MessageCircle size={19} aria-hidden="true" />Falar com a equipe</a>
-            </div>
-            <div className="hero-trust">
-              <span><CheckCircle2 size={16} aria-hidden="true" />Atendimento único, humano e personalizado</span>
-              <span><CheckCircle2 size={16} aria-hidden="true" />Opções de financiamento</span>
-              <span><CheckCircle2 size={16} aria-hidden="true" />Rede de parceiros</span>
-            </div>
-          </div>
-          <div className="hero-banner-frame">
-            <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
-          </div>
-        </div>
-      </section>
-
       <section className="benefits"><div className="shell benefit-grid">
         <div><ShieldCheck size={28} aria-hidden="true" /><strong>Veículos periciados</strong><span>Procedência e verificação antes da venda.</span></div>
         <div><CircleDollarSign size={28} aria-hidden="true" /><strong>Entrada em até 21x</strong><span>Entrada facilitada. Consulte condições.</span></div>
         <div><CarFront size={28} aria-hidden="true" /><strong>Financiamento em até 60x</strong><span>Com ou sem entrada. Consulte condições.</span></div>
         <div><BadgeCheck size={28} aria-hidden="true" /><strong>Mais de 16 financeiras</strong><span>Aprovação de crédito online.</span></div>
       </div></section>
+
+      {homeServices}
 
       <section className="shell section">
         <div className="section-heading"><div><p className="eyebrow dark">Como trabalhamos</p><h2>Duas formas de fazer negócio.</h2></div></div>
