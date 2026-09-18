@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/veiculos", icon: "🚗", label: "Veículos" },
   { href: "/admin/banners", icon: "🖼️", label: "Banners e Home" },
   { href: "/admin/leads", icon: "📋", label: "Leads / Contatos" },
+  { href: "/admin/depoimentos", icon: "⭐", label: "Depoimentos" },
   { href: "/admin/parceiros", icon: "🤝", label: "Parceiros" },
   { href: "/admin/atacado", icon: "🏢", label: "Leads de Parceiros" },
   { href: "/admin/sync", icon: "🔄", label: "Sincronização" },

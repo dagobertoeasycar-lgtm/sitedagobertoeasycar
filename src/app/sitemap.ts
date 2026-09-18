@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/parceiros",
     "/sobre",
     "/financiamento",
+    "/financia-facil",
     "/contato",
     "/privacidade",
     "/termos",

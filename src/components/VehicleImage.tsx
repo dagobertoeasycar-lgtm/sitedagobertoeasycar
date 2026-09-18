@@ -15,6 +15,6 @@ export function VehicleImage({ src, alt, loading = "lazy" }: { src: string; alt:
   }, [src]);
   return (
     /* eslint-disable-next-line @next/next/no-img-element */
-    <img ref={image} src={failedSrc === src ? "/em-breve.jpg" : src} alt={alt} loading={loading} onError={() => setFailedSrc(src)} />
+    <img ref={image} src={failedSrc === src ? "/em-breve.png" : src} alt={alt} loading={loading} onError={() => setFailedSrc(src)} />
   );
 }

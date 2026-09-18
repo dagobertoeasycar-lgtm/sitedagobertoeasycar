@@ -120,7 +120,7 @@ export default async function AdminDashboard() {
           <div className="adm-card-header"><h2>Veículos recentes</h2><Link href="/admin/veiculos" className="adm-link">Ver todos →</Link></div>
           <table className="adm-table"><thead><tr><th>Foto</th><th>Veículo</th><th>Status</th><th>Preço</th></tr></thead><tbody>
             {recentVehicles.map((v) => (
-              <tr key={v.id}><td><img src={v.image_url || "/em-breve.jpg"} alt="" className="adm-thumb" /></td><td>{v.title}</td><td><span className={`adm-badge ${v.status}`}>{v.status}</span></td><td>{(v.price_cents/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0})}</td></tr>
+              <tr key={v.id}><td><img src={v.image_url || "/em-breve.png"} alt="" className="adm-thumb" /></td><td>{v.title}</td><td><span className={`adm-badge ${v.status}`}>{v.status}</span></td><td>{(v.price_cents/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0})}</td></tr>
             ))}
           </tbody></table>
         </div>

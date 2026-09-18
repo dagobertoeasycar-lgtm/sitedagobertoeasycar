@@ -46,7 +46,7 @@ export const DEFAULT_META_FEED_SETTINGS: MetaFeedSettings = {
   availabilityPublished: "in stock",
   availabilityReserved: "out of stock",
   availabilitySold: "exclude",
-  defaultImageUrl: `${META_FEED_ORIGIN}/em-breve.jpg`,
+  defaultImageUrl: `${META_FEED_ORIGIN}/em-breve.png`,
   includeWithoutImages: false,
   catalogId: "",
   businessPortfolio: "",

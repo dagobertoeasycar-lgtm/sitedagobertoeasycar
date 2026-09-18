@@ -3,7 +3,7 @@ import { VehicleCard } from "@/components/VehicleCard";
 import { BannerCarousel } from "@/components/BannerCarousel";
 import { listVehicles } from "@/lib/vehicles";
 import { query } from "@/lib/db";
-import { ArrowRight, BadgeCheck, CarFront, CheckCircle2, CircleDollarSign, Handshake, MessageCircle, Search, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, CarFront, CheckCircle2, CircleDollarSign, Handshake, MessageCircle, Search, ShieldCheck, Star, MapPin, HelpCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +12,10 @@ const journeys = [
   { icon: BadgeCheck, title: "Quero vender ou trocar", text: "Conte com nossa equipe para avaliar e anunciar seu veículo.", label: "Avaliar meu carro", href: "/venda-seu-carro" },
   { icon: Search, title: "Procuro um carro específico", text: "Nós procuramos o modelo que você quer na nossa rede.", label: "Pedir uma busca", href: "/encontre-seu-carro" },
   { icon: Handshake, title: "Quero ser parceiro", text: "Mais oportunidades para lojistas e profissionais do setor.", label: "Conhecer a parceria", href: "/parceiros" },
-  { icon: CircleDollarSign, title: "Financiamento fácil", text: "Para veículos do site ou comprados de amigos e conhecidos.", label: "Fazer uma simulação", href: "/financiamento" },
+  { icon: CircleDollarSign, title: "Financiamento", text: "Escolha um veículo publicado por uma loja parceira.", label: "Simular financiamento", href: "/financiamento" },
 ];
+
+type HomeTestimonial = { name: string; text: string; vehicle?: string };
 
 async function getBanners() {
   try {
@@ -36,40 +38,47 @@ async function getCarouselIntervalSeconds() {
   }
 }
 
+async function getHomeTestimonials(): Promise<HomeTestimonial[]> {
+  try {
+    const result = await query<{ value: string }>("SELECT value FROM site_settings WHERE key='home_testimonials' LIMIT 1");
+    const value = JSON.parse(result.rows[0]?.value || "[]");
+    if (!Array.isArray(value)) return [];
+    return value.filter((item): item is HomeTestimonial => Boolean(item && typeof item.name === "string" && typeof item.text === "string"))
+      .slice(0, 6).map(item => ({ name: item.name.slice(0, 80), text: item.text.slice(0, 360), vehicle: typeof item.vehicle === "string" ? item.vehicle.slice(0, 100) : "" }));
+  } catch { return []; }
+}
+
 export default async function Home() {
-  const [vehicles, banners, carouselIntervalSeconds] = await Promise.all([
+  const [vehicles, banners, carouselIntervalSeconds, testimonials] = await Promise.all([
     listVehicles().catch(() => []),
     getBanners(),
     getCarouselIntervalSeconds(),
+    getHomeTestimonials(),
   ]);
 
   return (
     <>
-      {/* Banner carousel - managed from admin */}
-      {banners.length > 0 ? (
-        <div className="banner-band">
-          <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
-        </div>
-      ) : (
-        <section className="hero home-hero">
-          <img src="/vehicles/hero.avif" alt="Veículo em showroom automotivo" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          <div className="hero-overlay" />
-          <div className="shell hero-content">
+      <section className="hero home-hero">
+        <div className="shell hero-grid">
+          <div className="hero-content">
             <p className="eyebrow">Centenas de opções. Um só atendimento.</p>
-            <h1>Autodrive Veículos</h1>
-            <p>Modelos para todos os gostos. Compare veículos próprios, de parceiros e particulares, com atendimento humano em cada etapa da negociação.</p>
+            <h1>Modelos para todos os gostos.</h1>
+            <p>Estoque próprio, veículos de parceiros e oportunidades de particulares em um só lugar. Você escolhe o caminho e a Autodrive acompanha a negociação.</p>
             <div className="hero-actions">
               <Link className="button" href="/veiculos"><CarFront size={19} aria-hidden="true" />Ver carros disponíveis</Link>
               <a className="button button-outline hero-outline" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><MessageCircle size={19} aria-hidden="true" />Falar com a equipe</a>
             </div>
             <div className="hero-trust">
-              <span><CheckCircle2 size={16} aria-hidden="true" />Atendimento personalizado</span>
+              <span><CheckCircle2 size={16} aria-hidden="true" />Atendimento único, humano e personalizado</span>
               <span><CheckCircle2 size={16} aria-hidden="true" />Opções de financiamento</span>
               <span><CheckCircle2 size={16} aria-hidden="true" />Rede de parceiros</span>
             </div>
           </div>
-        </section>
-      )}
+          <div className="hero-banner-frame">
+            <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
+          </div>
+        </div>
+      </section>
 
       <section className="home-search">
         <form className="shell" action="/veiculos">
@@ -87,6 +96,14 @@ export default async function Home() {
           </Link>
         ))}
       </section>
+
+      <section className="section home-services"><div className="shell">
+        <div className="section-heading"><div><p className="eyebrow dark">Como podemos ajudar?</p><h2>Escolha o caminho certo para o seu momento.</h2><p className="section-intro">A equipe direciona cada atendimento para a solução mais adequada.</p></div></div>
+        <div className="service-panels">
+          <article className="service-panel"><p className="eyebrow dark">Para quem vai comprar</p><h3>Financiamento</h3><p>Escolha um veículo anunciado por uma loja parceira e faça sua simulação com acompanhamento da Autodrive.</p><Link className="button button-dark" href="/financiamento">Escolher veículo e simular<ArrowRight size={17} aria-hidden="true" /></Link></article>
+          <article className="service-panel service-panel-accent"><p className="eyebrow dark">Para negociações particulares</p><h3>Financia Fácil</h3><p>Encontrou um carro com um amigo, conhecido ou outro particular? Nós cuidamos do caminho com a financeira.</p><Link className="button" href="/financia-facil">Conhecer o Financia Fácil<ArrowRight size={17} aria-hidden="true" /></Link></article>
+        </div>
+      </div></section>
 
       <section className="featured-showcase">
         <div className="shell">
@@ -131,6 +148,15 @@ export default async function Home() {
         </div>
         <p className="legal-note">* Somos somente intermediadores. Garantia, laudo cautelar e procedência são de responsabilidade dos vendedores.</p>
       </section>
+
+      <section className="section home-partner-band" id="parceiros"><div className="shell home-partner-grid">
+        <div><p className="eyebrow">Para lojistas e profissionais do setor</p><h2>Quero ser parceiro Autodrive.</h2><p>Ofereça veículos do seu estoque, encontre oportunidades para sua loja e conte com uma equipe para acompanhar a negociação.</p><div className="partner-points"><span><Handshake size={18} aria-hidden="true" />Ofereça seu estoque</span><span><Search size={18} aria-hidden="true" />Encontre carros para sua loja</span><span><ShieldCheck size={18} aria-hidden="true" />Análise comercial e atendimento acompanhado</span></div></div>
+        <div className="partner-actions"><Link className="button button-light" href="/parceiros">Quero ser parceiro</Link><a className="button partner-outline" href="https://wa.me/5511934718276?text=Ol%C3%A1!%20Quero%20ser%20parceiro%20da%20Autodrive." target="_blank" rel="noreferrer">Falar com a equipe</a></div>
+      </div></section>
+
+      {testimonials.length > 0 && <section className="section section-soft"><div className="shell"><div className="section-heading"><div><p className="eyebrow dark">Experiências reais</p><h2>Quem negocia com a Autodrive recomenda.</h2></div></div><div className="testimonial-grid">{testimonials.map(item => <article className="testimonial-card" key={`${item.name}-${item.text}`}><Star size={20} aria-hidden="true" /><p>“{item.text}”</p><strong>{item.name}</strong>{item.vehicle && <span>{item.vehicle}</span>}</article>)}</div></div></section>}
+
+      <section className="section"><div className="shell home-faq-location"><div className="faq-block"><div className="section-heading"><div><p className="eyebrow dark"><HelpCircle size={15} aria-hidden="true" /> Dúvidas frequentes</p><h2>Negocie com mais tranquilidade.</h2></div></div><details><summary>A Autodrive trabalha com financiamento?</summary><p>Sim. Oferecemos simulações para veículos de lojas parceiras e, pelo Financia Fácil, para negociações particulares. Toda proposta está sujeita à análise.</p></details><details><summary>Posso comprar de um amigo e financiar?</summary><p>Sim. Acesse o Financia Fácil e informe os dados do veículo da negociação para nossa equipe orientar os próximos passos.</p></details><details><summary>Posso vender ou trocar meu carro?</summary><p>Sim. Envie os dados pela página Venda seu carro para uma avaliação inicial da equipe.</p></details></div><div className="location-panel"><MapPin size={24} aria-hidden="true" /><p className="eyebrow dark">Atendimento Autodrive</p><h3>Barueri, região e São Paulo.</h3><p>Atendimento mediante agendamento, com negociação fácil e acompanhamento em cada etapa.</p><Link className="button button-outline" href="/contato">Falar com a equipe</Link></div></div></section>
 
       <section className="home-action-band">
         <div className="shell home-action-grid">

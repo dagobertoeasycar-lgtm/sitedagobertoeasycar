@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Financiamento enviado",
   description: "Confirmação de envio da solicitação de financiamento para a Autodrive.",
+  robots: { index: false, follow: false },
 };
 
 export default function FinancingSuccessPage() {
@@ -11,7 +12,7 @@ export default function FinancingSuccessPage() {
     <>
       <section className="page-hero">
         <div className="shell">
-          <p className="eyebrow">Solicitação enviada</p>
+          <p className="eyebrow">Financiamento de parceiros · Solicitação enviada</p>
           <h1>Recebemos sua simulação.</h1>
           <p>A equipe da Autodrive vai analisar as informações e chamar você pelo WhatsApp para seguir com as opções disponíveis.</p>
         </div>

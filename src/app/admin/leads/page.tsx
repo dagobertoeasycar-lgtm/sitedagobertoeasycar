@@ -2,6 +2,7 @@ import { query } from "@/lib/db";
 import { currentSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatCents } from "@/lib/pricing";
+import { FINANCING_SERVICES, resolveFinancingService } from "@/lib/financing";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ type LeadRow = {
   phone: string;
   email: string | null;
   kind: string;
+  payload: Record<string, unknown> | null;
   message: string | null;
   status: string;
   created_at: Date;
@@ -102,7 +104,9 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams: P
                   <td><strong>{l.name}</strong></td>
                   <td><a href={`https://wa.me/55${l.phone?.replace(/\D/g,"")}`} target="_blank" rel="noreferrer">{l.phone}</a></td>
                   <td>{l.email || "—"}</td>
-                  <td>{kindLabels[l.kind] || l.kind}</td>
+                  <td>{l.kind === "financing" && resolveFinancingService(l.payload?.financingService, l.payload?.financingTarget)
+                    ? FINANCING_SERVICES[resolveFinancingService(l.payload?.financingService, l.payload?.financingTarget)!].label
+                    : kindLabels[l.kind] || l.kind}</td>
                   <td className="adm-lead-origin">
                     {l.vehicle_title ? (
                       <>

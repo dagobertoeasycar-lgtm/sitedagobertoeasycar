@@ -10,6 +10,8 @@ const ALLOWED_PARAMETER_KEYS = new Set([
   "modelo",
   "ano",
   "lead_type",
+  "financing_target",
+  "financing_service",
   "origem",
 ]);
 
@@ -22,6 +24,8 @@ export function sanitizeMetaPixelParameters(parameters: MetaPixelParameters = {}
 
   for (const [key, rawValue] of Object.entries(parameters)) {
     if (!ALLOWED_PARAMETER_KEYS.has(key) || rawValue === undefined || rawValue === null) continue;
+    if (key === "financing_target" && rawValue !== "site" && rawValue !== "network") continue;
+    if (key === "financing_service" && rawValue !== "partners" && rawValue !== "private") continue;
     if (key === "content_ids") {
       const values = Array.isArray(rawValue) ? rawValue : [rawValue];
       const contentIds = values.map(String).filter(value => /^EC-[0-9]{6,}$/.test(value));

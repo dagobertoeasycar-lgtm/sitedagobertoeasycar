@@ -93,7 +93,7 @@ export default async function AdminVehiclesPage({ searchParams }: { searchParams
             <tbody>
               {vehicles.rows.map((v) => (
                 <tr key={v.id}>
-                  <td><img src={v.image_url || "/em-breve.jpg"} alt="" className="adm-thumb" /></td>
+                  <td><img src={v.image_url || "/em-breve.png"} alt="" className="adm-thumb" /></td>
                   <td><strong>{v.brand} {v.model}</strong><br/><small style={{color:"#64748b"}}>{v.title}</small></td>
                   <td><span className={`adm-badge origin-${v.origin_type.toLowerCase()}`}>{originLabels[v.origin_type] || v.origin_type}</span>{v.origin_type === "PARTNER" && <><br/><small>{v.partner_name || v.store || "Parceiro não identificado"}</small></>}</td>
                   <td>{v.year_make}/{v.year_model}</td>

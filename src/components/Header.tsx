@@ -7,9 +7,9 @@ import { Menu, MessageCircle, Phone } from "lucide-react";
 
 const navItems = [
   ["Início", "/"], ["Estoque", "/veiculos"],
-  ["Encontre seu carro", "/encontre-seu-carro"], ["Venda seu carro", "/venda-seu-carro"],
-  ["Financiamento", "/financiamento"], ["Parceiros", "/parceiros"],
-  ["Sobre nós", "/sobre"], ["Contato", "/contato"],
+  ["Sobre nós", "/sobre"], ["Financiamento", "/financiamento"],
+  ["Financia Fácil", "/financia-facil"], ["Venda seu carro", "/venda-seu-carro"],
+  ["Parceiros", "/parceiros"], ["Contato", "/contato"],
 ] as const;
 
 export function Header() {
@@ -46,6 +46,7 @@ export function Header() {
           <summary aria-label="Abrir menu" title="Menu"><Menu size={22} aria-hidden="true" /></summary>
           <nav aria-label="Navegação móvel">
             {navigation}
+            <Link href="/encontre-seu-carro" onClick={() => { if (mobileMenu.current) mobileMenu.current.open = false; }}>Encontre seu carro</Link>
             <a href="tel:+5511934718276"><Phone size={16} aria-hidden="true" /> (11) 93471-8276</a>
             <a className="button" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><MessageCircle size={18} aria-hidden="true" /> WhatsApp</a>
           </nav>

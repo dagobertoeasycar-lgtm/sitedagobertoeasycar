@@ -5,7 +5,7 @@ import { Gauge, MapPin, MessageCircle } from "lucide-react";
 import { VehicleImage } from "@/components/VehicleImage";
 
 export function VehicleCard({ vehicle, index = 0 }: { vehicle: Vehicle; index?: number }) {
-  const imgSrc = vehicle.image_url || "/em-breve.jpg";
+  const imgSrc = vehicle.image_url || "/em-breve.png";
   const isExternal = imgSrc.startsWith("http");
   const originLabel = vehicleOriginBadgeLabel(vehicle);
   const version = vehicle.version?.trim();

@@ -57,7 +57,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
         <VehicleGallery
           images={vehicle.images}
           title={vehicle.title}
-          fallback={vehicle.image_url || "/em-breve.jpg"}
+          fallback={vehicle.image_url || "/em-breve.png"}
         />
 
         {/* Badges row */}

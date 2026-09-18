@@ -4,6 +4,7 @@ import { safeMailError, sendLeadNotification } from "@/lib/email";
 import { formatCnpj, isValidCnpj } from "@/lib/cnpj";
 import { normalizeVehicleOrigin } from "@/lib/vehicle-origin";
 import { imageUploadMaxBytes, saveImageFile } from "@/lib/image-upload";
+import { FINANCING_SERVICES, financingValidationError, resolveFinancingService } from "@/lib/financing";
 
 export const runtime = "nodejs";
 const kinds = new Set(["contact", "financing", "sell_car", "wholesale", "partner", "find_car", "vehicle_interest"]);
@@ -52,7 +53,7 @@ const requiredSellCarPhotos = [
 const payloadKeys = [
   "city", "brand", "model", "version", "year", "yearMin", "mileage", "transmission", "fuel", "plate", "color",
   "targetPrice", "vehicleStatus", "photoLinks", "budget", "downPayment", "hasTrade", "wantsFinancing",
-  "financingTarget", "selectedVehicleLabel", "desiredVehicle", "installmentGoal",
+  "financingTarget", "financingService", "selectedVehicleLabel", "desiredVehicle", "installmentGoal",
   "companyName", "tradeName", "cnpj", "address", "instagram", "website", "averageInventory", "currentSystem",
   "desiredWork", "vehicleId", "vehicleTitle", "vehicleOriginType", "leadSource", "campaign", "utmSource",
   "utmMedium", "utmCampaign", "pageUrl", "vehiclePhotos",
@@ -98,9 +99,10 @@ function line(label: string, value: unknown) {
 function buildMessage(kind: string, body: Record<string, unknown>, fallback: string) {
   if (kind === "financing") {
     const financingTarget = text(body, "financingTarget", 40);
+    const service = resolveFinancingService(body.financingService, financingTarget);
     return [
-      "Solicitação de financiamento.",
-      line("Origem do veículo", financingTarget === "site" ? "Veículo do site" : financingTarget === "network" ? "Amigos e conhecidos" : financingTarget),
+      service ? `Solicitação de ${FINANCING_SERVICES[service].label}.` : "Solicitação de financiamento.",
+      line("Origem do veículo", service ? FINANCING_SERVICES[service].originLabel : financingTarget),
       line("Veículo", text(body, "selectedVehicleLabel", 220) || text(body, "vehicleTitle", 220) || text(body, "desiredVehicle", 220)),
       line("Entrada aproximada", text(body, "downPayment", 40)),
       line("Parcela desejada", text(body, "installmentGoal", 40)),
@@ -234,6 +236,24 @@ export async function POST(request: NextRequest) {
   const preliminaryMessage = buildMessage(kind, body, message).slice(0, 5000);
   const baseIsInvalid = !kinds.has(kind) || resolvedName.length < 2 || resolvedName.length > 160 || phone.length > 30 || phoneDigits.length < 10 || phoneDigits.length > 13 || !emailIsValid || preliminaryMessage.length < 2 || body.consent !== "yes";
   if (baseIsInvalid) return NextResponse.json({ error: "Preencha corretamente todos os campos obrigatórios." }, { status: 400 });
+  let financingVehicleId: string | null = null;
+  if (kind === "financing") {
+    const error = financingValidationError(body);
+    if (error) return NextResponse.json({ error }, { status: 400 });
+    if (body.financingService === "partners") {
+      const vehicle = await query<{ id: string; title: string; catalog_item_id: string; partner_id: string | null }>(
+        "SELECT id, title, catalog_item_id, partner_id FROM vehicles WHERE id=$1 AND status='published' AND origin_type='PARTNER' LIMIT 1",
+        [body.vehicleId],
+      );
+      if (!vehicle.rows[0]) return NextResponse.json({ error: "Este veículo não está disponível para simulação. Escolha outro veículo de parceiro." }, { status: 400 });
+      financingVehicleId = vehicle.rows[0].id;
+      body.vehicleTitle = body.selectedVehicleLabel = `${vehicle.rows[0].title} (${vehicle.rows[0].catalog_item_id})`;
+      body.vehicleOriginType = "PARTNER";
+    } else if (body.financingService === "private") {
+      body.vehicleTitle = body.selectedVehicleLabel = text(body, "desiredVehicle", 180);
+      body.vehicleOriginType = "PRIVATE";
+    }
+  }
   if (isWholesale && (!email || !isValidCnpj(cnpj))) return NextResponse.json({ error: "Informe um CNPJ válido e um e-mail válido." }, { status: 400 });
   if (isPartner && (!email || !companyName || !text(body, "city", 100) || !isValidCnpj(cnpj))) return NextResponse.json({ error: "Informe os dados obrigatórios da empresa e um CNPJ válido." }, { status: 400 });
   if (isSellCar && (!text(body, "city", 100) || !text(body, "brand", 80) || !text(body, "model", 100) || !text(body, "year", 20) || !text(body, "mileage", 30) || !text(body, "targetPrice", 40))) return NextResponse.json({ error: "Informe os dados principais do veículo." }, { status: 400 });
@@ -308,8 +328,8 @@ export async function POST(request: NextRequest) {
   const resolvedMessage = buildMessage(kind, leadBody, message).slice(0, 5000);
   const vehicleOriginType = normalizeVehicleOrigin(text(body, "vehicleOriginType", 30));
   const inserted = await query<{ id: string }>(
-    `insert into leads(kind, name, company_name, cnpj, email, phone, message, consent_at, lead_source, campaign, utm_source, utm_medium, utm_campaign, page_url, vehicle_origin_type, partner_id, payload)
-     values ($1,$2,$3,$4,$5,$6,$7,now(),$8,$9,$10,$11,$12,$13,$14,$15,$16::jsonb)
+    `insert into leads(kind, name, company_name, cnpj, email, phone, message, consent_at, lead_source, campaign, utm_source, utm_medium, utm_campaign, page_url, vehicle_origin_type, partner_id, payload, vehicle_id)
+     values ($1,$2,$3,$4,$5,$6,$7,now(),$8,$9,$10,$11,$12,$13,$14,$15,$16::jsonb,$17)
      returning id`,
     [
       kind,
@@ -328,6 +348,7 @@ export async function POST(request: NextRequest) {
       vehicleOriginType,
       partnerId,
       JSON.stringify(structuredPayload),
+      financingVehicleId,
     ],
   );
   try {

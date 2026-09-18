@@ -9,15 +9,18 @@ test("vitrine pública usa 28 veículos por página", () => {
   assert.match(page, /VEHICLE_PAGE_SIZE/);
 });
 
-test("financiamento oferece veículo do site e amigos/conhecidos", () => {
+test("serviços de financiamento ficam separados por origem", () => {
   const form = readFileSync("src/components/FinancingForm.tsx", "utf8");
   const page = readFileSync("src/app/(site)/financiamento/page.tsx", "utf8");
   const success = readFileSync("src/app/(site)/financiamento/sucesso/page.tsx", "utf8");
 
   assert.match(page, /listVehicleChoices/);
-  assert.match(form, /Veículo do site/);
-  assert.match(form, /Amigos e conhecidos/);
-  assert.match(form, /\/financiamento\/sucesso/);
+  assert.match(page, /veículos publicados por lojas parceiras/i);
+  assert.match(form, /financingService/);
+  assert.match(readFileSync("src/app/(site)/financia-facil/page.tsx", "utf8"), /negociação particular/i);
+  assert.match(readFileSync("src/lib/financing.ts", "utf8"), /partners/);
+  assert.match(readFileSync("src/lib/financing.ts", "utf8"), /private/);
+  assert.match(readFileSync("src/lib/financing.ts", "utf8"), /successHref: "\/financiamento\/sucesso"/);
   assert.match(success, /Recebemos sua simulação/);
 });
 

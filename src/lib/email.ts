@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { FINANCING_SERVICES, resolveFinancingService } from "./financing";
 
 type LeadNotification = {
   id: string;
@@ -69,11 +70,13 @@ function transporter(settings: SmtpSettings) {
 export async function sendLeadNotification(lead: LeadNotification) {
   const settings = smtpSettings();
   if (!settings) return "disabled" as const;
+  const service = lead.kind === "financing" ? resolveFinancingService(lead.details?.financingService, lead.details?.financingTarget) : null;
+  const label = service ? FINANCING_SERVICES[service].label : kindLabels[lead.kind];
   const text = [
     "Novo lead recebido pelo site Autodrive Veículos & Tecnologia.",
     "",
     `Protocolo: ${lead.id}`,
-    `Tipo: ${kindLabels[lead.kind]}`,
+    `Tipo: ${label}`,
     `Nome: ${lead.name}`,
     `Telefone: ${lead.phone}`,
     `E-mail: ${lead.email || "não informado"}`,
@@ -88,7 +91,7 @@ export async function sendLeadNotification(lead: LeadNotification) {
     from: settings.from,
     to: settings.to,
     replyTo: lead.email || undefined,
-    subject: `[Site] Novo lead — ${kindLabels[lead.kind]}`,
+    subject: `[Site] Novo lead — ${label}`,
     text,
   });
   return "sent" as const;

@@ -18,6 +18,7 @@ export function Footer() {
           <Link href="/encontre-seu-carro">Encontre seu carro</Link>
           <Link href="/venda-seu-carro">Venda seu carro</Link>
           <Link href="/financiamento">Financiamento</Link>
+          <Link href="/financia-facil">Financia Fácil</Link>
           <Link href="/parceiros">Seja parceiro</Link>
           <Link href="/sobre">Sobre</Link>
           <Link href="/contato">Contato</Link>

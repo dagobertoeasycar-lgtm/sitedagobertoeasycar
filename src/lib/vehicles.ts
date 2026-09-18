@@ -71,14 +71,14 @@ export async function listVehicles(filters: VehicleFilters = {}) {
   return result.rows;
 }
 
-export async function listVehicleChoices(limit = 180) {
+export async function listVehicleChoices(limit = 180, origin?: VehicleOriginType) {
   const result = await query<VehicleChoice>(
     `SELECT id, catalog_item_id, slug, title, brand, model, version, year_make, year_model, price_cents, image_url, origin_type
      FROM vehicles
-     WHERE status = 'published'
+     WHERE status = 'published' AND ($2::text IS NULL OR origin_type = $2)
      ORDER BY CASE WHEN image_url IS NULL OR image_url = '' THEN 1 ELSE 0 END, featured DESC, created_at DESC
      LIMIT $1`,
-    [limit],
+    [limit, origin ?? null],
   );
   return result.rows;
 }
