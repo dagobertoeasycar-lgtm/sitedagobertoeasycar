@@ -58,28 +58,6 @@ export default async function Home() {
 
   return (
     <>
-      <section className="hero home-hero">
-        <div className="shell hero-grid">
-          <div className="hero-content">
-            <p className="eyebrow">Centenas de opções. Um só atendimento.</p>
-            <h1>Modelos para todos os gostos.</h1>
-            <p>Estoque próprio, veículos de parceiros e oportunidades de particulares em um só lugar. Você escolhe o caminho e a Autodrive acompanha a negociação.</p>
-            <div className="hero-actions">
-              <Link className="button" href="/veiculos"><CarFront size={19} aria-hidden="true" />Ver carros disponíveis</Link>
-              <a className="button button-outline hero-outline" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><MessageCircle size={19} aria-hidden="true" />Falar com a equipe</a>
-            </div>
-            <div className="hero-trust">
-              <span><CheckCircle2 size={16} aria-hidden="true" />Atendimento único, humano e personalizado</span>
-              <span><CheckCircle2 size={16} aria-hidden="true" />Opções de financiamento</span>
-              <span><CheckCircle2 size={16} aria-hidden="true" />Rede de parceiros</span>
-            </div>
-          </div>
-          <div className="hero-banner-frame">
-            <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
-          </div>
-        </div>
-      </section>
-
       <section className="shell home-journeys" aria-label="Caminhos principais">
         {journeys.map(({ icon: Icon, title, text, label, href }) => (
           <Link href={href} className="journey-card" key={href}>
@@ -105,6 +83,28 @@ export default async function Home() {
           <Link className="button button-dark" href="/veiculos">Ver todo o estoque<ArrowRight size={18} aria-hidden="true" /></Link>
         </div>
         {vehicles.length ? <div className="vehicle-grid">{vehicles.slice(0, 8).map((vehicle, index) => <VehicleCard key={vehicle.id} vehicle={vehicle} index={index} />)}</div> : <div className="empty-state"><h3>Estoque em atualização</h3><p>Os anúncios serão publicados pelo painel administrativo.</p><a className="button" href="https://wa.me/5511934718276">Consultar pelo WhatsApp</a></div>}
+        </div>
+      </section>
+
+      <section className="hero home-hero">
+        <div className="shell hero-grid">
+          <div className="hero-content">
+            <p className="eyebrow">Centenas de opções. Um só atendimento.</p>
+            <h1>Modelos para todos os gostos.</h1>
+            <p>Estoque próprio, veículos de parceiros e oportunidades de particulares em um só lugar. Você escolhe o caminho e a Autodrive acompanha a negociação.</p>
+            <div className="hero-actions">
+              <Link className="button" href="/veiculos"><CarFront size={19} aria-hidden="true" />Ver carros disponíveis</Link>
+              <a className="button button-outline hero-outline" href="https://wa.me/5511934718276" target="_blank" rel="noreferrer"><MessageCircle size={19} aria-hidden="true" />Falar com a equipe</a>
+            </div>
+            <div className="hero-trust">
+              <span><CheckCircle2 size={16} aria-hidden="true" />Atendimento único, humano e personalizado</span>
+              <span><CheckCircle2 size={16} aria-hidden="true" />Opções de financiamento</span>
+              <span><CheckCircle2 size={16} aria-hidden="true" />Rede de parceiros</span>
+            </div>
+          </div>
+          <div className="hero-banner-frame">
+            <BannerCarousel banners={banners} intervalSeconds={carouselIntervalSeconds} />
+          </div>
         </div>
       </section>
 
