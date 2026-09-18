@@ -149,7 +149,13 @@ function imageCandidates(vehicle: MetaFeedVehicle): string[] {
   const result: string[] = [];
   for (const candidate of candidates) {
     const url = publicHttpsUrl(candidate);
-    if (url && !result.includes(url)) result.push(url);
+    if (!url || result.includes(url)) continue;
+    // /api/uploads era o armazenamento antigo, em disco temporário, e a rota
+    // que servia esses arquivos não existe mais: todo endereço desses dá 404.
+    // Mandar para a Meta um item cuja imagem não abre faz ela recusar o item
+    // inteiro — melhor o veículo cair no relatório como "sem imagem".
+    if (/\/api\/uploads\//i.test(url)) continue;
+    result.push(url);
   }
   return result;
 }
@@ -181,8 +187,37 @@ function generatedDescription(vehicle: MetaFeedVehicle): string {
     vehicle.color,
     vehicle.city,
   ].map(value => String(value ?? "").trim()).filter(Boolean);
-  const original = String(vehicle.description ?? "").replace(/\0/g, "").trim();
+  const original = textoSimples(vehicle.description);
   return [original || vehicle.title, details.join(" · ")].filter(Boolean).join("\n").slice(0, 5000);
+}
+
+/**
+ * Descrição em texto puro, do jeito que o catálogo da Meta exige.
+ *
+ * As descrições vêm do anúncio do parceiro e várias chegam com HTML — 51 dos
+ * 518 veículos traziam <div> e <br> crus no feed publicado. A Meta recusa o
+ * item quando encontra marcação na descrição, e era isso que derrubava parte
+ * do catálogo do WhatsApp sem erro visível no site.
+ *
+ * <br> e </p> viram quebra de linha antes de as tags sumirem, senão o texto
+ * todo cola numa linha só. As entidades mais comuns também são desfeitas.
+ */
+export function textoSimples(valor: unknown): string {
+  return String(valor ?? "")
+    .replace(/\0/g, "")
+    .replace(/<\s*br\s*\/?>/gi, "\n")
+    .replace(/<\s*\/\s*(p|div|li|tr|h[1-6])\s*>/gi, "\n")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function issue(vehicle: MetaFeedVehicle, code: string, message: string): MetaFeedIssue {
