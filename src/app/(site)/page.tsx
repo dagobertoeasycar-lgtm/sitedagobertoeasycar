@@ -80,13 +80,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="home-search">
-        <form className="shell" action="/veiculos">
-          <label htmlFor="q">Buscar por marca, modelo ou veículo<span className="home-search-field"><Search size={19} aria-hidden="true" /><input id="q" name="q" placeholder="Ex.: Corolla, SUV ou automático" /></span></label>
-          <button className="button button-dark" type="submit">Buscar veículos<ArrowRight size={18} aria-hidden="true" /></button>
-        </form>
-      </section>
-
       <section className="shell home-journeys" aria-label="Caminhos principais">
         {journeys.map(({ icon: Icon, title, text, label, href }) => (
           <Link href={href} className="journey-card" key={href}>
