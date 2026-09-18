@@ -1500,6 +1500,15 @@ th { background: var(--soft); }
   overflow: visible;
 }
 .veiculo-fotos-grade img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Foto que o CDN da origem não entregou: fica legível em vez de virar um
+   retângulo com texto derramando por cima das vizinhas. */
+.veiculo-fotos-grade img.quebrada {
+  object-fit: contain;
+  background: #fee2e2;
+  font-size: 0.6rem;
+  color: #b42318;
+  padding: 2px;
+}
 .veiculo-fotos-grade li > span {
   position: absolute;
   left: 3px;

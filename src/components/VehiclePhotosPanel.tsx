@@ -89,16 +89,53 @@ export function VehiclePhotosPanel({
     }
   }
 
+  /**
+   * Sobe UMA foto por requisição.
+   *
+   * Mandar as 12 juntas estourava o limite de corpo da hospedagem e voltava
+   * HTTP 413 antes de chegar na API — nenhuma subia e o erro não dizia por quê.
+   * Uma por vez também deixa o progresso visível e salva o que já passou
+   * quando uma falha no meio.
+   */
   async function subir(lista: FileList | null) {
     if (!lista || !lista.length) return;
-    const dados = new FormData();
-    for (const arquivo of Array.from(lista)) dados.append("fotos", arquivo);
-    await agir(
-      "subindo",
-      () => fetch(`/api/admin/vehicles/${id}/photos`, { method: "POST", body: dados }),
-      `${lista.length} foto(s) enviada(s). O veículo foi travado para a sincronização não desfazer.`,
-    );
+    const arquivosSelecionados = Array.from(lista);
+    setErro("");
+    setAviso("");
+
+    const falhas: string[] = [];
+    let enviadas = 0;
+
+    for (let i = 0; i < arquivosSelecionados.length; i++) {
+      const arquivo = arquivosSelecionados[i];
+      setOcupado(`subindo ${i + 1}/${arquivosSelecionados.length}`);
+      const dados = new FormData();
+      dados.append("fotos", arquivo);
+      try {
+        const resposta = await fetch(`/api/admin/vehicles/${id}/photos`, { method: "POST", body: dados });
+        if (resposta.status === 413) {
+          falhas.push(`${arquivo.name}: grande demais (${(arquivo.size / 1024 / 1024).toFixed(1)} MB)`);
+          continue;
+        }
+        const corpo = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) {
+          falhas.push(`${arquivo.name}: ${corpo.error || `HTTP ${resposta.status}`}`);
+          continue;
+        }
+        enviadas++;
+      } catch (e) {
+        falhas.push(`${arquivo.name}: ${e instanceof Error ? e.message : "falhou"}`);
+      }
+    }
+
+    setOcupado("");
     if (arquivos.current) arquivos.current.value = "";
+    await carregar();
+
+    if (enviadas) {
+      setAviso(`${enviadas} foto(s) enviada(s). O veículo foi travado para a sincronização não desfazer.`);
+    }
+    if (falhas.length) setErro(`Não subiram: ${falhas.join("; ")}`);
   }
 
   async function excluirVeiculo() {
@@ -245,7 +282,19 @@ export function VehiclePhotosPanel({
                 {galeria.fotos.map((foto, indice) => (
                   <li key={foto.url}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={foto.url} alt={`Foto ${indice + 1} de ${titulo}`} loading="lazy" />
+                    <img
+                      src={foto.url}
+                      alt={`Foto ${indice + 1} de ${titulo}`}
+                      loading="lazy"
+                      // O CDN de alguns parceiros recusa a imagem quando vem
+                      // referenciador de outro site; sem isto a miniatura fica
+                      // quebrada no painel mesmo com a foto existindo.
+                      referrerPolicy="no-referrer"
+                      onError={(evento) => {
+                        evento.currentTarget.classList.add("quebrada");
+                        evento.currentTarget.alt = `Foto ${indice + 1} não carregou`;
+                      }}
+                    />
                     <button
                       type="button"
                       aria-label={`Apagar foto ${indice + 1}`}
@@ -267,7 +316,13 @@ export function VehiclePhotosPanel({
                     <span>{String(indice + 1).padStart(2, "0")}</span>
                   </li>
                 ))}
-                {!galeria.fotos.length && <li className="veiculo-fotos-vazio">Sem foto nenhuma.</li>}
+                {!galeria.fotos.length && (
+                  <li className="veiculo-fotos-vazio">
+                    {galeria.artesDaLoja.length
+                      ? `Só tem arte da loja parceira (${galeria.artesDaLoja.length}). Suba fotos de verdade aqui.`
+                      : "Sem foto nenhuma."}
+                  </li>
+                )}
               </ul>
 
               {galeria.artesDaLoja.length > 0 && (
