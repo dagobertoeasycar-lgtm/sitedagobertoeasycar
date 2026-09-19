@@ -54,3 +54,20 @@ test("painel envia mídia direto, salva a ordem e oferece vídeo padrão ou pró
   assert.match(migration, /default_vehicle_video_url/);
   assert.match(migration, /REORDENAR/);
 });
+
+test("vídeo padrão da vitrine pode ser ativado e vídeos próprios têm prioridade", () => {
+  const adminPage = readFileSync("src/app/admin/veiculos/page.tsx", "utf8");
+  const component = readFileSync("src/components/DefaultVehicleVideo.tsx", "utf8");
+  const publicPage = readFileSync("src/app/(site)/veiculos/[slug]/page.tsx", "utf8");
+  const api = readFileSync("src/app/api/admin/default-vehicle-video/route.ts", "utf8");
+  const migration = readFileSync("migrations/019_controle_video_padrao.sql", "utf8");
+
+  assert.match(adminPage, /<DefaultVehicleVideo/);
+  assert.match(component, /Ativar para todos/);
+  assert.match(component, /Desativar em todos/);
+  assert.match(component, /Com vídeo próprio/);
+  assert.match(publicPage, /vehicle\.video_url \|\| defaultVideo\.effectiveUrl/);
+  assert.match(api, /default.*video/i);
+  assert.match(api, /inheriting/);
+  assert.match(migration, /default_vehicle_video_enabled/);
+});

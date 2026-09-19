@@ -4,6 +4,7 @@ import { query } from "@/lib/db";
 import { VehicleStatusForm } from "@/components/VehicleStatusForm";
 import { VehiclePhotosPanel } from "@/components/VehiclePhotosPanel";
 import { AdminVehicleForm } from "@/components/AdminVehicleForm";
+import { DefaultVehicleVideo } from "@/components/DefaultVehicleVideo";
 import { pastaDoParceiro, pastaDoVeiculo, separarFotos } from "@/lib/vehicle-photos";
 import Link from "next/link";
 
@@ -71,6 +72,8 @@ export default async function AdminVehiclesPage({ searchParams }: { searchParams
       <div className="adm-header">
         <h1>Veículos ({total})</h1>
       </div>
+
+      <DefaultVehicleVideo />
 
       <div className="adm-card">
         <form className="adm-filters" action="/admin/veiculos">

@@ -3,6 +3,7 @@ import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { imageUploadMaxBytes, saveImageFile } from "@/lib/image-upload";
 import { isVercelBlobUrl } from "@/lib/media-upload";
+import { readDefaultVehicleVideo } from "@/lib/default-vehicle-video";
 import { mesmasFotos, normalizarFotos, separarFotos, type MediaItem } from "@/lib/vehicle-photos";
 
 /**
@@ -97,9 +98,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const v = await carregar(id);
   if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
 
-  const defaultVideo = await query<{ value: string }>(
-    "SELECT value FROM site_settings WHERE key='default_vehicle_video_url' LIMIT 1",
-  ).catch(() => ({ rows: [] as { value: string }[] }));
+  const defaultVideo = await readDefaultVehicleVideo().catch(() => ({ url: "", enabled: false, effectiveUrl: "" }));
 
   const { fotos, artesDaLoja } = separarFotos(v.images);
   return NextResponse.json({
@@ -112,7 +111,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     travada: v.photos_locked,
     situacao: v.photos_status,
     videoUrl: v.video_url || "",
-    defaultVideoUrl: defaultVideo.rows[0]?.value || "",
+    defaultVideoUrl: defaultVideo.url,
+    defaultVideoEnabled: defaultVideo.enabled,
   });
 }
 

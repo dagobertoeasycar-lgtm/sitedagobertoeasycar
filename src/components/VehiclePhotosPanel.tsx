@@ -28,6 +28,7 @@ type Galeria = {
   situacao: string;
   videoUrl: string;
   defaultVideoUrl: string;
+  defaultVideoEnabled: boolean;
 };
 
 const SITUACOES: Record<string, string> = {
@@ -242,7 +243,8 @@ export function VehiclePhotosPanel({
   }
 
   const travada = galeria?.travada ?? false;
-  const videoEfetivo = galeria?.videoUrl || galeria?.defaultVideoUrl || "";
+  const defaultVideoAtivo = Boolean(galeria?.defaultVideoEnabled && galeria.defaultVideoUrl);
+  const videoEfetivo = galeria?.videoUrl || (defaultVideoAtivo ? galeria?.defaultVideoUrl : "") || "";
 
   return (
     <div className="veiculo-fotos">
@@ -372,8 +374,16 @@ export function VehiclePhotosPanel({
             <>
               <div className="veiculo-video-admin">
                 <div>
-                  <strong>{galeria.videoUrl ? "Vídeo deste anúncio" : galeria.defaultVideoUrl ? "Vídeo padrão" : "Sem vídeo"}</strong>
-                  <span>{galeria.videoUrl ? "Substitui o vídeo padrão somente neste veículo." : "O padrão é usado automaticamente quando não há vídeo próprio."}</span>
+                  <strong>{galeria.videoUrl ? "Vídeo deste anúncio" : defaultVideoAtivo ? "Vídeo padrão" : "Sem vídeo ativo"}</strong>
+                  <span>
+                    {galeria.videoUrl
+                      ? "Substitui o vídeo padrão somente neste veículo."
+                      : defaultVideoAtivo
+                        ? "O padrão é usado automaticamente porque não há vídeo próprio."
+                        : galeria.defaultVideoUrl
+                          ? "O vídeo padrão está pausado no controle geral."
+                          : "Envie um vídeo próprio ou configure o padrão no topo da página."}
+                  </span>
                 </div>
                 {videoEfetivo && <video src={videoEfetivo} controls preload="metadata" playsInline />}
                 {galeria.videoUrl && (
@@ -390,11 +400,13 @@ export function VehiclePhotosPanel({
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ acao: "usar-video-padrao" }),
                           }),
-                        "O anúncio voltou a usar o vídeo padrão.",
+                        defaultVideoAtivo
+                          ? "O anúncio voltou a usar o vídeo padrão."
+                          : "O vídeo próprio foi removido. O anúncio está sem vídeo enquanto o padrão estiver pausado.",
                       )
                     }
                   >
-                    Usar vídeo padrão
+                    {defaultVideoAtivo ? "Usar vídeo padrão" : "Remover vídeo próprio"}
                   </button>
                 )}
               </div>
