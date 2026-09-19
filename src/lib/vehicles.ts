@@ -12,7 +12,7 @@ export type Vehicle = {
   mileage: number; fuel: string; transmission: string; body_type: string; city: string;
   color: string; doors: number; status: string; featured: boolean; promotion: boolean;
   image_url: string | null; images: MediaItem[] | string[]; options: string[];
-  store: string; video_url: string; description: string;
+  store: string; video_url: string | null; description: string;
   origin_type?: VehicleOriginType | null; partner_id?: string | null; private_owner_id?: string | null;
   partner_external_id?: string | null;
 };

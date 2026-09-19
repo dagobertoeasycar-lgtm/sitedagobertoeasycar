@@ -6,6 +6,7 @@ import {
   fotosParaTratamento,
   fotosPublicaveis,
   limparNomeDePasta,
+  mesmasFotos,
   nomeDaFoto,
   normalizarFotos,
   pastaDoParceiro,
@@ -92,6 +93,13 @@ test("normalizarFotos aceita string e objeto, tira repetida e lixo", () => {
     [`${BNDV_CARRO}/a.webp`, `${BNDV_CARRO}/b.webp`],
   );
   assert.deepEqual(normalizarFotos("não é lista"), []);
+});
+
+test("reordenação aceita somente o mesmo conjunto de fotos", () => {
+  const fotos = [`${BNDV_CARRO}/a.webp`, `${BNDV_CARRO}/b.webp`, `${BNDV_CARRO}/c.webp`];
+  assert.equal(mesmasFotos(fotos, [fotos[2], fotos[0], fotos[1]]), true);
+  assert.equal(mesmasFotos(fotos, [fotos[0], fotos[1]]), false);
+  assert.equal(mesmasFotos(fotos, [fotos[0], fotos[1], `${BNDV_CARRO}/outra.webp`]), false);
 });
 
 test("pasta do veículo começa pela placa, que é o que se procura no Explorer", () => {

@@ -391,6 +391,14 @@ th { background: var(--soft); }
   object-fit: contain;
   background: #0a0a0a;
 }
+.vehicle-gallery-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: contain;
+  background: #020617;
+}
 .vehicle-gallery-thumbs {
   display: flex;
   gap: 6px;
@@ -1546,6 +1554,13 @@ th { background: var(--soft); }
   overflow: hidden;
   background: #e2e8f0;
 }
+.veiculo-fotos-grade li[draggable="true"] { cursor: grab; }
+.veiculo-fotos-grade li[draggable="true"]:active { cursor: grabbing; }
+.veiculo-fotos-grade li.arrastando {
+  opacity: 0.45;
+  outline: 2px dashed #0891b2;
+  outline-offset: 2px;
+}
 .veiculo-fotos-grade li.veiculo-fotos-vazio {
   width: auto;
   height: auto;
@@ -1562,7 +1577,7 @@ th { background: var(--soft); }
   color: #b42318;
   padding: 2px;
 }
-.veiculo-fotos-grade li > span {
+.veiculo-fotos-indice {
   position: absolute;
   left: 3px;
   bottom: 3px;
@@ -1572,6 +1587,28 @@ th { background: var(--soft); }
   color: #fff;
   font-size: 0.66rem;
   font-weight: 700;
+}
+.veiculo-fotos-arraste {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 0.76rem;
+}
+.veiculo-fotos-arraste-icone {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 1;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 5px;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.78);
+  pointer-events: none;
 }
 .veiculo-fotos-grade li > button {
   position: absolute;
@@ -1588,6 +1625,45 @@ th { background: var(--soft); }
   cursor: pointer;
 }
 .veiculo-fotos-grade li > button:disabled { opacity: 0.5; cursor: not-allowed; }
+.veiculo-video-admin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+.veiculo-video-admin video {
+  display: block;
+  width: min(360px, 100%);
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  background: #020617;
+}
+.veiculo-video-admin p {
+  flex: 1 1 180px;
+  margin: 0;
+  color: #475569;
+  font-size: 0.78rem;
+}
+.default-video-admin {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #dbe4ec;
+  border-radius: 8px;
+  background: #fff;
+}
+.default-video-admin h2 { margin: 0 0 6px; font-size: 1rem; }
+.default-video-admin > p { margin: 0 0 12px; color: #64748b; font-size: 0.85rem; }
+.default-video-admin video {
+  display: block;
+  width: min(680px, 100%);
+  aspect-ratio: 16 / 9;
+  margin-top: 12px;
+  border-radius: 8px;
+  background: #020617;
+}
 
 /* Pagination */
 .adm-pagination {

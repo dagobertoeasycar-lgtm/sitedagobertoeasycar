@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { GripVertical, Video } from "lucide-react";
+import { uploadAdminMedia } from "@/lib/client-media-upload";
 
 /**
  * Ações de foto e exclusão de um veículo, na linha da tabela do painel.
@@ -24,6 +26,8 @@ type Galeria = {
   fotosOriginais: Foto[];
   travada: boolean;
   situacao: string;
+  videoUrl: string;
+  defaultVideoUrl: string;
 };
 
 const SITUACOES: Record<string, string> = {
@@ -52,7 +56,9 @@ export function VehiclePhotosPanel({
   const [ocupado, setOcupado] = useState("");
   const [aviso, setAviso] = useState("");
   const [erro, setErro] = useState("");
+  const [arrastando, setArrastando] = useState<number | null>(null);
   const arquivos = useRef<HTMLInputElement>(null);
+  const arquivoVideo = useRef<HTMLInputElement>(null);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -101,14 +107,7 @@ export function VehiclePhotosPanel({
     }
   }
 
-  /**
-   * Sobe UMA foto por requisição.
-   *
-   * Mandar as 12 juntas estourava o limite de corpo da hospedagem e voltava
-   * HTTP 413 antes de chegar na API — nenhuma subia e o erro não dizia por quê.
-   * Uma por vez também deixa o progresso visível e salva o que já passou
-   * quando uma falha no meio.
-   */
+  /** Envia direto ao Blob; assim a foto não atravessa o limite da função web. */
   async function subir(lista: FileList | null) {
     if (!lista || !lista.length) return;
     const arquivosSelecionados = Array.from(lista);
@@ -116,42 +115,107 @@ export function VehiclePhotosPanel({
     setAviso("");
 
     const falhas: string[] = [];
-    let enviadas = 0;
+    const enviadas: string[] = [];
 
     for (let i = 0; i < arquivosSelecionados.length; i++) {
       const arquivo = arquivosSelecionados[i];
       setOcupado(`subindo ${i + 1}/${arquivosSelecionados.length}`);
-      const dados = new FormData();
-      dados.append("fotos", arquivo);
       try {
-        const resposta = await fetch(`/api/admin/vehicles/${id}/photos`, { method: "POST", body: dados });
-        if (resposta.status === 401) {
-          redirecionarParaLogin();
-          return;
-        }
-        if (resposta.status === 413) {
-          falhas.push(`${arquivo.name}: grande demais (${(arquivo.size / 1024 / 1024).toFixed(1)} MB)`);
-          continue;
-        }
-        const corpo = await resposta.json().catch(() => ({}));
-        if (!resposta.ok) {
-          falhas.push(`${arquivo.name}: ${corpo.error || `HTTP ${resposta.status}`}`);
-          continue;
-        }
-        enviadas++;
+        const url = await uploadAdminMedia(arquivo, { kind: "image", vehicleId: id }, (percentual) => {
+          setOcupado(`subindo ${i + 1}/${arquivosSelecionados.length} · ${percentual}%`);
+        });
+        enviadas.push(url);
       } catch (e) {
         falhas.push(`${arquivo.name}: ${e instanceof Error ? e.message : "falhou"}`);
       }
     }
 
-    setOcupado("");
     if (arquivos.current) arquivos.current.value = "";
-    await carregar();
-
-    if (enviadas) {
-      setAviso(`${enviadas} foto(s) enviada(s). O veículo foi travado para a sincronização não desfazer.`);
+    if (enviadas.length) {
+      setOcupado("salvando fotos");
+      try {
+        const resposta = await fetch(`/api/admin/vehicles/${id}/photos`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ acao: "adicionar", fotos: enviadas }),
+        });
+        if (resposta.status === 401) {
+          redirecionarParaLogin();
+          return;
+        }
+        const corpo = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) throw new Error(corpo.error || `HTTP ${resposta.status}`);
+        setAviso(`${enviadas.length} foto(s) enviada(s). O veículo foi travado para preservar a galeria.`);
+        await carregar();
+      } catch (e) {
+        falhas.push(e instanceof Error ? e.message : "não foi possível salvar as fotos no anúncio");
+      }
     }
+    setOcupado("");
     if (falhas.length) setErro(`Não subiram: ${falhas.join("; ")}`);
+  }
+
+  async function subirVideo(file: File | undefined) {
+    if (!file) return;
+    setErro("");
+    setAviso("");
+    try {
+      setOcupado("subindo vídeo");
+      const url = await uploadAdminMedia(file, { kind: "video", vehicleId: id }, (percentual) => {
+        setOcupado(`subindo vídeo · ${percentual}%`);
+      });
+      const resposta = await fetch(`/api/admin/vehicles/${id}/photos`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acao: "definir-video", url }),
+      });
+      if (resposta.status === 401) {
+        redirecionarParaLogin();
+        return;
+      }
+      const corpo = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) throw new Error(corpo.error || `HTTP ${resposta.status}`);
+      setAviso("Vídeo deste anúncio salvo.");
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "não foi possível subir o vídeo");
+    } finally {
+      if (arquivoVideo.current) arquivoVideo.current.value = "";
+      setOcupado("");
+    }
+  }
+
+  async function moverFoto(origem: number, destino: number) {
+    if (!galeria || origem === destino || origem < 0 || destino < 0) return;
+    const anterior = galeria.fotos;
+    const novaOrdem = [...anterior];
+    const [movida] = novaOrdem.splice(origem, 1);
+    novaOrdem.splice(destino, 0, movida);
+    setArrastando(null);
+    setGaleria({ ...galeria, fotos: novaOrdem, travada: true });
+    setErro("");
+    setAviso("");
+    setOcupado("salvando ordem");
+    try {
+      const resposta = await fetch(`/api/admin/vehicles/${id}/photos`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acao: "reordenar", fotos: novaOrdem.map((foto) => foto.url) }),
+      });
+      if (resposta.status === 401) {
+        redirecionarParaLogin();
+        return;
+      }
+      const corpo = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) throw new Error(corpo.error || `HTTP ${resposta.status}`);
+      setAviso("Ordem das fotos salva. A primeira foto virou a capa do anúncio.");
+      await carregar();
+    } catch (e) {
+      setGaleria({ ...galeria, fotos: anterior });
+      setErro(e instanceof Error ? e.message : "não foi possível salvar a ordem");
+    } finally {
+      setOcupado("");
+    }
   }
 
   async function excluirVeiculo() {
@@ -178,6 +242,7 @@ export function VehiclePhotosPanel({
   }
 
   const travada = galeria?.travada ?? false;
+  const videoEfetivo = galeria?.videoUrl || galeria?.defaultVideoUrl || "";
 
   return (
     <div className="veiculo-fotos">
@@ -225,6 +290,17 @@ export function VehiclePhotosPanel({
                 multiple
                 hidden
                 onChange={(evento) => void subir(evento.currentTarget.files)}
+              />
+            </label>
+            <label className="button button-small button-outline">
+              <Video size={14} aria-hidden="true" />
+              Vídeo deste anúncio
+              <input
+                ref={arquivoVideo}
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                hidden
+                onChange={(evento) => void subirVideo(evento.currentTarget.files?.[0])}
               />
             </label>
             <button
@@ -294,9 +370,52 @@ export function VehiclePhotosPanel({
 
           {galeria && (
             <>
+              <div className="veiculo-video-admin">
+                <div>
+                  <strong>{galeria.videoUrl ? "Vídeo deste anúncio" : galeria.defaultVideoUrl ? "Vídeo padrão" : "Sem vídeo"}</strong>
+                  <span>{galeria.videoUrl ? "Substitui o vídeo padrão somente neste veículo." : "O padrão é usado automaticamente quando não há vídeo próprio."}</span>
+                </div>
+                {videoEfetivo && <video src={videoEfetivo} controls preload="metadata" playsInline />}
+                {galeria.videoUrl && (
+                  <button
+                    type="button"
+                    className="button button-small button-outline"
+                    disabled={ocupado !== ""}
+                    onClick={() =>
+                      void agir(
+                        "alterando vídeo",
+                        () =>
+                          fetch(`/api/admin/vehicles/${id}/photos`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ acao: "usar-video-padrao" }),
+                          }),
+                        "O anúncio voltou a usar o vídeo padrão.",
+                      )
+                    }
+                  >
+                    Usar vídeo padrão
+                  </button>
+                )}
+              </div>
+
+              {galeria.fotos.length > 1 && (
+                <p className="veiculo-fotos-arraste"><GripVertical size={15} aria-hidden="true" /> Arraste as fotos para mudar a sequência. A foto 01 é a capa.</p>
+              )}
               <ul className="veiculo-fotos-grade">
                 {galeria.fotos.map((foto, indice) => (
-                  <li key={foto.url}>
+                  <li
+                    key={foto.url}
+                    draggable={ocupado === ""}
+                    className={arrastando === indice ? "arrastando" : ""}
+                    onDragStart={() => setArrastando(indice)}
+                    onDragEnd={() => setArrastando(null)}
+                    onDragOver={(evento) => evento.preventDefault()}
+                    onDrop={(evento) => {
+                      evento.preventDefault();
+                      if (arrastando !== null) void moverFoto(arrastando, indice);
+                    }}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={foto.url}
@@ -329,7 +448,8 @@ export function VehiclePhotosPanel({
                     >
                       ×
                     </button>
-                    <span>{String(indice + 1).padStart(2, "0")}</span>
+                    <GripVertical className="veiculo-fotos-arraste-icone" size={16} aria-hidden="true" />
+                    <span className="veiculo-fotos-indice">{String(indice + 1).padStart(2, "0")}</span>
                   </li>
                 ))}
                 {!galeria.fotos.length && (

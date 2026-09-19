@@ -58,7 +58,9 @@ const nextConfig: NextConfig = {
               "https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
               "style-src 'self' 'unsafe-inline'; " +
               "script-src 'self' 'unsafe-inline' https://connect.facebook.net; " +
-              "connect-src 'self' https://www.facebook.com https://connect.facebook.net; " +
+              "connect-src 'self' https://www.facebook.com https://connect.facebook.net " +
+              "https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
+              "media-src 'self' https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
               "frame-src https://www.google.com https://www.youtube.com; " +
               "form-action 'self'; frame-ancestors 'self'; base-uri 'self'",
           },

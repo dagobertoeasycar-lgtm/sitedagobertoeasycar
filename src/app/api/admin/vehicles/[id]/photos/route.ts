@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { imageUploadMaxBytes, saveImageFile } from "@/lib/image-upload";
-import { normalizarFotos, separarFotos, type MediaItem } from "@/lib/vehicle-photos";
+import { isVercelBlobUrl } from "@/lib/media-upload";
+import { mesmasFotos, normalizarFotos, separarFotos, type MediaItem } from "@/lib/vehicle-photos";
 
 /**
  * Gestão das fotos de um veículo.
@@ -33,6 +34,7 @@ type VehicleRow = {
   image_url: string | null;
   photos_locked: boolean;
   photos_status: string;
+  video_url: string | null;
 };
 
 function comoMedia(urls: string[]): MediaItem[] {
@@ -41,7 +43,7 @@ function comoMedia(urls: string[]): MediaItem[] {
 
 async function carregar(id: string) {
   const r = await query<VehicleRow>(
-    `SELECT id, title, images, images_original, image_url, photos_locked, photos_status
+    `SELECT id, title, images, images_original, image_url, photos_locked, photos_status, video_url
        FROM vehicles WHERE id = $1 LIMIT 1`,
     [id],
   );
@@ -95,6 +97,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const v = await carregar(id);
   if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
 
+  const defaultVideo = await query<{ value: string }>(
+    "SELECT value FROM site_settings WHERE key='default_vehicle_video_url' LIMIT 1",
+  ).catch(() => ({ rows: [] as { value: string }[] }));
+
   const { fotos, artesDaLoja } = separarFotos(v.images);
   return NextResponse.json({
     id: v.id,
@@ -105,6 +111,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     capa: v.image_url,
     travada: v.photos_locked,
     situacao: v.photos_status,
+    videoUrl: v.video_url || "",
+    defaultVideoUrl: defaultVideo.rows[0]?.value || "",
   });
 }
 
@@ -193,9 +201,61 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
   if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
 
-  const body = (await request.json()) as { acao?: string };
+  const body = (await request.json()) as { acao?: string; fotos?: unknown; url?: unknown };
   const v = await carregar(id);
   if (!v) return NextResponse.json({ error: "Veículo não encontrado" }, { status: 404 });
+
+  if (body.acao === "adicionar") {
+    const novas = normalizarFotos(body.fotos).filter((url) => isVercelBlobUrl(url, "vehicle-images"));
+    if (!novas.length) return NextResponse.json({ error: "Nenhuma foto válida foi enviada." }, { status: 400 });
+    const atuais = separarFotos(v.images).fotos;
+    const galeria = normalizarFotos([...atuais, ...novas]);
+    await gravarGaleria(id, v, galeria, {
+      travar: true,
+      situacao: v.photos_status === "ORIGEM" ? "EM_TRATAMENTO" : v.photos_status,
+      userId: session.userId,
+    });
+    await registrar(id, "ADICIONAR", atuais.length, galeria.length, session.userId, `${novas.length} enviada(s) direto ao Blob`);
+    return NextResponse.json({ id, fotos: comoMedia(galeria), travada: true });
+  }
+
+  if (body.acao === "reordenar") {
+    const ordem = normalizarFotos(body.fotos);
+    const atuais = separarFotos(v.images).fotos;
+    if (!mesmasFotos(atuais, ordem)) {
+      return NextResponse.json({ error: "A nova ordem precisa conter exatamente as fotos atuais." }, { status: 400 });
+    }
+    await query(
+      `UPDATE vehicles SET images=$2::jsonb, image_url=$3,
+         photos_locked=true, photos_locked_at=now(), photos_locked_by=$4, updated_at=now()
+       WHERE id=$1`,
+      [id, JSON.stringify(comoMedia(ordem)), ordem[0] ?? null, session.userId],
+    );
+    await registrar(id, "REORDENAR", atuais.length, ordem.length, session.userId, "ordem manual salva");
+    return NextResponse.json({ id, fotos: comoMedia(ordem), travada: true });
+  }
+
+  if (body.acao === "definir-video") {
+    const url = typeof body.url === "string" ? body.url.trim() : "";
+    if (!isVercelBlobUrl(url, "vehicle-videos")) {
+      return NextResponse.json({ error: "Vídeo inválido." }, { status: 400 });
+    }
+    await query("UPDATE vehicles SET video_url=$2, updated_at=now() WHERE id=$1", [id, url]);
+    await query(
+      "INSERT INTO audit_log(actor_id,action,entity_type,entity_id,metadata) VALUES($1,'video','vehicle',$2,$3::jsonb)",
+      [session.userId, id, JSON.stringify({ url })],
+    ).catch(() => undefined);
+    return NextResponse.json({ id, videoUrl: url });
+  }
+
+  if (body.acao === "usar-video-padrao") {
+    await query("UPDATE vehicles SET video_url=NULL, updated_at=now() WHERE id=$1", [id]);
+    await query(
+      "INSERT INTO audit_log(actor_id,action,entity_type,entity_id,metadata) VALUES($1,'video_padrao','vehicle',$2,'{}'::jsonb)",
+      [session.userId, id],
+    ).catch(() => undefined);
+    return NextResponse.json({ id, videoUrl: "" });
+  }
 
   if (body.acao === "travar" || body.acao === "destravar") {
     const travar = body.acao === "travar";

@@ -94,6 +94,15 @@ export function normalizarFotos(valor: unknown): string[] {
   return saida;
 }
 
+/** Confere se uma nova ordem contém exatamente as mesmas fotos atuais. */
+export function mesmasFotos(valorA: unknown, valorB: unknown) {
+  const a = normalizarFotos(valorA);
+  const b = normalizarFotos(valorB);
+  if (a.length !== b.length) return false;
+  const urls = new Set(a);
+  return b.every((url) => urls.has(url));
+}
+
 /**
  * Separa a galeria em foto do carro e arte da loja.
  *

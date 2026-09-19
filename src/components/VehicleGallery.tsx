@@ -40,6 +40,22 @@ function YouTubeEmbed({ url, autoplay = false }: { url: string; autoplay?: boole
   );
 }
 
+function VideoPlayer({ url, autoplay = false }: { url: string; autoplay?: boolean }) {
+  if (/youtu\.be\/|youtube\.com\//i.test(url)) return <YouTubeEmbed url={url} autoplay={autoplay} />;
+  return (
+    <video
+      className="vehicle-gallery-video"
+      src={url}
+      controls
+      playsInline
+      preload="metadata"
+      autoPlay={autoplay}
+      muted={autoplay}
+      onClick={(event) => event.stopPropagation()}
+    />
+  );
+}
+
 function Lightbox({ media, startIndex, title, onClose }: {
   media: MediaItem[]; startIndex: number; title: string; onClose: () => void;
 }) {
@@ -68,7 +84,7 @@ function Lightbox({ media, startIndex, title, onClose }: {
         {media.length > 1 && <button className="lightbox-nav prev" onClick={prev} aria-label="Anterior">&#8249;</button>}
         {item.type === "video" ? (
           <div style={{ position: "relative", width: "min(900px, 85vw)", aspectRatio: "16/9" }}>
-            <YouTubeEmbed url={item.url} autoplay />
+            <VideoPlayer url={item.url} autoplay />
           </div>
         ) : (
           <img src={item.url} alt={`${title} - ${idx + 1}`} />
@@ -90,8 +106,11 @@ function Lightbox({ media, startIndex, title, onClose }: {
   );
 }
 
-export function VehicleGallery({ images, title, fallback }: { images: unknown; title: string; fallback: string }) {
-  const media = parseMedia(images, fallback);
+export function VehicleGallery({ images, title, fallback, videoUrl = "" }: { images: unknown; title: string; fallback: string; videoUrl?: string }) {
+  const parsed = parseMedia(images, fallback);
+  const media = videoUrl && !parsed.some((item) => item.type === "video" && item.url === videoUrl)
+    ? [...parsed, { type: "video" as const, url: videoUrl }]
+    : parsed;
   const [current, setCurrent] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const item = media[current];
@@ -101,7 +120,7 @@ export function VehicleGallery({ images, title, fallback }: { images: unknown; t
       <div className="vehicle-gallery">
         <div className="vehicle-gallery-main" onClick={() => setLightbox(current)} style={{ cursor: "zoom-in" }}>
           {item.type === "video" ? (
-            <YouTubeEmbed url={item.url} />
+            <VideoPlayer url={item.url} />
           ) : (
             <img src={item.url} alt={`${title} - foto ${current + 1}`} loading="eager" />
           )}

@@ -4,6 +4,7 @@ import { VehicleGallery } from "@/components/VehicleGallery";
 import { findVehicle, money, listVehicles, vehicleOriginBadgeLabel, vehicleOriginPublicLabel, vehiclePublicLocation } from "@/lib/vehicles";
 import { VehicleCard } from "@/components/VehicleCard";
 import { MetaTrackedAnchor, VehicleViewContent } from "@/components/MetaPixelEvents";
+import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,10 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
   const message = encodeURIComponent(`Olá! Vi o ${vehicle.title} (${vehicle.catalog_item_id}) no site da Autodrive e gostaria de mais informações.`);
   const options = parseOptions(vehicle.options);
   const descParagraphs = parseDescription(vehicle.description);
+  const defaultVideo = await query<{ value: string }>(
+    "SELECT value FROM site_settings WHERE key='default_vehicle_video_url' LIMIT 1",
+  ).catch(() => ({ rows: [] as { value: string }[] }));
+  const videoUrl = vehicle.video_url || defaultVideo.rows[0]?.value || "";
   const pixelVehicle = {
     contentId: vehicle.catalog_item_id,
     name: vehicle.title,
@@ -58,6 +63,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
           images={vehicle.images}
           title={vehicle.title}
           fallback={vehicle.image_url || "/em-breve.png"}
+          videoUrl={videoUrl}
         />
 
         {/* Badges row */}

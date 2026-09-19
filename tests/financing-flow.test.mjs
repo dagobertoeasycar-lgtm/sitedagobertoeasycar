@@ -39,3 +39,18 @@ test("painel de fotos exige sessão antes de abrir a galeria", () => {
   assert.match(panel, /resposta\.status === 401/);
   assert.match(panel, /redirecionarParaLogin/);
 });
+
+test("painel envia mídia direto, salva a ordem e oferece vídeo padrão ou próprio", () => {
+  const panel = readFileSync("src/components/VehiclePhotosPanel.tsx", "utf8");
+  const upload = readFileSync("src/lib/client-media-upload.ts", "utf8");
+  const gallery = readFileSync("src/components/VehicleGallery.tsx", "utf8");
+  const migration = readFileSync("migrations/018_ordem_de_fotos_e_videos.sql", "utf8");
+  assert.match(upload, /@vercel\/blob\/client/);
+  assert.match(upload, /multipart:/);
+  assert.match(panel, /draggable=/);
+  assert.match(panel, /acao: "reordenar"/);
+  assert.match(panel, /acao: "definir-video"/);
+  assert.match(gallery, /vehicle-gallery-video/);
+  assert.match(migration, /default_vehicle_video_url/);
+  assert.match(migration, /REORDENAR/);
+});
