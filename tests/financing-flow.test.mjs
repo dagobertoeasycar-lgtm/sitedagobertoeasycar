@@ -26,8 +26,9 @@ test("serviços de financiamento ficam separados por origem", () => {
 
 test("uploads usam Vercel Blob quando configurado e mantêm fallback local", () => {
   const upload = readFileSync("src/lib/image-upload.ts", "utf8");
+  const token = readFileSync("src/lib/vercel-blob-token.ts", "utf8");
   assert.match(upload, /@vercel\/blob/);
-  assert.match(upload, /BLOB_READ_WRITE_TOKEN/);
+  assert.match(token, /BLOB_READ_WRITE_TOKEN/);
   assert.match(upload, /api\/uploads/);
 });
 

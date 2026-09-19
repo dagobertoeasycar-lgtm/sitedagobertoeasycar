@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { put } from "@vercel/blob";
+import { getVercelBlobToken } from "@/lib/vercel-blob-token";
 
 export const imageUploadMaxBytes = 8 * 1024 * 1024;
 export const imageUploadContentTypes: Record<string, string> = {
@@ -14,8 +15,6 @@ export const imageUploadContentTypes: Record<string, string> = {
 export const uploadsRoot =
   process.env.UPLOAD_DIR || (process.env.VERCEL ? "/tmp/autodrive-uploads" : "C:\\Sites\\DagobertoEasycar\\data\\uploads");
 
-const shouldUseVercelBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN) && !process.env.UPLOAD_DIR;
-
 export function detectedImageExtension(bytes: Uint8Array) {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";
   if (bytes.length >= 8 && bytes.slice(0, 8).every((value, index) => value === [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a][index])) return "png";
@@ -24,8 +23,8 @@ export function detectedImageExtension(bytes: Uint8Array) {
   return null;
 }
 
-export async function saveImageFile(file: File) {
-  if (file.size === 0 || file.size > imageUploadMaxBytes) throw new Error("Arquivo inválido");
+export async function saveImageFile(file: File, maximumSizeInBytes = imageUploadMaxBytes) {
+  if (file.size === 0 || file.size > maximumSizeInBytes) throw new Error("Arquivo inválido");
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
   const extension = detectedImageExtension(bytes);
@@ -34,11 +33,13 @@ export async function saveImageFile(file: File) {
   const filename = `${randomUUID()}.${extension}`;
   const contentType = imageUploadContentTypes[extension];
 
-  if (shouldUseVercelBlob) {
+  const blobToken = getVercelBlobToken();
+  if (blobToken && !process.env.UPLOAD_DIR) {
     const blob = await put(`uploads/${filename}`, buffer, {
       access: "public",
       addRandomSuffix: false,
       contentType,
+      token: blobToken,
     });
     return {
       filename,
@@ -46,6 +47,10 @@ export async function saveImageFile(file: File) {
       size: file.size,
       contentType,
     };
+  }
+
+  if (process.env.VERCEL && !process.env.UPLOAD_DIR) {
+    throw new Error("O armazenamento de fotos não está conectado ao projeto na Vercel.");
   }
 
   const base = resolve(uploadsRoot);

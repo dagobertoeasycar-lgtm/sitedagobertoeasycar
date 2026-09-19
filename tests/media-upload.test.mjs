@@ -8,6 +8,7 @@ import {
   isVercelBlobUrl,
   safeUploadName,
 } from "../src/lib/media-upload.ts";
+import { getVercelBlobToken } from "../src/lib/vercel-blob-token.ts";
 
 test("validação aceita apenas mídia e limites definidos para o painel", () => {
   assert.deepEqual([...adminImageContentTypes], ["image/jpeg", "image/png", "image/webp", "image/avif"]);
@@ -29,4 +30,11 @@ test("endereço de upload precisa ser HTTPS, do Vercel Blob e da pasta esperada"
 test("nome enviado perde acentos, espaços e caracteres inseguros", () => {
   assert.equal(safeUploadName("Foto São João (01).JPG", "foto.jpg"), "Foto-Sao-Joao-01-.JPG");
   assert.equal(safeUploadName("...", "foto.jpg"), "foto.jpg");
+});
+
+test("credencial Blob aceita o nome padrão e nomes prefixados pela Vercel", () => {
+  assert.equal(getVercelBlobToken({ BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_padrao" }), "vercel_blob_rw_padrao");
+  assert.equal(getVercelBlobToken({ AUTODRIVE_READ_WRITE_TOKEN: "vercel_blob_rw_prefixado" }), "vercel_blob_rw_prefixado");
+  assert.equal(getVercelBlobToken({ OTHER_READ_WRITE_TOKEN: "token-invalido" }), null);
+  assert.equal(getVercelBlobToken({}), null);
 });

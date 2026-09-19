@@ -8,6 +8,7 @@ import {
   adminVideoContentTypes,
   adminVideoMaxBytes,
 } from "@/lib/media-upload";
+import { getVercelBlobToken } from "@/lib/vercel-blob-token";
 
 export const runtime = "nodejs";
 
@@ -20,13 +21,23 @@ type ClientPayload = {
 };
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as HandleUploadBody;
+  const body = (await request.json().catch(() => null)) as HandleUploadBody | null;
+  if (!body) return NextResponse.json({ error: "Solicitação de upload inválida." }, { status: 400 });
   if (body.type === "blob.generate-client-token" && !(await currentSession())) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const token = getVercelBlobToken();
+  if (!token) {
+    return NextResponse.json(
+      { error: "O armazenamento de fotos não está conectado ao projeto na Vercel." },
+      { status: 503 },
+    );
+  }
+
   try {
     const response = await handleUpload({
+      token,
       body,
       request,
       onBeforeGenerateToken: async (pathname, rawPayload) => {

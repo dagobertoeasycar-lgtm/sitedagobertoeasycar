@@ -1,6 +1,6 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
+import { put } from "@vercel/blob/client";
 import {
   adminImageContentTypes,
   adminImageMaxBytes,
@@ -12,6 +12,46 @@ import {
 type UploadTarget =
   | { kind: "image"; vehicleId?: string }
   | { kind: "video"; vehicleId?: string; defaultVideo?: boolean };
+
+class UploadAuthorizationError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+async function requestClientToken(pathname: string, target: UploadTarget, multipart: boolean) {
+  const response = await fetch("/api/admin/blob-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "blob.generate-client-token",
+      payload: {
+        pathname,
+        clientPayload: JSON.stringify(target),
+        multipart,
+      },
+    }),
+  });
+  const result = await response.json().catch(() => null) as { clientToken?: string; error?: string } | null;
+  if (!response.ok || !result?.clientToken) {
+    throw new UploadAuthorizationError(
+      result?.error || "Não foi possível autorizar o envio. Entre novamente no painel e tente de novo.",
+      response.status,
+    );
+  }
+  return result.clientToken;
+}
+
+async function uploadImageThroughServer(file: File, onProgress?: (percentage: number) => void) {
+  const form = new FormData();
+  form.set("file", file);
+  onProgress?.(10);
+  const response = await fetch("/api/admin/uploads", { method: "POST", body: form });
+  const result = await response.json().catch(() => null) as { url?: string; error?: string } | null;
+  if (!response.ok || !result?.url) throw new Error(result?.error || "Não foi possível enviar a foto.");
+  onProgress?.(100);
+  return result.url;
+}
 
 export async function uploadAdminMedia(
   file: File,
@@ -32,12 +72,21 @@ export async function uploadAdminMedia(
   const scope = target.kind === "video" && target.defaultVideo ? "default" : target.vehicleId || "manual";
   const filename = safeUploadName(file.name, isVideo ? "video.mp4" : "foto.jpg");
   const pathname = `${folder}/${scope}/${Date.now()}-${filename}`;
-  const blob = await upload(pathname, file, {
+  const multipart = isVideo || file.size > 10 * 1024 * 1024;
+  let token: string;
+  try {
+    token = await requestClientToken(pathname, target, multipart);
+  } catch (error) {
+    if (!isVideo && error instanceof UploadAuthorizationError && error.status === 503) {
+      return uploadImageThroughServer(file, onProgress);
+    }
+    throw error;
+  }
+  const blob = await put(pathname, file, {
     access: "public",
+    token,
     contentType: file.type,
-    handleUploadUrl: "/api/admin/blob-upload",
-    clientPayload: JSON.stringify(target),
-    multipart: isVideo || file.size > 10 * 1024 * 1024,
+    multipart,
     onUploadProgress: ({ percentage }) => onProgress?.(Math.round(percentage)),
   });
   return blob.url;
