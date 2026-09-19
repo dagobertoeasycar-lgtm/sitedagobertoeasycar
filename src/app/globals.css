@@ -1300,9 +1300,16 @@ th { background: var(--soft); }
   padding: 16px 18px;
   border-top: 1px solid rgba(255,255,255,0.08);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+.adm-session-expiry {
+  width: 100%;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 .adm-user { font-size: 0.8rem; color: #cbd5e1; overflow: hidden; text-overflow: ellipsis; }
 .adm-logout {
@@ -1739,6 +1746,119 @@ th { background: var(--soft); }
 .default-video-actions .button { display: inline-flex; align-items: center; gap: 6px; }
 .default-video-actions .is-disabled { opacity: 0.55; cursor: not-allowed; }
 .default-video-hint { margin: 10px 0 0; color: #64748b; font-size: 0.74rem; }
+.session-settings-card { padding: 20px; }
+.session-settings-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.session-settings-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.08rem;
+}
+.session-settings-heading p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+.session-settings-status {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.session-settings-status.active { color: #166534; background: #dcfce7; }
+.session-settings-status.inactive { color: #475569; background: #f1f5f9; }
+.session-settings-controls {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(210px, 280px);
+  align-items: end;
+  gap: 24px;
+  margin-top: 18px;
+  padding-block: 18px;
+  border-block: 1px solid #e2e8f0;
+}
+.session-toggle {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.session-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.session-toggle-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: background 0.18s;
+}
+.session-toggle-track span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15,23,42,.25);
+  transition: transform 0.18s;
+}
+.session-toggle input:checked + .session-toggle-track { background: #0a7c86; }
+.session-toggle input:checked + .session-toggle-track span { transform: translateX(20px); }
+.session-toggle input:focus-visible + .session-toggle-track { outline: 3px solid rgba(10,124,134,.22); outline-offset: 2px; }
+.session-toggle input:disabled + .session-toggle-track { opacity: 0.55; cursor: not-allowed; }
+.session-toggle strong { display: block; color: #0f172a; font-size: 0.86rem; }
+.session-toggle small { display: block; margin-top: 3px; color: #64748b; font-size: 0.74rem; }
+.session-duration-field { display: grid; gap: 6px; }
+.session-duration-field > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.session-duration-field select {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  background: #fff;
+}
+.session-duration-field select:disabled { color: #94a3b8; background: #f8fafc; }
+.session-settings-note {
+  margin-top: 14px;
+  color: #475569;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.session-settings-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+.session-settings-actions .button { display: inline-flex; align-items: center; gap: 6px; }
+.session-settings-actions .veiculo-fotos-aviso,
+.session-settings-actions .veiculo-fotos-erro { margin: 0; }
 
 /* Pagination */
 .adm-pagination {
@@ -1787,6 +1907,8 @@ th { background: var(--soft); }
     border-bottom: 1px solid #e2e8f0;
   }
   .default-video-stats > div:last-child { border-bottom: 0; }
+  .session-settings-heading { flex-direction: column; }
+  .session-settings-controls { grid-template-columns: 1fr; align-items: stretch; }
 }
 
 /* ── Catálogo Meta ──────────────────────────────────────── */

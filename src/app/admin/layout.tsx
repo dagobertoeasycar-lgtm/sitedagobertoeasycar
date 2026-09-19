@@ -22,5 +22,5 @@ export default async function Layout({ children }: { children: React.ReactNode }
     email = undefined;
   }
 
-  return <AdminLayout user={email}>{children}</AdminLayout>;
+  return <AdminLayout user={email} sessionExpiresAt={session.expiresAt}>{children}</AdminLayout>;
 }

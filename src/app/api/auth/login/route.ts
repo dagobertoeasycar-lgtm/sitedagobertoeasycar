@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSession, sessionCookie, verifyPassword } from "@/lib/auth";
+import { createSession, sessionCookie, sessionCookieOptions, verifyPassword } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { publicUrl } from "@/lib/public-url";
+import { defaultSessionTimeoutSettings, readSessionTimeoutSettings } from "@/lib/session-settings";
 
 type UserRow = { id: string; password_hash: string; password_salt: string; active: boolean };
 export async function POST(request: NextRequest) {
@@ -11,8 +12,14 @@ export async function POST(request: NextRequest) {
   const result = await query<UserRow>("select id, password_hash, password_salt, active from users where email=$1 limit 1", [email]);
   const user = result.rows[0];
   if (!user?.active || !verifyPassword(password, user.password_salt, user.password_hash)) return NextResponse.redirect(publicUrl("/admin/login?erro=1", request.url), 303);
+  const settings = await readSessionTimeoutSettings().catch(() => defaultSessionTimeoutSettings);
+  const timeoutMinutes = settings.enabled ? settings.minutes : null;
   const response = NextResponse.redirect(publicUrl("/admin", request.url), 303);
-  response.cookies.set(sessionCookie.name, createSession(user.id), sessionCookie.options);
+  response.cookies.set(
+    sessionCookie.name,
+    createSession(user.id, timeoutMinutes),
+    sessionCookieOptions(timeoutMinutes),
+  );
   await query("insert into audit_log(actor_id, action, entity_type) values ($1, 'login', 'session')", [user.id]);
   return response;
 }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { currentSession } from "@/lib/auth";
 import Link from "next/link";
 import { DefaultVehicleVideo } from "@/components/DefaultVehicleVideo";
+import { SessionTimeoutSettings } from "@/components/SessionTimeoutSettings";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function AdminConfigPage() {
           <span className="config-link-icon">🔐</span><div><h2>Trocar senha</h2><p>Atualize com segurança a senha da sua conta administrativa.</p></div>
         </Link>
       </div>
+      <SessionTimeoutSettings />
       <DefaultVehicleVideo />
     </>
   );

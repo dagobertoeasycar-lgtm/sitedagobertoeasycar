@@ -71,3 +71,21 @@ test("vídeo padrão da vitrine pode ser ativado e vídeos próprios têm priori
   assert.match(api, /inheriting/);
   assert.match(migration, /default_vehicle_video_enabled/);
 });
+
+test("configurações controlam o encerramento automático da sessão", () => {
+  const page = readFileSync("src/app/admin/configuracoes/page.tsx", "utf8");
+  const component = readFileSync("src/components/SessionTimeoutSettings.tsx", "utf8");
+  const layout = readFileSync("src/components/AdminLayout.tsx", "utf8");
+  const login = readFileSync("src/app/api/auth/login/route.ts", "utf8");
+  const refresh = readFileSync("src/app/api/auth/session/refresh/route.ts", "utf8");
+  const migration = readFileSync("migrations/020_tempo_sessao_admin.sql", "utf8");
+
+  assert.match(page, /<SessionTimeoutSettings/);
+  assert.match(component, /Deslogar automaticamente/);
+  assert.match(component, /Salvar configuração/);
+  assert.match(layout, /autodrive:session-updated/);
+  assert.match(layout, /session\/refresh/);
+  assert.match(login, /readSessionTimeoutSettings/);
+  assert.match(refresh, /sessionCookieOptions/);
+  assert.match(migration, /admin_session_timeout_enabled/);
+});
