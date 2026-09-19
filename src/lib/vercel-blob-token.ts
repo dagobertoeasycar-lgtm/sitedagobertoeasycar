@@ -12,3 +12,7 @@ export function getVercelBlobToken(environment: NodeJS.ProcessEnv = process.env)
 
   return null;
 }
+
+export function hasVercelBlobCredentials(environment: NodeJS.ProcessEnv = process.env) {
+  return Boolean(getVercelBlobToken(environment) || environment.BLOB_STORE_ID?.trim());
+}

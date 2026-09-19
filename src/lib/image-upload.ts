@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { put } from "@vercel/blob";
-import { getVercelBlobToken } from "@/lib/vercel-blob-token";
+import { getVercelBlobToken, hasVercelBlobCredentials } from "@/lib/vercel-blob-token";
 
 export const imageUploadMaxBytes = 8 * 1024 * 1024;
 export const imageUploadContentTypes: Record<string, string> = {
@@ -34,12 +34,12 @@ export async function saveImageFile(file: File, maximumSizeInBytes = imageUpload
   const contentType = imageUploadContentTypes[extension];
 
   const blobToken = getVercelBlobToken();
-  if (blobToken && !process.env.UPLOAD_DIR) {
+  if (hasVercelBlobCredentials() && !process.env.UPLOAD_DIR) {
     const blob = await put(`uploads/${filename}`, buffer, {
       access: "public",
       addRandomSuffix: false,
       contentType,
-      token: blobToken,
+      ...(blobToken ? { token: blobToken } : {}),
     });
     return {
       filename,

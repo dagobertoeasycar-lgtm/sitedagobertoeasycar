@@ -47,7 +47,7 @@ test("painel envia mídia direto, salva a ordem e oferece vídeo padrão ou pró
   const gallery = readFileSync("src/components/VehicleGallery.tsx", "utf8");
   const migration = readFileSync("migrations/018_ordem_de_fotos_e_videos.sql", "utf8");
   assert.match(upload, /@vercel\/blob\/client/);
-  assert.match(upload, /multipart:/);
+  assert.match(upload, /uploadPresigned/);
   assert.match(panel, /draggable=/);
   assert.match(panel, /acao: "reordenar"/);
   assert.match(panel, /acao: "definir-video"/);

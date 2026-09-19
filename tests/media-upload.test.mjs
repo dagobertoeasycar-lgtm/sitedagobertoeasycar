@@ -8,7 +8,7 @@ import {
   isVercelBlobUrl,
   safeUploadName,
 } from "../src/lib/media-upload.ts";
-import { getVercelBlobToken } from "../src/lib/vercel-blob-token.ts";
+import { getVercelBlobToken, hasVercelBlobCredentials } from "../src/lib/vercel-blob-token.ts";
 
 test("validação aceita apenas mídia e limites definidos para o painel", () => {
   assert.deepEqual([...adminImageContentTypes], ["image/jpeg", "image/png", "image/webp", "image/avif"]);
@@ -37,4 +37,6 @@ test("credencial Blob aceita o nome padrão e nomes prefixados pela Vercel", () 
   assert.equal(getVercelBlobToken({ AUTODRIVE_READ_WRITE_TOKEN: "vercel_blob_rw_prefixado" }), "vercel_blob_rw_prefixado");
   assert.equal(getVercelBlobToken({ OTHER_READ_WRITE_TOKEN: "token-invalido" }), null);
   assert.equal(getVercelBlobToken({}), null);
+  assert.equal(hasVercelBlobCredentials({ BLOB_STORE_ID: "store_autodrive" }), true);
+  assert.equal(hasVercelBlobCredentials({}), false);
 });

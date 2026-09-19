@@ -1,6 +1,6 @@
 "use client";
 
-import { put } from "@vercel/blob/client";
+import { uploadPresigned } from "@vercel/blob/client";
 import {
   adminImageContentTypes,
   adminImageMaxBytes,
@@ -12,35 +12,6 @@ import {
 type UploadTarget =
   | { kind: "image"; vehicleId?: string }
   | { kind: "video"; vehicleId?: string; defaultVideo?: boolean };
-
-class UploadAuthorizationError extends Error {
-  constructor(message: string, readonly status: number) {
-    super(message);
-  }
-}
-
-async function requestClientToken(pathname: string, target: UploadTarget, multipart: boolean) {
-  const response = await fetch("/api/admin/blob-upload", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type: "blob.generate-client-token",
-      payload: {
-        pathname,
-        clientPayload: JSON.stringify(target),
-        multipart,
-      },
-    }),
-  });
-  const result = await response.json().catch(() => null) as { clientToken?: string; error?: string } | null;
-  if (!response.ok || !result?.clientToken) {
-    throw new UploadAuthorizationError(
-      result?.error || "Não foi possível autorizar o envio. Entre novamente no painel e tente de novo.",
-      response.status,
-    );
-  }
-  return result.clientToken;
-}
 
 async function uploadImageThroughServer(file: File, onProgress?: (percentage: number) => void) {
   const form = new FormData();
@@ -73,21 +44,21 @@ export async function uploadAdminMedia(
   const filename = safeUploadName(file.name, isVideo ? "video.mp4" : "foto.jpg");
   const pathname = `${folder}/${scope}/${Date.now()}-${filename}`;
   const multipart = isVideo || file.size > 10 * 1024 * 1024;
-  let token: string;
   try {
-    token = await requestClientToken(pathname, target, multipart);
+    const blob = await uploadPresigned(pathname, file, {
+      access: "public",
+      contentType: file.type,
+      handleUploadUrl: "/api/admin/blob-upload",
+      clientPayload: JSON.stringify(target),
+      multipart,
+      onUploadProgress: ({ percentage }) => onProgress?.(Math.round(percentage)),
+    });
+    return blob.url;
   } catch (error) {
-    if (!isVideo && error instanceof UploadAuthorizationError && error.status === 503) {
+    const message = error instanceof Error ? error.message : "";
+    if (!isVideo && message.includes("retrieve the presigned URL")) {
       return uploadImageThroughServer(file, onProgress);
     }
     throw error;
   }
-  const blob = await put(pathname, file, {
-    access: "public",
-    token,
-    contentType: file.type,
-    multipart,
-    onUploadProgress: ({ percentage }) => onProgress?.(Math.round(percentage)),
-  });
-  return blob.url;
 }
