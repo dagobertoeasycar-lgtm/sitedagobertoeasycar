@@ -51,6 +51,7 @@ test("painel envia mídia direto, salva a ordem e oferece vídeo padrão ou pró
   assert.match(panel, /acao: "reordenar"/);
   assert.match(panel, /acao: "definir-video"/);
   assert.match(gallery, /vehicle-gallery-video/);
+  assert.match(gallery, /orderVehicleGallery/);
   assert.match(migration, /default_vehicle_video_url/);
   assert.match(migration, /REORDENAR/);
 });

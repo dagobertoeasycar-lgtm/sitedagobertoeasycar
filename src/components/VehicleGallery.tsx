@@ -1,28 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-
-type MediaItem = { type: "video" | "image"; url: string };
-
-function parseMedia(raw: unknown, fallback: string): MediaItem[] {
-  let data = raw;
-  if (typeof data === "string") {
-    try { data = JSON.parse(data); } catch { return [{ type: "image", url: fallback }]; }
-  }
-  if (!Array.isArray(data) || data.length === 0) return [{ type: "image", url: fallback }];
-  return data.map((item: unknown) => {
-    if (typeof item === "string") return { type: "image" as const, url: item };
-    if (item && typeof item === "object" && "url" in item) {
-      const candidate = item as Record<string, unknown>;
-      if (typeof candidate.url !== "string") return null;
-      return {
-        type: candidate.type === "video" ? "video" as const : "image" as const,
-        url: candidate.url,
-      };
-    }
-    return null;
-  }).filter(Boolean) as MediaItem[];
-}
+import { orderVehicleGallery, type GalleryMediaItem } from "@/lib/vehicle-gallery-media";
 
 function YouTubeEmbed({ url, autoplay = false }: { url: string; autoplay?: boolean }) {
   let videoId = "";
@@ -57,7 +36,7 @@ function VideoPlayer({ url, autoplay = false }: { url: string; autoplay?: boolea
 }
 
 function Lightbox({ media, startIndex, title, onClose }: {
-  media: MediaItem[]; startIndex: number; title: string; onClose: () => void;
+  media: GalleryMediaItem[]; startIndex: number; title: string; onClose: () => void;
 }) {
   const [idx, setIdx] = useState(startIndex);
   const item = media[idx];
@@ -107,10 +86,7 @@ function Lightbox({ media, startIndex, title, onClose }: {
 }
 
 export function VehicleGallery({ images, title, fallback, videoUrl = "" }: { images: unknown; title: string; fallback: string; videoUrl?: string }) {
-  const parsed = parseMedia(images, fallback);
-  const media = videoUrl && !parsed.some((item) => item.type === "video" && item.url === videoUrl)
-    ? [...parsed, { type: "video" as const, url: videoUrl }]
-    : parsed;
+  const media = orderVehicleGallery(images, fallback, videoUrl);
   const [current, setCurrent] = useState(0);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const item = media[current];
@@ -118,9 +94,15 @@ export function VehicleGallery({ images, title, fallback, videoUrl = "" }: { ima
   return (
     <>
       <div className="vehicle-gallery">
-        <div className="vehicle-gallery-main" onClick={() => setLightbox(current)} style={{ cursor: "zoom-in" }}>
+        <div
+          className={`vehicle-gallery-main${item.type === "video" ? " has-video" : ""}`}
+          onClick={() => { if (item.type === "image") setLightbox(current); }}
+        >
           {item.type === "video" ? (
-            <VideoPlayer url={item.url} />
+            <>
+              <VideoPlayer url={item.url} />
+              <span className="gallery-video-label">Vídeo</span>
+            </>
           ) : (
             <img src={item.url} alt={`${title} - foto ${current + 1}`} loading="eager" />
           )}
@@ -135,7 +117,13 @@ export function VehicleGallery({ images, title, fallback, videoUrl = "" }: { ima
         {media.length > 1 && (
           <div className="vehicle-gallery-thumbs">
             {media.map((m, i) => (
-              <button key={i} className={i === current ? "active" : ""} onClick={() => setCurrent(i)}>
+              <button
+                key={`${m.type}-${m.url}`}
+                className={i === current ? "active" : ""}
+                onClick={() => setCurrent(i)}
+                aria-label={m.type === "video" ? "Abrir vídeo do veículo" : `Abrir foto ${i + 1} do veículo`}
+                title={m.type === "video" ? "Vídeo do veículo" : `Foto ${i + 1}`}
+              >
                 {m.type === "video" ? <span className="thumb-video">&#9654;</span> :
                   <img src={m.url.replace("/1440x0/", "/200x150/")} alt="" loading="lazy" />}
               </button>

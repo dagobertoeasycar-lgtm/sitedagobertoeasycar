@@ -381,7 +381,9 @@ th { background: var(--soft); }
   border-radius: 12px;
   overflow: hidden;
   background: #0a0a0a;
+  cursor: zoom-in;
 }
+.vehicle-gallery-main.has-video { cursor: default; }
 .vehicle-gallery-main img {
   position: absolute;
   top: 0;
@@ -398,6 +400,19 @@ th { background: var(--soft); }
   border: 0;
   object-fit: contain;
   background: #020617;
+}
+.gallery-video-label {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 5px 9px;
+  border-radius: 6px;
+  color: #fff;
+  background: rgba(2, 6, 23, 0.76);
+  font-size: 0.72rem;
+  font-weight: 800;
+  pointer-events: none;
 }
 .vehicle-gallery-thumbs {
   display: flex;
