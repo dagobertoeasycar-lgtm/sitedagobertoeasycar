@@ -1,19 +1,22 @@
 import { randomUUID } from "node:crypto";
+<<<<<<< HEAD
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { put } from "@vercel/blob";
 import { getVercelBlobToken, hasVercelBlobCredentials } from "@/lib/vercel-blob-token";
+=======
+import { put } from "@vercel/blob";
+>>>>>>> 8c79e06 (fix: CSP bloqueia blob, maxDuration, rejeitar video, mensagens de erro claras)
 
 export const imageUploadMaxBytes = 8 * 1024 * 1024;
+
+/** Extensões de mídia aceitas pelo upload. Vídeos ficam fora por enquanto. */
 export const imageUploadContentTypes: Record<string, string> = {
   jpg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
   avif: "image/avif",
 };
-
-export const uploadsRoot =
-  process.env.UPLOAD_DIR || (process.env.VERCEL ? "/tmp/autodrive-uploads" : "C:\\Sites\\DagobertoEasycar\\data\\uploads");
 
 export function detectedImageExtension(bytes: Uint8Array) {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";
@@ -23,12 +26,36 @@ export function detectedImageExtension(bytes: Uint8Array) {
   return null;
 }
 
+/**
+ * Detecta se o arquivo é vídeo pelos magic bytes.
+ * Usado para rejeitar com mensagem clara ao invés de erro genérico.
+ */
+export function isVideoFile(bytes: Uint8Array): boolean {
+  if (bytes.length < 12) return false;
+  const head4 = new TextDecoder().decode(bytes.slice(0, 4));
+  const ftyp = new TextDecoder().decode(bytes.slice(4, 8));
+  // MP4/MOV: ftyp box
+  if (ftyp === "ftyp") return true;
+  // AVI
+  if (head4 === "RIFF" && bytes.length >= 12 && new TextDecoder().decode(bytes.slice(8, 12)) === "AVI ") return true;
+  // WebM/MKV (EBML header: 0x1A 0x45 0xDF 0xA3)
+  if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) return true;
+  return false;
+}
+
 export async function saveImageFile(file: File, maximumSizeInBytes = imageUploadMaxBytes) {
-  if (file.size === 0 || file.size > maximumSizeInBytes) throw new Error("Arquivo inválido");
+  if (file.size === 0 || file.size > maximumSizeInBytes) {
+    throw new Error(`Arquivo inválido (${(file.size / 1024 / 1024).toFixed(1)} MB). O limite é ${Math.round(maximumSizeInBytes / 1024 / 1024)} MB.`);
+  }
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
+
+  if (isVideoFile(bytes)) {
+    throw new Error("Vídeos não são aceitos no upload. Use um link do YouTube no campo de vídeo.");
+  }
+
   const extension = detectedImageExtension(bytes);
-  if (!extension) throw new Error("Formato não permitido");
+  if (!extension) throw new Error("Formato não permitido. Aceitos: JPG, PNG, WebP, AVIF.");
 
   const filename = `${randomUUID()}.${extension}`;
   const contentType = imageUploadContentTypes[extension];
@@ -53,15 +80,16 @@ export async function saveImageFile(file: File, maximumSizeInBytes = imageUpload
     throw new Error("O armazenamento de fotos não está conectado ao projeto na Vercel.");
   }
 
-  const base = resolve(uploadsRoot);
+  const base = resolve(process.env.UPLOAD_DIR || "data/uploads");
   const destination = resolve(base, /* turbopackIgnore: true */ filename);
   if (!destination.startsWith(base + sep)) throw new Error("Destino inválido");
   await mkdir(base, { recursive: true });
   await writeFile(destination, bytes, { flag: "wx" });
   return {
     filename,
-    url: `/api/uploads/${filename}`,
+    url: blob.url,
     size: file.size,
     contentType,
   };
 }
+

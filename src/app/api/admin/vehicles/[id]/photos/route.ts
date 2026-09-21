@@ -23,6 +23,7 @@ import { mesmasFotos, normalizarFotos, separarFotos, type MediaItem } from "@/li
  */
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const UUID = /^[0-9a-f-]{36}$/;
 const MAX_ARQUIVOS = 40;

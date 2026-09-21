@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   poweredByHeader: false,
   compress: true,
   images: {
@@ -57,7 +56,7 @@ const nextConfig: NextConfig = {
               // navegador bloqueia a foto tratada e o card fica vazio.
               "https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
               "style-src 'self' 'unsafe-inline'; " +
-              "script-src 'self' 'unsafe-inline' https://connect.facebook.net; " +
+              `script-src 'self' 'unsafe-inline' https://connect.facebook.net ${process.env.NODE_ENV === "development" ? "'unsafe-eval'" : ""}; ` +
               "connect-src 'self' https://www.facebook.com https://connect.facebook.net " +
               "https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
               "media-src 'self' https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +

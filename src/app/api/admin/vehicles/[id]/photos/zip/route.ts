@@ -29,6 +29,7 @@ import { montarZip, nomeSeguroNoZip, type ArquivoZip } from "@/lib/zip";
  */
 
 export const runtime = "nodejs";
+export const maxDuration = 120;
 
 const UUID = /^[0-9a-f-]{36}$/;
 const LIMITE_BYTES = 250 * 1024 * 1024; // ZIP maior do que isto trava o navegador
