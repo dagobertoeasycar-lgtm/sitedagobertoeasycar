@@ -172,45 +172,52 @@ export function DefaultVehicleVideo() {
         </div>
       )}
 
-      <div className="default-video-actions" style={{ flexDirection: "column", gap: "12px", alignItems: "flex-start" }}>
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center", width: "100%" }}>
-          <label className={`button button-small${busy ? " is-disabled" : ""}`} style={{ flexShrink: 0 }}>
-            <Upload size={15} aria-hidden="true" />
-            {state.url ? "Substituir arquivo" : "Enviar arquivo (Até 500MB)"}
-            <input
-              ref={input}
-              type="file"
-              accept="video/mp4,video/webm,video/quicktime"
-              hidden
-              disabled={busy}
-              onChange={(event) => void uploadVideo(event.currentTarget.files?.[0])}
-            />
-          </label>
-          <div style={{ display: "flex", gap: "6px", flexGrow: 1, minWidth: "250px" }}>
-            <input
-              type="url"
-              placeholder="Ou cole um link do YouTube ou Drive..."
-              className="input input-small"
-              disabled={busy}
-              style={{ flexGrow: 1 }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  const val = e.currentTarget.value.trim();
-                  if (val) {
-                    void saveVideo(val, state.url ? state.enabled : true).then((ok) => {
-                      if (ok) setMessage("Link do vídeo salvo e ativado na vitrine.");
-                    });
-                    e.currentTarget.value = "";
-                  }
+      <div className="default-video-actions" style={{ flexDirection: "column", gap: "16px", alignItems: "flex-start", width: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
+          <label style={{ fontSize: "14px", fontWeight: "bold" }}>🔗 Link do Vídeo (Recomendado)</label>
+          <input
+            type="url"
+            placeholder="Cole o link do YouTube, Google Drive, etc. e aperte Enter..."
+            className="input"
+            disabled={busy}
+            style={{ width: "100%", padding: "10px" }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const val = e.currentTarget.value.trim();
+                if (val) {
+                  void saveVideo(val, state.url ? state.enabled : true).then((ok) => {
+                    if (ok) setMessage("Link do vídeo salvo e ativado na vitrine.");
+                  });
+                  e.currentTarget.value = "";
                 }
-              }}
-            />
+              }
+            }}
+          />
+          <span style={{ fontSize: "12px", color: "#666" }}>Essa é a forma mais rápida e garantida de exibir vídeos na vitrine.</span>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%", marginTop: "8px", padding: "12px", border: "1px dashed #ccc", borderRadius: "8px" }}>
+          <label style={{ fontSize: "13px", fontWeight: "bold", color: "#d97706" }}>⚠️ Envio de Arquivo Bruto (Pode ser instável)</label>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <label className={`button button-small button-outline${busy ? " is-disabled" : ""}`} style={{ flexShrink: 0 }}>
+              <Upload size={15} aria-hidden="true" />
+              {state.url ? "Substituir arquivo" : "Enviar MP4 (Até 500MB)"}
+              <input
+                ref={input}
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                hidden
+                disabled={busy}
+                onChange={(event) => void uploadVideo(event.currentTarget.files?.[0])}
+              />
+            </label>
+            <span style={{ fontSize: "12px", color: "#666" }}>O upload pode travar dependendo da sua internet. Se falhar, use o link do YouTube acima.</span>
           </div>
         </div>
 
         {state.url && (
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "8px" }}>
             <button
               type="button"
               className="button button-small button-outline"
