@@ -186,6 +186,20 @@ export function VehiclePhotosPanel({
     }
   }
 
+  async function salvarLinkVideo(url: string) {
+    if (!url) return;
+    await agir(
+      "salvando vídeo",
+      () =>
+        fetch(`/api/admin/vehicles/${id}/photos`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ acao: "substituir-video", url }),
+        }),
+      "Link do vídeo atualizado com sucesso.",
+    );
+  }
+
   async function moverFoto(origem: number, destino: number) {
     if (!galeria || origem === destino || origem < 0 || destino < 0) return;
     const anterior = galeria.fotos;
@@ -294,17 +308,36 @@ export function VehiclePhotosPanel({
                 onChange={(evento) => void subir(evento.currentTarget.files)}
               />
             </label>
-            <label className="button button-small button-outline">
-              <Video size={14} aria-hidden="true" />
-              Vídeo deste anúncio
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexGrow: 1 }}>
               <input
-                ref={arquivoVideo}
-                type="file"
-                accept="video/mp4,video/webm,video/quicktime"
-                hidden
-                onChange={(evento) => void subirVideo(evento.currentTarget.files?.[0])}
+                type="url"
+                placeholder="🔗 Cole link do YouTube p/ este carro (Enter salva)"
+                className="input input-small"
+                disabled={ocupado !== ""}
+                style={{ minWidth: "300px" }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const val = e.currentTarget.value.trim();
+                    if (val) {
+                      void salvarLinkVideo(val);
+                      e.currentTarget.value = "";
+                    }
+                  }
+                }}
               />
-            </label>
+              <label className="button button-small button-outline" style={{ fontSize: "11px", color: "#d97706", borderColor: "#fcd34d", background: "#fef3c7" }}>
+                <Video size={14} aria-hidden="true" />
+                ⚠️ Upload MP4 (Instável)
+                <input
+                  ref={arquivoVideo}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  hidden
+                  onChange={(evento) => void subirVideo(evento.currentTarget.files?.[0])}
+                />
+              </label>
+            </div>
             <button
               type="button"
               className="button button-small button-outline"
@@ -385,7 +418,15 @@ export function VehiclePhotosPanel({
                           : "Envie um vídeo próprio ou configure o padrão no topo da página."}
                   </span>
                 </div>
-                {videoEfetivo && <video src={videoEfetivo} controls preload="metadata" playsInline />}
+                {videoEfetivo && (
+                  /youtu\.be\/|youtube\.com\//i.test(videoEfetivo) ? (
+                    <div style={{ background: "#000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", height: "100px", borderRadius: "8px", marginTop: "12px" }}>
+                      🔗 Vídeo do YouTube (Preview apenas no site)
+                    </div>
+                  ) : (
+                    <video src={videoEfetivo} controls preload="metadata" playsInline />
+                  )
+                )}
                 {galeria.videoUrl && (
                   <button
                     type="button"
