@@ -45,7 +45,7 @@ export async function PUT(request: NextRequest) {
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const body = (await request.json()) as { url?: unknown; enabled?: unknown };
   const url = typeof body.url === "string" ? body.url.trim() : "";
-  if (url && !isVercelBlobUrl(url, "vehicle-videos")) {
+  if (url && !isVercelBlobUrl(url, "vehicle-videos") && !/youtu\.be\/|youtube\.com\/|drive\.google\.com\//i.test(url)) {
     return NextResponse.json({ error: "Vídeo inválido" }, { status: 400 });
   }
   const enabled = Boolean(url) && (typeof body.enabled === "boolean" ? body.enabled : true);

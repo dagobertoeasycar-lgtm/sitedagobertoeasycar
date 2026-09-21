@@ -236,9 +236,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ id, fotos: comoMedia(ordem), travada: true });
   }
 
-  if (body.acao === "definir-video") {
+  if (body.acao === "definir-video" || body.acao === "substituir-video") {
     const url = typeof body.url === "string" ? body.url.trim() : "";
-    if (!isVercelBlobUrl(url, "vehicle-videos")) {
+    if (url && !isVercelBlobUrl(url, "vehicle-videos") && !/youtu\.be\/|youtube\.com\/|drive\.google\.com\//i.test(url)) {
       return NextResponse.json({ error: "Vídeo inválido." }, { status: 400 });
     }
     await query("UPDATE vehicles SET video_url=$2, updated_at=now() WHERE id=$1", [id, url]);
