@@ -28,8 +28,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const pathname = form.get("pathname")?.toString();
+
   try {
-    const uploaded = await saveImageFile(file, adminImageMaxBytes);
+    const uploaded = await saveImageFile(file, adminImageMaxBytes, pathname);
     return NextResponse.json({ url: uploaded.url }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Upload inválido";

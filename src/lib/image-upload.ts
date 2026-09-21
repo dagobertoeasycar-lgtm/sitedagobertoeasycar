@@ -39,7 +39,7 @@ export function isVideoFile(bytes: Uint8Array): boolean {
   return false;
 }
 
-export async function saveImageFile(file: File, maximumSizeInBytes = imageUploadMaxBytes) {
+export async function saveImageFile(file: File, maximumSizeInBytes = imageUploadMaxBytes, pathname?: string) {
   if (file.size === 0 || file.size > maximumSizeInBytes) {
     throw new Error(`Arquivo inválido (${(file.size / 1024 / 1024).toFixed(1)} MB). O limite é ${Math.round(maximumSizeInBytes / 1024 / 1024)} MB.`);
   }
@@ -58,7 +58,7 @@ export async function saveImageFile(file: File, maximumSizeInBytes = imageUpload
 
   const blobToken = getVercelBlobToken();
   if (hasVercelBlobCredentials() && !process.env.UPLOAD_DIR) {
-    const blob = await put(`uploads/${filename}`, buffer, {
+    const blob = await put(pathname || `uploads/${filename}`, buffer, {
       access: "public",
       addRandomSuffix: false,
       contentType,
@@ -77,13 +77,15 @@ export async function saveImageFile(file: File, maximumSizeInBytes = imageUpload
   }
 
   const base = resolve(process.env.UPLOAD_DIR || "data/uploads");
-  const destination = resolve(base, /* turbopackIgnore: true */ filename);
+  const finalPath = pathname || filename;
+  const destination = resolve(base, /* turbopackIgnore: true */ finalPath);
   if (!destination.startsWith(base + sep)) throw new Error("Destino inválido");
-  await mkdir(base, { recursive: true });
+  const { dirname } = await import("node:path");
+  await mkdir(dirname(destination), { recursive: true });
   await writeFile(destination, bytes, { flag: "wx" });
   return {
-    filename,
-    url: `/api/uploads/${filename}`,
+    filename: finalPath,
+    url: `/api/uploads/${finalPath}`,
     size: file.size,
     contentType,
   };

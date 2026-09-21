@@ -13,9 +13,10 @@ type UploadTarget =
   | { kind: "image"; vehicleId?: string }
   | { kind: "video"; vehicleId?: string; defaultVideo?: boolean };
 
-async function uploadImageThroughServer(file: File, onProgress?: (percentage: number) => void) {
+async function uploadImageThroughServer(file: File, pathname: string, onProgress?: (percentage: number) => void) {
   const form = new FormData();
   form.set("file", file);
+  form.set("pathname", pathname);
   onProgress?.(10);
   const response = await fetch("/api/admin/uploads", { method: "POST", body: form });
   const result = await response.json().catch(() => null) as { url?: string; error?: string } | null;
@@ -46,7 +47,7 @@ export async function uploadAdminMedia(
   const multipart = isVideo || file.size > 10 * 1024 * 1024;
   
   if (!isVideo) {
-    return uploadImageThroughServer(file, onProgress);
+    return uploadImageThroughServer(file, pathname, onProgress);
   }
 
   try {
@@ -62,7 +63,7 @@ export async function uploadAdminMedia(
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (!isVideo && message.includes("retrieve the presigned URL")) {
-      return uploadImageThroughServer(file, onProgress);
+      return uploadImageThroughServer(file, pathname, onProgress);
     }
     throw error;
   }
