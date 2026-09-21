@@ -62,6 +62,12 @@ export function VehiclePhotosPanel({
   const arquivoVideo = useRef<HTMLInputElement>(null);
   const linkVideoRef = useRef<HTMLInputElement>(null);
 
+  function getYouTubeId(url: string) {
+    const s = url.match(/youtu\.be\/([^?&]+)/);
+    const l = url.match(/[?&]v=([^?&]+)/);
+    return s ? s[1] : l ? l[1] : null;
+  }
+
   const carregar = useCallback(async () => {
     setErro("");
     setOcupado("lendo");
@@ -437,13 +443,27 @@ export function VehiclePhotosPanel({
                   </span>
                 </div>
                 {videoEfetivo && (
-                  /youtu\.be\/|youtube\.com\//i.test(videoEfetivo) ? (
-                    <div style={{ background: "#000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", height: "100px", borderRadius: "8px", marginTop: "12px" }}>
-                      🔗 Vídeo do YouTube (Preview apenas no site)
-                    </div>
-                  ) : (
-                    <video src={videoEfetivo} controls preload="metadata" playsInline />
-                  )
+                  (() => {
+                    const ytId = getYouTubeId(videoEfetivo);
+                    if (ytId) {
+                      return (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                          title="Preview do Vídeo"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          style={{ width: "240px", aspectRatio: "16/9", borderRadius: "8px", border: 0, marginTop: "12px" }}
+                        />
+                      );
+                    } else if (/youtu\.be\/|youtube\.com\//i.test(videoEfetivo)) {
+                      return (
+                        <div style={{ background: "#000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", height: "100px", borderRadius: "8px", marginTop: "12px" }}>
+                          🔗 Link do YouTube Inválido
+                        </div>
+                      );
+                    }
+                    return <video src={videoEfetivo} controls preload="metadata" playsInline />;
+                  })()
                 )}
                 {galeria.videoUrl && (
                   <button

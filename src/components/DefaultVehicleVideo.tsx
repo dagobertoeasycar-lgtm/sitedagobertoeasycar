@@ -37,16 +37,19 @@ export function DefaultVehicleVideo() {
   useEffect(() => {
     fetch("/api/admin/default-vehicle-video", { cache: "no-store" })
       .then(readApiResponse)
-      .then((body) => {
-        if (!body) return;
-        setState(body);
-        setMessage("");
+      .then((data) => {
+        if (data) setState(data);
       })
       .catch((cause) => {
-        setMessage("");
-        setError(cause instanceof Error ? cause.message : "Não foi possível carregar o vídeo padrão.");
+        setError(cause instanceof Error ? cause.message : "Erro desconhecido.");
       });
   }, []);
+
+  function getYouTubeId(url: string) {
+    const s = url.match(/youtu\.be\/([^?&]+)/);
+    const l = url.match(/[?&]v=([^?&]+)/);
+    return s ? s[1] : l ? l[1] : null;
+  }
 
   async function saveVideo(nextUrl: string, enabled: boolean) {
     setBusy(true);
@@ -150,13 +153,27 @@ export function DefaultVehicleVideo() {
 
       {state.url ? (
         <div className="default-video-preview">
-          {/youtu\.be\/|youtube\.com\//i.test(state.url) ? (
-            <div style={{ background: "#000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", height: "100px", borderRadius: "8px" }}>
-              🔗 Vídeo do YouTube (Preview Indisponível Aqui)
-            </div>
-          ) : (
-            <video src={state.url} controls preload="metadata" playsInline />
-          )}
+          {(() => {
+            const ytId = getYouTubeId(state.url);
+            if (ytId) {
+              return (
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                  title="Preview do Vídeo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ width: "240px", aspectRatio: "16/9", borderRadius: "8px", border: 0 }}
+                />
+              );
+            } else if (/youtu\.be\/|youtube\.com\//i.test(state.url)) {
+              return (
+                <div style={{ background: "#000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", height: "100px", borderRadius: "8px" }}>
+                  🔗 Link do YouTube Inválido
+                </div>
+              );
+            }
+            return <video src={state.url} controls preload="metadata" playsInline />;
+          })()}
           <div>
             <strong>{state.enabled ? "Distribuição ativa" : "Arquivo guardado e pausado"}</strong>
             <p>
