@@ -44,6 +44,11 @@ export async function uploadAdminMedia(
   const filename = safeUploadName(file.name, isVideo ? "video.mp4" : "foto.jpg");
   const pathname = `${folder}/${scope}/${Date.now()}-${filename}`;
   const multipart = isVideo || file.size > 10 * 1024 * 1024;
+  
+  if (!isVideo) {
+    return uploadImageThroughServer(file, onProgress);
+  }
+
   try {
     const blob = await uploadPresigned(pathname, file, {
       access: "public",
