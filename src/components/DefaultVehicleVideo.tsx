@@ -48,15 +48,27 @@ export function DefaultVehicleVideo() {
   }, []);
 
   async function saveVideo(nextUrl: string, enabled: boolean) {
-    const response = await fetch("/api/admin/default-vehicle-video", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: nextUrl, enabled }),
-    });
-    const body = await readApiResponse(response);
-    if (!body) return false;
-    setState(body);
-    return true;
+    setBusy(true);
+    setError("");
+    if (!nextUrl) setMessage("Removendo vídeo padrão...");
+    else if (nextUrl.includes("youtu") || nextUrl.includes("drive.google")) setMessage("Salvando link do vídeo...");
+    
+    try {
+      const response = await fetch("/api/admin/default-vehicle-video", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: nextUrl, enabled }),
+      });
+      const body = await readApiResponse(response);
+      if (!body) return false;
+      setState(body);
+      return true;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Erro ao salvar.");
+      return false;
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function uploadVideo(file: File | undefined) {
@@ -109,16 +121,8 @@ export function DefaultVehicleVideo() {
 
   async function removeVideo() {
     if (!window.confirm("Remover o vídeo padrão? Os vídeos próprios dos anúncios serão mantidos.")) return;
-    setBusy(true);
-    setError("");
-    setMessage("Removendo vídeo padrão...");
-    try {
-      if (await saveVideo("", false)) setMessage("Vídeo padrão removido. Os vídeos próprios foram mantidos.");
-    } catch (cause) {
-      setMessage("");
-      setError(cause instanceof Error ? cause.message : "Não foi possível remover o vídeo padrão.");
-    } finally {
-      setBusy(false);
+    if (await saveVideo("", false)) {
+      setMessage("Vídeo padrão removido. Os vídeos próprios foram mantidos.");
     }
   }
 
@@ -145,7 +149,13 @@ export function DefaultVehicleVideo() {
 
       {state.url ? (
         <div className="default-video-preview">
-          <video src={state.url} controls preload="metadata" playsInline />
+          {/youtu\.be\/|youtube\.com\//i.test(state.url) ? (
+            <div style={{ background: "#000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", height: "100px", borderRadius: "8px" }}>
+              🔗 Vídeo do YouTube (Preview Indisponível Aqui)
+            </div>
+          ) : (
+            <video src={state.url} controls preload="metadata" playsInline />
+          )}
           <div>
             <strong>{state.enabled ? "Distribuição ativa" : "Arquivo guardado e pausado"}</strong>
             <p>
@@ -162,35 +172,59 @@ export function DefaultVehicleVideo() {
         </div>
       )}
 
-      <div className="default-video-actions">
-        <label className={`button button-small${busy ? " is-disabled" : ""}`}>
-          <Upload size={15} aria-hidden="true" />
-          {state.url ? "Substituir vídeo" : "Enviar e ativar"}
-          <input
-            ref={input}
-            type="file"
-            accept="video/mp4,video/webm,video/quicktime"
-            hidden
-            disabled={busy}
-            onChange={(event) => void uploadVideo(event.currentTarget.files?.[0])}
-          />
-        </label>
+      <div className="default-video-actions" style={{ flexDirection: "column", gap: "12px", alignItems: "flex-start" }}>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center", width: "100%" }}>
+          <label className={`button button-small${busy ? " is-disabled" : ""}`} style={{ flexShrink: 0 }}>
+            <Upload size={15} aria-hidden="true" />
+            {state.url ? "Substituir arquivo" : "Enviar arquivo (Até 500MB)"}
+            <input
+              ref={input}
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              hidden
+              disabled={busy}
+              onChange={(event) => void uploadVideo(event.currentTarget.files?.[0])}
+            />
+          </label>
+          <div style={{ display: "flex", gap: "6px", flexGrow: 1, minWidth: "250px" }}>
+            <input
+              type="url"
+              placeholder="Ou cole um link do YouTube ou Drive..."
+              className="input input-small"
+              disabled={busy}
+              style={{ flexGrow: 1 }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const val = e.currentTarget.value.trim();
+                  if (val) {
+                    void saveVideo(val, state.url ? state.enabled : true).then((ok) => {
+                      if (ok) setMessage("Link do vídeo salvo e ativado na vitrine.");
+                    });
+                    e.currentTarget.value = "";
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
+
         {state.url && (
-          <button
-            type="button"
-            className="button button-small button-outline"
-            disabled={busy}
-            aria-pressed={state.enabled}
-            onClick={() => void toggle(!state.enabled)}
-          >
-            {state.enabled ? <PauseCircle size={15} aria-hidden="true" /> : <PlayCircle size={15} aria-hidden="true" />}
-            {state.enabled ? "Desativar em todos" : "Ativar para todos"}
-          </button>
-        )}
-        {state.url && (
-          <button type="button" className="button button-small button-perigo" disabled={busy} onClick={() => void removeVideo()}>
-            <Trash2 size={15} aria-hidden="true" /> Remover vídeo
-          </button>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="button button-small button-outline"
+              disabled={busy}
+              aria-pressed={state.enabled}
+              onClick={() => void toggle(!state.enabled)}
+            >
+              {state.enabled ? <PauseCircle size={15} aria-hidden="true" /> : <PlayCircle size={15} aria-hidden="true" />}
+              {state.enabled ? "Desativar em todos" : "Ativar para todos"}
+            </button>
+            <button type="button" className="button button-small button-perigo" disabled={busy} onClick={() => void removeVideo()}>
+              <Trash2 size={15} aria-hidden="true" /> Remover vídeo
+            </button>
+          </div>
         )}
       </div>
 
