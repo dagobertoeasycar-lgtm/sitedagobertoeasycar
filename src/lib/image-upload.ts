@@ -1,12 +1,8 @@
 import { randomUUID } from "node:crypto";
-<<<<<<< HEAD
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { put } from "@vercel/blob";
 import { getVercelBlobToken, hasVercelBlobCredentials } from "@/lib/vercel-blob-token";
-=======
-import { put } from "@vercel/blob";
->>>>>>> 8c79e06 (fix: CSP bloqueia blob, maxDuration, rejeitar video, mensagens de erro claras)
 
 export const imageUploadMaxBytes = 8 * 1024 * 1024;
 
