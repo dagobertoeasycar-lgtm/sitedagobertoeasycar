@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Corpo da requisição inválido ou muito grande." }, { status: 413 });
   }
 
+  const file = form.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: "Nenhum arquivo enviado." }, { status: 400 });
   }

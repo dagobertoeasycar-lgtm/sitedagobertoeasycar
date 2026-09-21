@@ -83,7 +83,7 @@ export async function saveImageFile(file: File, maximumSizeInBytes = imageUpload
   await writeFile(destination, bytes, { flag: "wx" });
   return {
     filename,
-    url: blob.url,
+    url: `/api/uploads/${filename}`,
     size: file.size,
     contentType,
   };
