@@ -32,6 +32,7 @@ export function DefaultVehicleVideo() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const textInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/admin/default-vehicle-video", { cache: "no-store" })
@@ -175,25 +176,44 @@ export function DefaultVehicleVideo() {
       <div className="default-video-actions" style={{ flexDirection: "column", gap: "16px", alignItems: "flex-start", width: "100%" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
           <label style={{ fontSize: "14px", fontWeight: "bold" }}>🔗 Link do Vídeo (Recomendado)</label>
-          <input
-            type="url"
-            placeholder="Cole o link do YouTube, Google Drive, etc. e aperte Enter..."
-            className="input"
-            disabled={busy}
-            style={{ width: "100%", padding: "10px" }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                const val = e.currentTarget.value.trim();
+          <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+            <input
+              ref={textInput}
+              type="url"
+              placeholder="Cole o link do YouTube, Google Drive, etc..."
+              className="input"
+              disabled={busy}
+              style={{ flexGrow: 1, padding: "10px" }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const val = e.currentTarget.value.trim();
+                  if (val) {
+                    void saveVideo(val, state.url ? state.enabled : true).then((ok) => {
+                      if (ok) setMessage("Link do vídeo salvo e ativado na vitrine.");
+                    });
+                    if (textInput.current) textInput.current.value = "";
+                  }
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="button button-small"
+              disabled={busy}
+              onClick={() => {
+                const val = textInput.current?.value.trim();
                 if (val) {
                   void saveVideo(val, state.url ? state.enabled : true).then((ok) => {
                     if (ok) setMessage("Link do vídeo salvo e ativado na vitrine.");
                   });
-                  e.currentTarget.value = "";
+                  if (textInput.current) textInput.current.value = "";
                 }
-              }
-            }}
-          />
+              }}
+            >
+              Salvar link
+            </button>
+          </div>
           <span style={{ fontSize: "12px", color: "#666" }}>Essa é a forma mais rápida e garantida de exibir vídeos na vitrine.</span>
         </div>
 

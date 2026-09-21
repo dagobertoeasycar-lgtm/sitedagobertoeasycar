@@ -60,6 +60,7 @@ export function VehiclePhotosPanel({
   const [arrastando, setArrastando] = useState<number | null>(null);
   const arquivos = useRef<HTMLInputElement>(null);
   const arquivoVideo = useRef<HTMLInputElement>(null);
+  const linkVideoRef = useRef<HTMLInputElement>(null);
 
   const carregar = useCallback(async () => {
     setErro("");
@@ -309,23 +310,40 @@ export function VehiclePhotosPanel({
               />
             </label>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexGrow: 1 }}>
-              <input
-                type="url"
-                placeholder="🔗 Cole link do YouTube p/ este carro (Enter salva)"
-                className="input input-small"
-                disabled={ocupado !== ""}
-                style={{ minWidth: "300px" }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const val = e.currentTarget.value.trim();
+              <div style={{ display: "flex", gap: "6px" }}>
+                <input
+                  ref={linkVideoRef}
+                  type="url"
+                  placeholder="🔗 Cole link do YouTube (Enter salva)"
+                  className="input input-small"
+                  disabled={ocupado !== ""}
+                  style={{ flexGrow: 1, minWidth: "200px" }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const val = e.currentTarget.value.trim();
+                      if (val) {
+                        void salvarLinkVideo(val);
+                        e.currentTarget.value = "";
+                      }
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="button button-small"
+                  disabled={ocupado !== ""}
+                  onClick={() => {
+                    const val = linkVideoRef.current?.value.trim();
                     if (val) {
                       void salvarLinkVideo(val);
-                      e.currentTarget.value = "";
+                      if (linkVideoRef.current) linkVideoRef.current.value = "";
                     }
-                  }
-                }}
-              />
+                  }}
+                >
+                  Salvar
+                </button>
+              </div>
               <label className="button button-small button-outline" style={{ fontSize: "11px", color: "#d97706", borderColor: "#fcd34d", background: "#fef3c7" }}>
                 <Video size={14} aria-hidden="true" />
                 ⚠️ Upload MP4 (Instável)
