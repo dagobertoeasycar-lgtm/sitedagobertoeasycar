@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const sp = request.nextUrl.searchParams;
-  const limite = Math.min(Math.max(parseInt(sp.get("limite") || "10", 10) || 10, 1), 100);
+  const limite = Math.min(Math.max(parseInt(sp.get("limite") || "10", 10) || 10, 1), 1000);
   const parceiro = sp.get("parceiro");
   const situacao = sp.get("situacao");
 
