@@ -5,6 +5,7 @@ import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { VehiclePhotosPanel } from "@/components/VehiclePhotosPanel";
 import { VehicleRowActions } from "@/components/VehicleRowActions";
+import { DefaultVehicleVideo } from "@/components/DefaultVehicleVideo";
 import { pastaDoParceiro, pastaDoVeiculo, separarFotos } from "@/lib/vehicle-photos";
 import { brl, km, ORIGIN_LABELS, vehicleBadge } from "@/lib/admin-labels";
 
@@ -128,6 +129,8 @@ export default async function AdminVehiclesPage({ searchParams }: { searchParams
       <div className="adm-header">
         <h1>Gestão de anúncios / veículos <small className="ad-count">{total.toLocaleString("pt-BR")}</small></h1>
       </div>
+
+      <DefaultVehicleVideo />
 
       <section className="adm-card">
         <form className="adm-filters" action="/admin/veiculos">
