@@ -2,11 +2,14 @@ import { requireArea } from "@/lib/permissions";
 import Link from "next/link";
 import { DefaultVehicleVideo } from "@/components/DefaultVehicleVideo";
 import { SessionTimeoutSettings } from "@/components/SessionTimeoutSettings";
+import { ReviewLinkForm } from "@/components/ReviewLinkForm";
+import { getReviewLink } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminConfigPage() {
   await requireArea("configuracoes");
+  const reviewLink = await getReviewLink().catch(() => "");
 
   return (
     <>
@@ -25,6 +28,7 @@ export default async function AdminConfigPage() {
           <span className="config-link-icon">🔐</span><div><h2>Trocar senha</h2><p>Atualize com segurança a senha da sua conta administrativa.</p></div>
         </Link>
       </div>
+      <ReviewLinkForm initialUrl={reviewLink} />
       <SessionTimeoutSettings />
       <DefaultVehicleVideo />
     </>

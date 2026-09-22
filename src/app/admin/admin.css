@@ -480,3 +480,5 @@
 .ad-shell .ad-tab-link.active { background: var(--ad-navy); border-color: var(--ad-navy); color: #fff; }
 .ad-shell .ad-bars li > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ad-shell .ad-bars li { grid-template-columns: minmax(90px, 180px) minmax(0, 1fr) 48px; }
+.ad-shell .ad-review-link { font-size: .74rem; font-weight: 800; color: var(--ad-amber); text-decoration: none; }
+.ad-shell .ad-review-link:hover { text-decoration: underline; }

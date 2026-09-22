@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { ENDERECO, MAPS_ROTA_URL, WAZE_URL } from "@/lib/endereco";
+import { CIDADES } from "@/lib/seo-landings";
+import { listBrandLandings } from "@/lib/seo-landings";
 
-export function Footer() {
+export async function Footer() {
+  // Links por marca e por cidade: ajudam o Google a achar o estoque e levam
+  // quem procura "carros em Osasco" direto para uma página com conteúdo.
+  const marcas = await listBrandLandings(6).then((list) => list.slice(0, 8)).catch(() => []);
   return (
     <footer className="site-footer">
       <div className="shell footer-grid">
@@ -45,6 +50,18 @@ export function Footer() {
             <li>Vários modelos para todos os gostos</li>
             <li>Negociação fácil e rápida</li>
           </ul>
+        </div>
+      </div>
+
+      {/* Col 4: páginas de marca e cidade */}
+      <div className="shell footer-grid footer-landings">
+        <div>
+          <strong>Carros por marca</strong>
+          {marcas.map((marca) => <Link key={marca.slug} href={`/carros/${marca.slug}`}>{marca.nome}</Link>)}
+        </div>
+        <div>
+          <strong>Onde atendemos</strong>
+          {CIDADES.map((cidade) => <Link key={cidade.slug} href={`/carros-em/${cidade.slug}`}>Carros em {cidade.nome}</Link>)}
         </div>
       </div>
 

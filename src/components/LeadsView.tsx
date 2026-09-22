@@ -4,6 +4,7 @@ import { formatCents } from "@/lib/pricing";
 import { FINANCING_SERVICES, resolveFinancingService } from "@/lib/financing";
 import { LEAD_KIND_LABELS, LEAD_STATUS_LABELS, ORIGIN_LABELS, shortTime } from "@/lib/admin-labels";
 import { LeadNotes, LeadQuickFields } from "@/components/LeadAttendance";
+import { getReviewLink } from "@/lib/settings";
 
 /**
  * Tabela de atendimento compartilhada por Leads / Contatos e Financiamentos.
@@ -55,7 +56,14 @@ function payloadLines(payload: Record<string, unknown> | null) {
     .map(([key, value]) => `${key}: ${String(value)}`);
 }
 
+/** Mensagem pronta de pedido de avaliação, já com o link do Google. */
+function reviewWhatsappLink(phone: string, name: string, reviewLink: string) {
+  const texto = `Oi, ${name.split(" ")[0]}! Aqui é da Autodrive Veículos. Se o atendimento foi bom, você pode deixar sua avaliação no Google? Leva menos de um minuto: ${reviewLink}`;
+  return `https://wa.me/55${phone.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
+}
+
 export async function LeadsView({ mode, searchParams, basePath }: { mode: Mode; searchParams: Record<string, string>; basePath: string }) {
+  const reviewLink = await getReviewLink().catch(() => "");
   const filters = {
     q: searchParams.q || "",
     status: searchParams.status || "",
@@ -188,7 +196,12 @@ export async function LeadsView({ mode, searchParams, basePath }: { mode: Mode; 
                       </div>
                     </details>
                   </td>
-                  <td><a href={`https://wa.me/55${lead.phone?.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">{lead.phone}</a></td>
+                  <td>
+                    <a href={`https://wa.me/55${lead.phone?.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">{lead.phone}</a>
+                    {reviewLink && lead.phone && (
+                      <><br /><a className="ad-review-link" href={reviewWhatsappLink(lead.phone, lead.name, reviewLink)} target="_blank" rel="noreferrer">★ Pedir avaliação</a></>
+                    )}
+                  </td>
                   <td className="adm-lead-origin">
                     {lead.vehicle_title ? (
                       <>

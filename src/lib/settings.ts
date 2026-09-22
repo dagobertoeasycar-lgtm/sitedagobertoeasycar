@@ -54,3 +54,22 @@ export async function saveStockRule(rule: StockRule) {
     missing_checks_before_inactive: Math.max(1, Math.trunc(Number(rule.missing_checks_before_inactive) || 2)),
   });
 }
+
+/**
+ * Link de avaliação do Perfil da Empresa no Google (botão "Pedir avaliações").
+ * Com ele configurado, o painel monta a mensagem pronta de WhatsApp para
+ * mandar ao cliente depois da venda.
+ */
+export async function getReviewLink(): Promise<string> {
+  const raw = await readSetting("google_review_link");
+  return typeof raw === "string" ? raw : "";
+}
+
+export async function saveReviewLink(url: string) {
+  const clean = url.trim();
+  if (clean && !/^https:\/\/(g\.page|search\.google\.com|maps\.app\.goo\.gl|www\.google\.com)\//.test(clean)) {
+    throw new Error("Use o link de avaliação gerado pelo Google (g.page, maps.app.goo.gl ou google.com).");
+  }
+  await writeSetting("google_review_link", clean);
+  return clean;
+}
