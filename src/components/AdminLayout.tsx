@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bell, Building2, CarFront, ClipboardList, Handshake, Image, LayoutGrid, Link2,
   LogOut, MessageSquareQuote, Plus, RefreshCw, Search, Settings, ShoppingBag, Star, TriangleAlert,
-  UserCog, Warehouse, type LucideIcon,
+  Tag, UserCog, Warehouse, type LucideIcon,
 } from "lucide-react";
 import type { AdminOverview } from "@/lib/admin-overview";
 
@@ -16,10 +16,11 @@ type NavItem = { href: string; icon: LucideIcon; label: string; match?: string[]
 // (parceiros, atacado, depoimentos, Meta) entram nos pontos equivalentes.
 const NAV: NavItem[] = [
   { href: "/admin", icon: LayoutGrid, label: "Dashboard" },
-  { href: "/admin/veiculos", icon: CarFront, label: "Anúncios / Veículos" },
+  { href: "/admin/veiculos", icon: CarFront, label: "Anúncios / Veículos", match: ["/admin/veiculos/"] },
   { href: "/admin/veiculos/novo", icon: Plus, label: "Novo anúncio" },
   { href: "/admin/estoque", icon: Warehouse, label: "Estoque" },
   { href: "/admin/banners", icon: Image, label: "Banners e Home" },
+  { href: "/admin/promocoes", icon: Tag, label: "Promoções" },
   { href: "/admin/leads", icon: ClipboardList, label: "Leads / Contatos" },
   { href: "/admin/atacado", icon: Building2, label: "Leads de parceiros" },
   { href: "/admin/sync", icon: RefreshCw, label: "Importações" },
@@ -39,6 +40,8 @@ const ROLE_LABELS: Record<string, string> = { admin: "Administrador", editor: "E
 
 function isActive(pathname: string, item: NavItem) {
   if (pathname === item.href) return true;
+  // Um item com endereço exato (ex.: Novo anúncio) ganha do prefixo de outro.
+  if (NAV.some((other) => other !== item && other.href === pathname)) return false;
   return item.match?.some((path) => pathname.startsWith(path)) ?? false;
 }
 

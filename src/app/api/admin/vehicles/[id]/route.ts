@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { audit, diff } from "@/lib/audit";
+import { coerceField, VEHICLE_FIELDS } from "@/lib/admin-vehicle";
 
 const statuses = ["draft", "published", "paused", "sold"];
 const stockStatuses = ["available", "reserved", "sold"];
@@ -17,6 +19,72 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!result.rowCount) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   await query("insert into audit_log(actor_id,action,entity_type,entity_id,metadata) values($1,'status','vehicle',$2,$3::jsonb)", [session.userId, id, JSON.stringify({ status: body.status, stockStatus: body.stockStatus })]);
   return NextResponse.json({ id, status: body.status, stockStatus: body.stockStatus });
+}
+
+/**
+ * Grava o editor completo do anúncio (abas do painel novo).
+ *
+ * Em veículo importado de parceiro, os campos que a sincronização reescreve
+ * são ignorados com aviso: gravar ali só faria a alteração sumir no próximo
+ * ciclo. O resto (destaque, SEO, notas, publicação) vale para qualquer origem.
+ */
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await currentSession();
+  if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+  if (!body) return NextResponse.json({ error: "Corpo inválido" }, { status: 400 });
+
+  const columns = VEHICLE_FIELDS.map((field) => field.column);
+  const current = await query<Record<string, unknown>>(
+    `select source_id, status, stock_status, ${columns.join(", ")} from vehicles where id=$1`,
+    [id],
+  ).catch(async () => {
+    // Sem a migration 022 as colunas de SEO não existem; edita o resto.
+    return query<Record<string, unknown>>(
+      `select source_id, status, stock_status, ${columns.filter((c) => !c.startsWith("seo_")).join(", ")} from vehicles where id=$1`,
+      [id],
+    );
+  });
+  const before = current.rows[0];
+  if (!before) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
+  const synced = Boolean(before.source_id);
+
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  const after: Record<string, unknown> = {};
+  const ignored: string[] = [];
+  for (const field of VEHICLE_FIELDS) {
+    if (!(field.key in body)) continue;
+    if (!(field.column in before)) continue;
+    if (synced && field.syncOwned) { ignored.push(field.key); continue; }
+    const parsed = coerceField(field, body[field.key]);
+    if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    values.push(field.type === "list" ? JSON.stringify(parsed.value) : parsed.value);
+    sets.push(`${field.column}=$${values.length}${field.type === "list" ? "::jsonb" : ""}`);
+    after[field.column] = parsed.value;
+  }
+
+  if (!synced && "title" in after && !String(after.title ?? "").trim()) {
+    return NextResponse.json({ error: "O título é obrigatório." }, { status: 400 });
+  }
+
+  if (typeof body.status === "string") {
+    if (!statuses.includes(body.status)) return NextResponse.json({ error: "Status inválido" }, { status: 400 });
+    values.push(body.status); sets.push(`status=$${values.length}`); after.status = body.status;
+  }
+  if (typeof body.stockStatus === "string") {
+    if (!stockStatuses.includes(body.stockStatus)) return NextResponse.json({ error: "Disponibilidade inválida" }, { status: 400 });
+    values.push(body.stockStatus); sets.push(`stock_status=$${values.length}`); after.stock_status = body.stockStatus;
+  }
+  if (!sets.length) return NextResponse.json({ id, changed: {}, ignored });
+
+  values.push(id);
+  await query(`update vehicles set ${sets.join(", ")}, updated_at=now() where id=$${values.length}`, values);
+  const changed = diff(before, after);
+  if (Object.keys(changed).length) await audit(session.userId, "editar", "vehicle", id, { changed, ignored }, request);
+  return NextResponse.json({ id, changed, ignored });
 }
 
 /**

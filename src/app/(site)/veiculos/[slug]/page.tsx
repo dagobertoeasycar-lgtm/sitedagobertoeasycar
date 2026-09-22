@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { query } from "@/lib/db";
 import { VehicleGallery } from "@/components/VehicleGallery";
 import { findVehicle, money, listVehicles, vehicleOriginBadgeLabel, vehicleOriginPublicLabel, vehiclePublicLocation } from "@/lib/vehicles";
 import { VehicleCard } from "@/components/VehicleCard";
@@ -20,6 +22,31 @@ function parseOptions(raw: unknown): string[] {
 function parseDescription(raw: string | null): string[] {
   if (!raw) return [];
   return raw.split(/\n+/).filter(p => p.trim());
+}
+
+/** Título e descrição próprios do anúncio (aba SEO do painel), com padrão automático. */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const vehicle = await findVehicle(slug).catch(() => null);
+  if (!vehicle) return {};
+  const seo = await query<{ seo_title: string | null; seo_description: string | null }>(
+    "select seo_title, seo_description from vehicles where slug=$1 limit 1",
+    [slug],
+  ).then((r) => r.rows[0]).catch(() => undefined);
+  const automatic = [
+    vehicle.title,
+    vehicle.year_model ? `ano ${vehicle.year_make}/${vehicle.year_model}` : "",
+    vehicle.mileage ? `${vehicle.mileage.toLocaleString("pt-BR")} km` : "",
+    money(vehicle.price_cents),
+  ].filter(Boolean).join(", ");
+  const title = seo?.seo_title?.trim() || vehicle.title;
+  const description = seo?.seo_description?.trim() || `${automatic}. Compra, financiamento e atendimento pela Autodrive Veículos.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/veiculos/${slug}` },
+    openGraph: { title, description, url: `/veiculos/${slug}`, images: vehicle.image_url ? [vehicle.image_url] : undefined },
+  };
 }
 
 export default async function VehiclePage({ params }: { params: Promise<{ slug: string }> }) {
