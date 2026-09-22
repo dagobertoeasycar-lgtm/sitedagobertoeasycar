@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://www.dagobertoeasycar.com.br";
+  const base = "https://www.appautodrive.com.br";
   return [
     "",
     "/veiculos",

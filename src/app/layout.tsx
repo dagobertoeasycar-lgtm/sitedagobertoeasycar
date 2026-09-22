@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ENDERECO } from "@/lib/endereco";
 
-const siteUrl = "https://www.dagobertoeasycar.com.br";
+const siteUrl = "https://www.appautodrive.com.br";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

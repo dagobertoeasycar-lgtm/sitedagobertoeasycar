@@ -1,4 +1,4 @@
-export const META_FEED_ORIGIN = "https://www.dagobertoeasycar.com.br";
+export const META_FEED_ORIGIN = "https://www.appautodrive.com.br";
 
 export const META_FEED_HEADERS = [
   "id",

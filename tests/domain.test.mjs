@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 test("domínio oficial usa www e HTTPS", () => {
-  const url = new URL("https://www.dagobertoeasycar.com.br");
+  const url = new URL("https://www.appautodrive.com.br");
   assert.equal(url.protocol, "https:");
-  assert.equal(url.hostname, "www.dagobertoeasycar.com.br");
+  assert.equal(url.hostname, "www.appautodrive.com.br");
 });
 
 test("WhatsApp oficial contém apenas dígitos internacionais", () => {

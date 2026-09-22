@@ -187,7 +187,7 @@ function siteOrigin(body: Record<string, unknown>) {
   try {
     if (pageUrl) return new URL(pageUrl).origin;
   } catch {}
-  return process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_URL || "https://www.dagobertoeasycar.com.br";
+  return process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_URL || "https://www.appautodrive.com.br";
 }
 
 async function uploadLeadPhotos(photoFiles: LeadPhotoFile[], body: Record<string, unknown>) {

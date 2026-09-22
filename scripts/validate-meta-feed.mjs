@@ -1,4 +1,4 @@
-const feedUrl = process.env.META_FEED_URL || "https://www.dagobertoeasycar.com.br/feeds/meta-veiculos.csv";
+const feedUrl = process.env.META_FEED_URL || "https://www.appautodrive.com.br/feeds/meta-veiculos.csv";
 const concurrency = Math.max(1, Math.min(20, Number(process.env.META_VALIDATE_CONCURRENCY) || 10));
 
 function parseCsv(text) {

@@ -81,7 +81,7 @@ test("imagem Em breve pode ser usada quando habilitada", () => {
   const settings = { ...DEFAULT_META_FEED_SETTINGS, includeWithoutImages: true };
   const result = buildMetaFeed([vehicle({ image_url: null, images: [] })], settings);
   assert.equal(result.exported, 1);
-  assert.equal(result.items[0].image_link, "https://www.dagobertoeasycar.com.br/em-breve.png");
+  assert.equal(result.items[0].image_link, "https://www.appautodrive.com.br/em-breve.png");
 });
 
 test("vírgulas, aspas, quebras de linha e caracteres especiais são escapados", () => {
@@ -95,7 +95,7 @@ test("URLs locais, Windows, HTTP e localhost são rejeitadas", () => {
   assert.equal(publicHttpsUrl("C:\\Fotos\\carro.jpg"), null);
   assert.equal(publicHttpsUrl("http://localhost:3100/a.jpg"), null);
   assert.equal(publicHttpsUrl("http://images.example.com/a.jpg"), null);
-  assert.equal(publicHttpsUrl("/api/uploads/a.jpg"), "https://www.dagobertoeasycar.com.br/api/uploads/a.jpg");
+  assert.equal(publicHttpsUrl("/api/uploads/a.jpg"), "https://www.appautodrive.com.br/api/uploads/a.jpg");
 });
 
 test("imagem principal e adicionais usam apenas HTTPS público", () => {

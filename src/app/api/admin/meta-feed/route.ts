@@ -17,7 +17,7 @@ async function responseData() {
     "SELECT generated_at,exported,ignored,errors FROM meta_feed_validations ORDER BY id DESC LIMIT 1",
   );
   return {
-    feedUrl: "https://www.dagobertoeasycar.com.br/feeds/meta-veiculos.csv",
+    feedUrl: "https://www.appautodrive.com.br/feeds/meta-veiculos.csv",
     generatedAt: snapshot.generatedAt,
     lastModified: snapshot.lastModified,
     exported: snapshot.exported,
