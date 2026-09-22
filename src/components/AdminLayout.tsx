@@ -3,19 +3,54 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Bell, Building2, CarFront, ClipboardList, Handshake, Image, LayoutGrid, Link2,
+  LogOut, MessageSquareQuote, Plus, RefreshCw, Search, Settings, ShoppingBag, Star, TriangleAlert,
+  UserCog, Warehouse, type LucideIcon,
+} from "lucide-react";
+import type { AdminOverview } from "@/lib/admin-overview";
 
-const NAV = [
-  { href: "/admin", icon: "📊", label: "Dashboard" },
-  { href: "/admin/veiculos", icon: "🚗", label: "Veículos" },
-  { href: "/admin/banners", icon: "🖼️", label: "Banners e Home" },
-  { href: "/admin/leads", icon: "📋", label: "Leads / Contatos" },
-  { href: "/admin/depoimentos", icon: "⭐", label: "Depoimentos" },
-  { href: "/admin/parceiros", icon: "🤝", label: "Parceiros" },
-  { href: "/admin/atacado", icon: "🏢", label: "Leads de Parceiros" },
-  { href: "/admin/sync", icon: "🔄", label: "Sincronização" },
-  { href: "/admin/configuracoes/integracoes/meta", icon: "🛒", label: "Catálogo Meta" },
-  { href: "/admin/configuracoes", icon: "⚙️", label: "Configurações" },
+type NavItem = { href: string; icon: LucideIcon; label: string; match?: string[] };
+
+// Ordem e nomes seguem o protótipo do painel novo; itens próprios da Autodrive
+// (parceiros, atacado, depoimentos, Meta) entram nos pontos equivalentes.
+const NAV: NavItem[] = [
+  { href: "/admin", icon: LayoutGrid, label: "Dashboard" },
+  { href: "/admin/veiculos", icon: CarFront, label: "Anúncios / Veículos" },
+  { href: "/admin/veiculos/novo", icon: Plus, label: "Novo anúncio" },
+  { href: "/admin/estoque", icon: Warehouse, label: "Estoque" },
+  { href: "/admin/banners", icon: Image, label: "Banners e Home" },
+  { href: "/admin/leads", icon: ClipboardList, label: "Leads / Contatos" },
+  { href: "/admin/atacado", icon: Building2, label: "Leads de parceiros" },
+  { href: "/admin/sync", icon: RefreshCw, label: "Importações" },
+  { href: "/admin/parceiros", icon: Handshake, label: "Fontes e parceiros" },
+  { href: "/admin/configuracoes/integracoes/meta", icon: ShoppingBag, label: "Catálogo Meta" },
+  { href: "/admin/depoimentos", icon: MessageSquareQuote, label: "Depoimentos" },
+  { href: "/admin/configuracoes", icon: Settings, label: "Configurações", match: ["/admin/configuracoes/precificacao", "/admin/trocar-senha"] },
 ];
+
+const QUICK: NavItem[] = [
+  { href: "/admin/veiculos/novo", icon: Plus, label: "Novo anúncio" },
+  { href: "/admin/sync", icon: RefreshCw, label: "Importar veículos" },
+  { href: "/admin/leads", icon: ClipboardList, label: "Ver leads" },
+];
+
+const ROLE_LABELS: Record<string, string> = { admin: "Administrador", editor: "Editor de anúncios" };
+
+function isActive(pathname: string, item: NavItem) {
+  if (pathname === item.href) return true;
+  return item.match?.some((path) => pathname.startsWith(path)) ?? false;
+}
+
+const TZ = "America/Sao_Paulo";
+
+function syncLabel(date: Date | string | null) {
+  if (!date) return "Nunca";
+  const value = new Date(date);
+  const time = value.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+  const sameDay = value.toLocaleDateString("pt-BR", { timeZone: TZ }) === new Date().toLocaleDateString("pt-BR", { timeZone: TZ });
+  return sameDay ? `Hoje, ${time}` : `${value.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: TZ })}, ${time}`;
+}
 
 function remainingLabel(deadline: number, now: number) {
   const minutes = Math.max(0, Math.ceil((deadline - now) / 60_000));
@@ -96,43 +131,127 @@ function AdminSessionTimer({ initialExpiresAt }: { initialExpiresAt: number | nu
     return () => events.forEach((name) => window.removeEventListener(name, activity));
   }, [deadline, refresh]);
 
-  if (deadline === null) return <span className="adm-session-expiry">Sessão sem limite automático</span>;
-  return <span className="adm-session-expiry">Sessão: {now === null ? "ativa" : remainingLabel(deadline, now)}</span>;
+  if (deadline === null) return <span className="ad-session">Sessão sem limite automático</span>;
+  return <span className="ad-session">Sessão: {now === null ? "ativa" : remainingLabel(deadline, now)}</span>;
 }
 
 export function AdminLayout({
   children,
   user,
+  role,
   sessionExpiresAt,
+  overview,
 }: {
   children: React.ReactNode;
   user?: string;
+  role?: string;
   sessionExpiresAt: number | null;
+  overview: AdminOverview;
 }) {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    setMenuOpen(false);
+  }
+
   return (
-    <div className="adm">
-      <aside className="adm-sidebar">
-        <div className="adm-sidebar-brand">
-          <img src="/brand/logo-footer.png" alt="Autodrive Veículos" />
-          <span>Painel Admin</span>
-        </div>
-        <nav className="adm-nav">
-          {NAV.map(n => (
-            <Link key={n.href} href={n.href} className={`adm-nav-item${pathname === n.href ? " active" : ""}`}>
-              <span className="adm-nav-icon">{n.icon}</span>{n.label}
-            </Link>
-          ))}
+    <div className={`adm ad-shell${menuOpen ? " ad-menu-open" : ""}`}>
+      <aside className="ad-sidebar">
+        <Link href="/admin" className="ad-brand">
+          <img src="/brand/autodrive-logo.png" alt="Autodrive Veículos" />
+        </Link>
+        <nav className="ad-nav" aria-label="Menu do painel">
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.href} href={item.href} className={`ad-nav-item${isActive(pathname, item) ? " active" : ""}`}>
+                <Icon size={17} strokeWidth={2} aria-hidden />{item.label}
+              </Link>
+            );
+          })}
         </nav>
-        <div className="adm-sidebar-footer">
+        <div className="ad-quick">
+          <span className="ad-quick-title">Atalhos rápidos</span>
+          {QUICK.map((item) => {
+            const Icon = item.icon;
+            return <Link key={item.label} href={item.href}><Icon size={15} aria-hidden />{item.label}</Link>;
+          })}
+        </div>
+        <div className="ad-sidebar-footer">
           <AdminSessionTimer initialExpiresAt={sessionExpiresAt} />
-          {user && <span className="adm-user">👤 {user}</span>}
           <form action="/api/auth/logout" method="post">
-            <button className="adm-logout">Sair</button>
+            <button className="ad-logout"><LogOut size={15} aria-hidden />Sair</button>
           </form>
         </div>
       </aside>
-      <div className="adm-content">{children}</div>
+      <button type="button" className="ad-backdrop" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} />
+
+      <div className="ad-main">
+        <header className="ad-topbar">
+          <button type="button" className="ad-menu-toggle" aria-label="Abrir menu" onClick={() => setMenuOpen(true)}>☰</button>
+          <form className="ad-search" action="/admin/veiculos">
+            <Search size={16} aria-hidden />
+            <input name="q" placeholder="Buscar no painel: veículo, placa, código…" aria-label="Buscar no painel" />
+          </form>
+          <div className="ad-topbar-status">
+            <Link href="/admin/sync" className={overview.syncEnabled ? "ad-sync-on" : "ad-sync-off"}>
+              {overview.syncEnabled ? "Sincronização ativa" : "Sincronização pausada"}
+            </Link>
+            <span>Última atualização: <strong>{syncLabel(overview.lastSync)}</strong></span>
+            <Link href="/admin/veiculos?status=draft">Publicações pendentes: <strong>{overview.pending}</strong></Link>
+          </div>
+          <Link href="/admin/leads?status=new" className="ad-bell" aria-label={`${overview.newLeads} leads novos`}>
+            <Bell size={19} aria-hidden />
+            {overview.newLeads > 0 && <span>{overview.newLeads > 99 ? "99+" : overview.newLeads}</span>}
+          </Link>
+          <div className="ad-user">
+            <UserCog size={18} aria-hidden />
+            <div><strong>{ROLE_LABELS[role ?? ""] ?? "Usuário"}</strong><small>{user}</small></div>
+          </div>
+        </header>
+
+        <AdminKpis overview={overview} />
+
+        <main className="adm-content ad-content">{children}</main>
+      </div>
     </div>
+  );
+}
+
+function percent(part: number, total: number) {
+  if (!total) return "0%";
+  return `${((part / total) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+}
+
+function leadTrend(today: number, yesterday: number) {
+  if (!yesterday) return today ? "Nenhum ontem" : "Sem leads ontem";
+  const diff = Math.round(((today - yesterday) / yesterday) * 100);
+  return `${diff >= 0 ? "+" : ""}${diff}% vs ontem`;
+}
+
+function AdminKpis({ overview }: { overview: AdminOverview }) {
+  const cards: Array<{ href: string; icon: LucideIcon; label: string; value: number; note: string; warn?: boolean }> = [
+    { href: "/admin/veiculos?status=published", icon: CarFront, label: "Total de anúncios ativos", value: overview.published, note: `+${overview.publishedToday} hoje` },
+    { href: "/admin/veiculos?featured=1", icon: Star, label: "Veículos em destaque", value: overview.featured, note: `${percent(overview.featured, overview.published)} do total` },
+    { href: "/admin/leads", icon: ClipboardList, label: "Leads recebidos hoje", value: overview.leadsToday, note: leadTrend(overview.leadsToday, overview.leadsYesterday) },
+    { href: "/admin/banners", icon: Image, label: "Banners ativos", value: overview.banners, note: "na home" },
+    { href: "/admin/parceiros", icon: Link2, label: "Fontes integradas", value: overview.sources, note: overview.sourceErrors ? `${overview.sourcesOnline} online` : "Todas online" },
+    { href: "/admin/sync", icon: TriangleAlert, label: "Erros de importação", value: overview.sourceErrors, note: overview.sourceErrors ? "Ver detalhes" : "Nenhum erro", warn: overview.sourceErrors > 0 },
+  ];
+  return (
+    <section className="ad-kpis" aria-label="Indicadores">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <Link key={card.label} href={card.href} className={`ad-kpi${card.warn ? " warn" : ""}`}>
+            <span className="ad-kpi-label">{card.label}</span>
+            <span className="ad-kpi-value"><Icon size={22} strokeWidth={1.8} aria-hidden />{card.value.toLocaleString("pt-BR")}</span>
+            <span className="ad-kpi-note">{card.note}</span>
+          </Link>
+        );
+      })}
+    </section>
   );
 }

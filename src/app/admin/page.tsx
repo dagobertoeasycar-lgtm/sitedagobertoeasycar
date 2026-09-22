@@ -1,137 +1,168 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Eye, Plus } from "lucide-react";
 import { currentSession } from "@/lib/auth";
 import { query } from "@/lib/db";
-import Link from "next/link";
+import { brl, km, LEAD_KIND_LABELS, LEAD_STATUS_LABELS, ORIGIN_LABELS, shortTime, vehicleBadge } from "@/lib/admin-labels";
 
 export const dynamic = "force-dynamic";
 
-type DashboardStatsRow = {
-  vehicles: number;
-  published: number;
-  leads: number;
-  leads_today: number;
-  banners: number;
-  users: number;
-  last_sync: string | null;
-};
-
-type OriginStatsRow = {
-  own: number;
-  partner: number;
-  private: number;
-  active_partners: number;
-  new_today: number;
-  price_changed: number;
-  unavailable: number;
-};
-
 type RecentVehicleRow = {
   id: string;
+  slug: string;
+  internal_code: string | null;
   title: string;
   status: string;
+  stock_status: string;
+  promotion: boolean;
+  origin_type: string;
   price_cents: number;
+  mileage: number;
+  year_make: number;
+  year_model: number;
   image_url: string | null;
-  updated_at: Date;
 };
 
-type RecentLeadRow = {
-  id: string;
-  name: string;
-  phone: string;
-  kind: string;
-  status: string;
-  created_at: Date;
-};
+type RecentLeadRow = { id: string; name: string; phone: string; kind: string; status: string; vehicle_title: string | null; created_at: Date };
+type CountRow = { label: string; total: number };
+type SourceRow = { name: string; connector: string; last_sync_at: Date | null; last_error: string | null; last_found: number | null };
+
+async function rows<T extends Record<string, unknown>>(sql: string): Promise<T[]> {
+  try {
+    return (await query<T>(sql)).rows;
+  } catch {
+    return [];
+  }
+}
+
+function Bars({ items }: { items: CountRow[] }) {
+  const max = Math.max(1, ...items.map((item) => item.total));
+  if (!items.length) return <p className="ad-note">Sem dados ainda.</p>;
+  return (
+    <ul className="ad-bars">
+      {items.map((item) => (
+        <li key={item.label}>
+          <span>{item.label}</span>
+          <span className="bar"><i style={{ width: `${(item.total / max) * 100}%` }} /></span>
+          <b>{item.total}</b>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default async function AdminDashboard() {
-  const session = await currentSession();
-  if (!session) redirect("/admin/login");
+  if (!(await currentSession())) redirect("/admin/login");
 
-  let stats = { vehicles: 0, published: 0, leads: 0, leadsToday: 0, banners: 0, users: 0, lastSync: "Nunca" };
-  try {
-    const r = await query<DashboardStatsRow>(`SELECT
-      (SELECT count(*) FROM vehicles)::int as vehicles,
-      (SELECT count(*) FROM vehicles WHERE status='published')::int as published,
-      (SELECT count(*) FROM leads)::int as leads,
-      (SELECT count(*) FROM leads WHERE created_at >= CURRENT_DATE)::int as leads_today,
-      (SELECT count(*) FROM banners WHERE active=true)::int as banners,
-      (SELECT count(*) FROM users WHERE active)::int as users,
-      (SELECT to_char(max(finished_at),'DD/MM HH24:MI') FROM sync_runs)::text as last_sync
-    `);
-    const row = r.rows[0];
-    stats = { vehicles: row.vehicles, published: row.published, leads: row.leads, leadsToday: row.leads_today, banners: row.banners, users: row.users, lastSync: row.last_sync || "Nunca" };
-  } catch {}
-
-  // Resumo multiorigem. Se a migration 012 ainda não rodou, os cards somem em
-  // vez de derrubar o dashboard inteiro.
-  let origin: OriginStatsRow | null = null;
-  try {
-    const r = await query<OriginStatsRow>(`SELECT
-      (SELECT count(*) FROM vehicles WHERE origin_type='OWN' AND status='published')::int as own,
-      (SELECT count(*) FROM vehicles WHERE origin_type='PARTNER' AND status='published')::int as partner,
-      (SELECT count(*) FROM vehicles WHERE origin_type='PRIVATE' AND status='published')::int as private,
-      (SELECT count(*) FROM partners WHERE active)::int as active_partners,
-      (SELECT count(*) FROM vehicles WHERE created_at >= CURRENT_DATE)::int as new_today,
-      (SELECT count(*) FROM vehicle_price_history WHERE created_at >= CURRENT_DATE)::int as price_changed,
-      (SELECT count(*) FROM vehicles WHERE availability_status <> 'DISPONIVEL')::int as unavailable
-    `);
-    origin = r.rows[0] ?? null;
-  } catch {}
-
-  let recentVehicles: RecentVehicleRow[] = [];
-  let recentLeads: RecentLeadRow[] = [];
-  try {
-    recentVehicles = (await query<RecentVehicleRow>("SELECT id,title,status,price_cents,image_url,updated_at FROM vehicles ORDER BY updated_at DESC LIMIT 5")).rows;
-    recentLeads = (await query<RecentLeadRow>("SELECT id,name,phone,kind,status,created_at FROM leads ORDER BY created_at DESC LIMIT 5")).rows;
-  } catch {}
+  const [recentVehicles, recentLeads, topModels, byOrigin, sources] = await Promise.all([
+    rows<RecentVehicleRow>(`select id, slug, internal_code, title, status, stock_status, promotion, origin_type, price_cents, mileage, year_make, year_model, image_url
+      from vehicles order by updated_at desc limit 8`),
+    rows<RecentLeadRow>(`select l.id, l.name, l.phone, l.kind, l.status, v.title as vehicle_title, l.created_at
+      from leads l left join vehicles v on v.id = l.vehicle_id order by l.created_at desc limit 6`),
+    rows<CountRow>(`select model as label, count(*)::int as total from vehicles
+      where status='published' and coalesce(model,'') <> '' group by model order by total desc, model limit 6`),
+    rows<CountRow>(`select origin_type as label, count(*)::int as total from vehicles
+      where status='published' group by origin_type order by total desc`),
+    rows<SourceRow>(`select coalesce(nullif(trade_name,''), name) as name, connector, last_sync_at, last_error, last_found
+      from partners where active and connector is not null order by name`),
+  ]);
 
   return (
     <>
       <div className="adm-header">
         <h1>Dashboard</h1>
-        <div className="adm-header-actions">
-          <span className="adm-sync-status">🔄 Última sync: {stats.lastSync}</span>
-        </div>
+        <Link href="/admin/veiculos/novo" className="ad-btn"><Plus size={16} aria-hidden />Novo anúncio</Link>
       </div>
-      <div className="adm-stats">
-        <div className="adm-stat"><span className="adm-stat-icon">🚗</span><div><strong>{stats.published}</strong><span>Veículos ativos</span></div></div>
-        <div className="adm-stat"><span className="adm-stat-icon">📦</span><div><strong>{stats.vehicles}</strong><span>Total no estoque</span></div></div>
-        <div className="adm-stat"><span className="adm-stat-icon">📋</span><div><strong>{stats.leadsToday}</strong><span>Leads hoje</span></div></div>
-        <div className="adm-stat"><span className="adm-stat-icon">📨</span><div><strong>{stats.leads}</strong><span>Total de leads</span></div></div>
-        <div className="adm-stat"><span className="adm-stat-icon">🖼️</span><div><strong>{stats.banners}</strong><span>Banners ativos</span></div></div>
-        <div className="adm-stat"><span className="adm-stat-icon">👥</span><div><strong>{stats.users}</strong><span>Usuários</span></div></div>
-      </div>
-      {origin && (
-        <>
-          <h2 className="adm-section-title">Estoque por origem</h2>
-          <div className="adm-stats">
-            <div className="adm-stat"><span className="adm-stat-icon">🏠</span><div><strong>{origin.own}</strong><span>Estoque próprio</span></div></div>
-            <div className="adm-stat"><span className="adm-stat-icon">🤝</span><div><strong>{origin.partner}</strong><span>Lojas parceiras</span></div></div>
-            <div className="adm-stat"><span className="adm-stat-icon">👤</span><div><strong>{origin.private}</strong><span>Venda particular</span></div></div>
-            <div className="adm-stat"><span className="adm-stat-icon">🔗</span><div><strong>{origin.active_partners}</strong><span>Parceiros ativos</span></div></div>
-            <div className="adm-stat"><span className="adm-stat-icon">🆕</span><div><strong>{origin.new_today}</strong><span>Novos hoje</span></div></div>
-            <div className="adm-stat"><span className="adm-stat-icon">💲</span><div><strong>{origin.price_changed}</strong><span>Preços alterados hoje</span></div></div>
-            <div className="adm-stat"><span className="adm-stat-icon">⚠️</span><div><strong>{origin.unavailable}</strong><span>Possivelmente indisponíveis</span></div></div>
+
+      <div className="ad-grid-main">
+        <section className="adm-card">
+          <div className="adm-card-header"><h2>Anúncios atualizados recentemente</h2><Link href="/admin/veiculos" className="adm-link">Ver todos →</Link></div>
+          <div className="adm-table-wrap">
+            <table className="adm-table">
+              <thead><tr><th>Foto</th><th>Código</th><th>Título</th><th>Ano</th><th>Km</th><th>Preço</th><th>Status</th><th>Origem</th><th>Ações</th></tr></thead>
+              <tbody>
+                {recentVehicles.map((v) => {
+                  const badge = vehicleBadge(v.status, v.stock_status, v.promotion);
+                  return (
+                    <tr key={v.id}>
+                      <td><img src={v.image_url || "/em-breve.png"} alt="" className="adm-thumb" /></td>
+                      <td><small>{v.internal_code ? `#${v.internal_code}` : "—"}</small></td>
+                      <td>{v.title}</td>
+                      <td>{v.year_make}/{v.year_model}</td>
+                      <td>{km(v.mileage)}</td>
+                      <td>{brl(v.price_cents)}</td>
+                      <td><span className={`adm-badge ${badge.cls}`}>{badge.label}</span></td>
+                      <td>{ORIGIN_LABELS[v.origin_type] ?? v.origin_type}</td>
+                      <td>
+                        <div className="ad-icon-actions">
+                          <a className="ad-icon-btn" href={`/veiculos/${v.slug}`} target="_blank" rel="noreferrer" title="Ver no site" aria-label="Ver no site"><Eye size={15} /></a>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {!recentVehicles.length && <tr><td colSpan={9} className="adm-empty-row">Nenhum veículo cadastrado.</td></tr>}
+              </tbody>
+            </table>
           </div>
-        </>
-      )}
-      <div className="adm-grid-2">
-        <div className="adm-card">
-          <div className="adm-card-header"><h2>Veículos recentes</h2><Link href="/admin/veiculos" className="adm-link">Ver todos →</Link></div>
-          <table className="adm-table"><thead><tr><th>Foto</th><th>Veículo</th><th>Status</th><th>Preço</th></tr></thead><tbody>
-            {recentVehicles.map((v) => (
-              <tr key={v.id}><td><img src={v.image_url || "/em-breve.png"} alt="" className="adm-thumb" /></td><td>{v.title}</td><td><span className={`adm-badge ${v.status}`}>{v.status}</span></td><td>{(v.price_cents/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0})}</td></tr>
-            ))}
-          </tbody></table>
+        </section>
+
+        <div>
+          <section className="adm-card">
+            <div className="adm-card-header"><h2>Relatórios / inteligência</h2></div>
+            <p className="ad-note" style={{ marginBottom: 10 }}>Modelos com mais anúncios publicados.</p>
+            <Bars items={topModels} />
+          </section>
+          <section className="adm-card">
+            <div className="adm-card-header"><h2>Estoque por origem</h2></div>
+            <Bars items={byOrigin.map((row) => ({ ...row, label: ORIGIN_LABELS[row.label] ?? row.label }))} />
+          </section>
         </div>
-        <div className="adm-card">
+      </div>
+
+      <div className="ad-grid-2">
+        <section className="adm-card">
           <div className="adm-card-header"><h2>Leads recentes</h2><Link href="/admin/leads" className="adm-link">Ver todos →</Link></div>
-          <table className="adm-table"><thead><tr><th>Nome</th><th>Telefone</th><th>Tipo</th><th>Status</th></tr></thead><tbody>
-            {recentLeads.map((l) => (
-              <tr key={l.id}><td>{l.name}</td><td>{l.phone}</td><td>{l.kind}</td><td><span className={`adm-badge ${l.status}`}>{l.status}</span></td></tr>
-            ))}
-          </tbody></table>
-        </div>
+          <div className="adm-table-wrap">
+            <table className="adm-table">
+              <thead><tr><th>Nome</th><th>Telefone</th><th>Veículo</th><th>Tipo</th><th>Status</th><th>Data</th></tr></thead>
+              <tbody>
+                {recentLeads.map((l) => (
+                  <tr key={l.id}>
+                    <td>{l.name}</td>
+                    <td>{l.phone}</td>
+                    <td>{l.vehicle_title ?? "—"}</td>
+                    <td>{LEAD_KIND_LABELS[l.kind] ?? l.kind}</td>
+                    <td><span className={`adm-badge ${l.status}`}>{LEAD_STATUS_LABELS[l.status] ?? l.status}</span></td>
+                    <td>{shortTime(l.created_at)}</td>
+                  </tr>
+                ))}
+                {!recentLeads.length && <tr><td colSpan={6} className="adm-empty-row">Nenhum lead recebido ainda.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="adm-card">
+          <div className="adm-card-header"><h2>Fontes e integrações</h2><Link href="/admin/sync" className="adm-link">Importações →</Link></div>
+          <div className="adm-table-wrap">
+            <table className="adm-table">
+              <thead><tr><th>Fonte</th><th>Conector</th><th>Veículos</th><th>Última leitura</th><th>Situação</th></tr></thead>
+              <tbody>
+                {sources.map((s) => (
+                  <tr key={s.name + s.connector}>
+                    <td>{s.name}</td>
+                    <td><small>{s.connector}</small></td>
+                    <td>{s.last_found ?? "—"}</td>
+                    <td>{s.last_sync_at ? shortTime(s.last_sync_at) : "—"}</td>
+                    <td>{s.last_error ? <span className="adm-badge draft" title={s.last_error}>Com erro</span> : <span className="adm-badge published">Online</span>}</td>
+                  </tr>
+                ))}
+                {!sources.length && <tr><td colSpan={5} className="adm-empty-row">Nenhuma fonte automática configurada.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </>
   );
