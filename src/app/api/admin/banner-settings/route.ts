@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 
 const SETTING_KEY = "banner_interval_seconds";
@@ -16,7 +16,7 @@ function normalizeInterval(value: unknown) {
 }
 
 export async function GET() {
-  const session = await currentSession();
+  const session = await sessionFor("banners");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const result = await query<SettingRow>("SELECT value FROM site_settings WHERE key=$1 LIMIT 1", [SETTING_KEY]);
@@ -25,7 +25,7 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("banners");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = (await request.json()) as { intervalSeconds?: unknown };

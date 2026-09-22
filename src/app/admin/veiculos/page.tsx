@@ -1,7 +1,6 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { VehiclePhotosPanel } from "@/components/VehiclePhotosPanel";
 import { VehicleRowActions } from "@/components/VehicleRowActions";
@@ -55,7 +54,7 @@ const KM_RANGES: Record<string, [number, number | null, string]> = {
 };
 
 export default async function AdminVehiclesPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
-  if (!(await currentSession())) redirect("/admin/login");
+  await requireArea("veiculos");
 
   const sp = await searchParams;
   const filters = {

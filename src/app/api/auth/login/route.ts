@@ -21,5 +21,7 @@ export async function POST(request: NextRequest) {
     sessionCookieOptions(timeoutMinutes),
   );
   await query("insert into audit_log(actor_id, action, entity_type) values ($1, 'login', 'session')", [user.id]);
+  // Último acesso aparece em Usuários e permissões (migration 022).
+  await query("update users set last_login_at=now() where id=$1", [user.id]).catch(() => undefined);
   return response;
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ type SyncConfig = { key: string; value: string };
 
 // GET - status da última sincronização
 export async function GET() {
-  const session = await currentSession();
+  const session = await sessionFor("importacoes");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const [lastRun, config] = await Promise.all([
@@ -44,7 +44,7 @@ export async function GET() {
 
 // POST - ações: sync manual, toggle, alterar intervalo
 export async function POST(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("importacoes");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = (await request.json()) as { action: string; value?: string };

@@ -1,12 +1,10 @@
-import { redirect } from "next/navigation";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { SyncPanel } from "@/components/SyncPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSyncPage() {
-  const session = await currentSession();
-  if (!session) redirect("/admin/login");
+  await requireArea("importacoes");
 
   return (
     <>

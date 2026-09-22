@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 
 async function isAdmin() {
-  return Boolean(await currentSession());
+  return Boolean(await sessionFor("banners"));
 }
 
 type BannerPayload = {

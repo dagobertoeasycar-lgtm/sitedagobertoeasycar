@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { imageUploadMaxBytes, saveImageFile } from "@/lib/image-upload";
 import { isVercelBlobUrl } from "@/lib/media-upload";
@@ -92,7 +92,7 @@ async function gravarGaleria(
 }
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!(await sessionFor("veiculos"))) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
 
@@ -119,7 +119,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 /** Sobe arquivos do computador e acrescenta ao fim da galeria. */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
 /** Substitui a galeria inteira. Guarda as originais na primeira troca. */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
@@ -197,7 +197,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 /** Travar, destravar ou restaurar as fotos da origem. */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
@@ -300,7 +300,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 /** Remove uma foto pela URL, ou todas com ?todas=1. */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });

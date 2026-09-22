@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import {
   mergeConnectorConfig,
@@ -39,7 +39,7 @@ function readBody(body: Record<string, unknown>): PartnerInput {
  *   { name, ... }        → edição completa do cadastro
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("importacoes");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const { id } = await params;
@@ -122,7 +122,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
  * de leads e de preço não fica órfão.
  */
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("importacoes");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const { id } = await params;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 
 const key = "home_testimonials";
@@ -17,13 +17,13 @@ function cleanList(value: unknown) {
 }
 
 export async function GET() {
-  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!(await sessionFor("banners"))) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const result = await query<{ value: string }>("SELECT value FROM site_settings WHERE key=$1 LIMIT 1", [key]);
   try { return NextResponse.json(cleanList(JSON.parse(result.rows[0]?.value || "[]")) || []); } catch { return NextResponse.json([]); }
 }
 
 export async function PUT(request: NextRequest) {
-  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!(await sessionFor("banners"))) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const body = await request.json().catch(() => null) as { testimonials?: unknown } | null;
   const testimonials = cleanList(body?.testimonials);
   if (!testimonials) return NextResponse.json({ error: "Lista de depoimentos inválida" }, { status: 400 });

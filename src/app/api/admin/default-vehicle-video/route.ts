@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import {
   readDefaultVehicleVideo,
@@ -36,12 +36,12 @@ async function responseState() {
 }
 
 export async function GET() {
-  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!(await sessionFor("veiculos"))) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   return NextResponse.json(await responseState());
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const body = (await request.json()) as { url?: unknown; enabled?: unknown };
   const url = typeof body.url === "string" ? body.url.trim() : "";
@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const body = (await request.json()) as { enabled?: unknown };
   if (typeof body.enabled !== "boolean") {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { audit } from "@/lib/audit";
 
@@ -10,7 +10,7 @@ import { audit } from "@/lib/audit";
  * anúncio independente, pronto para ser ajustado e publicado.
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });

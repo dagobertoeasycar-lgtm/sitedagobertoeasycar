@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import Link from "next/link";
 import { DefaultVehicleVideo } from "@/components/DefaultVehicleVideo";
 import { SessionTimeoutSettings } from "@/components/SessionTimeoutSettings";
@@ -7,8 +6,7 @@ import { SessionTimeoutSettings } from "@/components/SessionTimeoutSettings";
 export const dynamic = "force-dynamic";
 
 export default async function AdminConfigPage() {
-  const session = await currentSession();
-  if (!session) redirect("/admin/login");
+  await requireArea("configuracoes");
 
   return (
     <>

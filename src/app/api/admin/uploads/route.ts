@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { saveImageFile } from "@/lib/image-upload";
 import { adminImageMaxBytes } from "@/lib/media-upload";
 
@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   let form: FormData;

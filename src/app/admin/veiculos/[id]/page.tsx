@@ -1,6 +1,6 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { formValue, VEHICLE_FIELDS, type VehicleEditorData } from "@/lib/admin-vehicle";
 import { VehicleEditor, type HistoryItem } from "@/components/VehicleEditor";
@@ -106,7 +106,7 @@ async function loadHistory(id: string): Promise<HistoryItem[]> {
 }
 
 export default async function EditVehiclePage({ params }: { params: Promise<{ id: string }> }) {
-  if (!(await currentSession())) redirect("/admin/login");
+  await requireArea("veiculos");
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const row = await loadVehicle(id);

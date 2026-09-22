@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { brl } from "@/lib/admin-labels";
 
@@ -10,7 +9,7 @@ type PromoRow = { id: string; title: string; internal_code: string | null; price
 type BannerCount = { total: number; active: number };
 
 export default async function PromotionsPage() {
-  if (!(await currentSession())) redirect("/admin/login");
+  await requireArea("banners");
 
   const [promos, featured, banners] = await Promise.all([
     query<PromoRow>(`select id, title, internal_code, price_cents, old_price_cents, featured, source_id, image_url

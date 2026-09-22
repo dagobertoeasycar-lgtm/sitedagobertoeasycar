@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { audit, diff } from "@/lib/audit";
 import { coerceField, VEHICLE_FIELDS } from "@/lib/admin-vehicle";
@@ -8,7 +8,7 @@ const statuses = ["draft", "published", "paused", "sold"];
 const stockStatuses = ["available", "reserved", "sold"];
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
@@ -29,7 +29,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
  * ciclo. O resto (destaque, SEO, notas, publicação) vale para qualquer origem.
  */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
@@ -97,7 +97,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
  * DELETE /api/admin/vehicles/{id}?motivo=texto
  */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });

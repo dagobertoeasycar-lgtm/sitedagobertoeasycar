@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { LeadsView } from "@/components/LeadsView";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminFinancingPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
-  if (!(await currentSession())) redirect("/admin/login");
+  await requireArea("leads");
   return (
     <>
       <div className="adm-header"><h1>Financiamentos</h1></div>

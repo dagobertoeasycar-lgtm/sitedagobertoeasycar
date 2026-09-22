@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { pastaDoParceiro, pastaDoVeiculo, separarFotos } from "@/lib/vehicle-photos";
 
@@ -41,7 +41,7 @@ type FilaRow = {
 };
 
 export async function GET(request: NextRequest) {
-  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!(await sessionFor("veiculos"))) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const sp = request.nextUrl.searchParams;
   const limite = Math.min(Math.max(parseInt(sp.get("limite") || "10", 10) || 10, 1), 1000);

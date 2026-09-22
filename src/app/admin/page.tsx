@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Eye, Plus } from "lucide-react";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { query } from "@/lib/db";
+import { AdminBars } from "@/components/AdminBars";
 import { brl, km, LEAD_KIND_LABELS, LEAD_STATUS_LABELS, ORIGIN_LABELS, shortTime, vehicleBadge } from "@/lib/admin-labels";
 
 export const dynamic = "force-dynamic";
@@ -35,24 +35,8 @@ async function rows<T extends Record<string, unknown>>(sql: string): Promise<T[]
   }
 }
 
-function Bars({ items }: { items: CountRow[] }) {
-  const max = Math.max(1, ...items.map((item) => item.total));
-  if (!items.length) return <p className="ad-note">Sem dados ainda.</p>;
-  return (
-    <ul className="ad-bars">
-      {items.map((item) => (
-        <li key={item.label}>
-          <span>{item.label}</span>
-          <span className="bar"><i style={{ width: `${(item.total / max) * 100}%` }} /></span>
-          <b>{item.total}</b>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 export default async function AdminDashboard() {
-  if (!(await currentSession())) redirect("/admin/login");
+  await requireArea("dashboard");
 
   const [recentVehicles, recentLeads, topModels, byOrigin, sources] = await Promise.all([
     rows<RecentVehicleRow>(`select id, slug, internal_code, title, status, stock_status, promotion, origin_type, price_cents, mileage, year_make, year_model, image_url
@@ -111,11 +95,11 @@ export default async function AdminDashboard() {
           <section className="adm-card">
             <div className="adm-card-header"><h2>Relatórios / inteligência</h2></div>
             <p className="ad-note" style={{ marginBottom: 10 }}>Modelos com mais anúncios publicados.</p>
-            <Bars items={topModels} />
+            <AdminBars items={topModels} />
           </section>
           <section className="adm-card">
             <div className="adm-card-header"><h2>Estoque por origem</h2></div>
-            <Bars items={byOrigin.map((row) => ({ ...row, label: ORIGIN_LABELS[row.label] ?? row.label }))} />
+            <AdminBars items={byOrigin.map((row) => ({ ...row, label: ORIGIN_LABELS[row.label] ?? row.label }))} />
           </section>
         </div>
       </div>

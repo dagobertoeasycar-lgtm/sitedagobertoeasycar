@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { MetaCatalogPanel } from "@/components/MetaCatalogPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function MetaCatalogPage() {
-  if (!(await currentSession())) redirect("/admin/login");
+  await requireArea("meta");
   return (
     <>
       <div className="adm-header">

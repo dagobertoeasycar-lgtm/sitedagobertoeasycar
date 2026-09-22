@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { normalizePricingRule } from "@/lib/pricing";
 import { getPricingRule, getStockRule, savePricingRule, saveStockRule } from "@/lib/settings";
 
 export async function GET() {
-  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!(await sessionFor("configuracoes"))) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const [pricing, stock] = await Promise.all([getPricingRule(), getStockRule()]);
   return NextResponse.json({ pricing, stock });
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("configuracoes");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = (await request.json()) as Record<string, unknown>;

@@ -467,3 +467,16 @@
 .ad-shell .adm-badge.qualified { background: var(--ad-teal-bg); color: var(--ad-teal); }
 .ad-shell .adm-badge.converted { background: var(--ad-green-bg); color: var(--ad-green); }
 .ad-shell .adm-badge.lost { background: #f1f4f6; color: var(--ad-muted); }
+
+/* ---------- Usuários ---------- */
+.ad-shell .ad-inline-input { height: 32px; padding: 0 8px; border: 1px solid var(--ad-line-strong); border-radius: 6px; background: #fff; font: inherit; font-size: .84rem; }
+.ad-shell .ad-inline-row { display: flex; gap: 6px; }
+.ad-shell .ad-inline-row input { flex: 1; }
+.ad-shell .ad-note code { padding: 1px 6px; border-radius: 4px; background: #fff; font-size: .85rem; user-select: all; }
+
+/* ---------- Auditoria e relatórios ---------- */
+.ad-shell .ad-audit-lines { margin: 6px 0 0; padding-left: 16px; font-size: .78rem; color: var(--ad-soft); }
+.ad-shell .ad-tab-link { flex: none; padding: 7px 12px; border: 1px solid var(--ad-line-strong); border-radius: 6px; background: #fff; color: var(--ad-ink); font-size: .8rem; font-weight: 800; text-decoration: none; }
+.ad-shell .ad-tab-link.active { background: var(--ad-navy); border-color: var(--ad-navy); color: #fff; }
+.ad-shell .ad-bars li > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ad-shell .ad-bars li { grid-template-columns: minmax(90px, 180px) minmax(0, 1fr) 48px; }

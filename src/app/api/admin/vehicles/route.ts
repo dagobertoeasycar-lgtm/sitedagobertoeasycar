@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 
 function slugify(value: string) { return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 100); }
 function stableExternalId(value: string) { return createHash("sha256").update(value.trim().toLowerCase()).digest("hex").slice(0, 24); }
 
 export async function POST(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("veiculos");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const body = await request.json() as Record<string, string>;
   const title = String(body.title ?? "").trim();

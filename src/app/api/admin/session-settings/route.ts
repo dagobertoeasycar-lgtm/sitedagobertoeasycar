@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSession, currentSession, parseSession, sessionCookie, sessionCookieOptions } from "@/lib/auth";
+import { createSession, parseSession, sessionCookie, sessionCookieOptions } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import {
   MAX_SESSION_TIMEOUT_MINUTES,
@@ -9,14 +10,14 @@ import {
 } from "@/lib/session-settings";
 
 export async function GET() {
-  const session = await currentSession();
+  const session = await sessionFor("configuracoes");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const settings = await readSessionTimeoutSettings();
   return NextResponse.json({ ...settings, expiresAt: session.expiresAt });
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("configuracoes");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const body = (await request.json()) as { enabled?: unknown; minutes?: unknown };
   if (typeof body.enabled !== "boolean") {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import {
   nomeDaFoto,
@@ -97,7 +97,7 @@ async function juntar(urls: string[], pasta: string, dentro: ArquivoZip[], falha
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await currentSession())) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!(await sessionFor("veiculos"))) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!UUID.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
 

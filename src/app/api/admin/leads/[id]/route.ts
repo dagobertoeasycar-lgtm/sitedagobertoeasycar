@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { audit, diff } from "@/lib/audit";
 import { LEAD_STATUS_LABELS } from "@/lib/admin-labels";
@@ -9,7 +9,7 @@ import { LEAD_STATUS_LABELS } from "@/lib/admin-labels";
  * PATCH /api/admin/leads/{id} { status?, assignedTo?, notes? }
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await currentSession();
+  const session = await sessionFor("leads");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });

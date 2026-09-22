@@ -1,7 +1,7 @@
 import { issueSignedToken } from "@vercel/blob";
 import { handleUploadPresigned, type HandleUploadPresignedBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import {
   adminImageContentTypes,
@@ -23,7 +23,7 @@ type ClientPayload = {
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as HandleUploadPresignedBody | null;
   if (!body) return NextResponse.json({ error: "Solicitação de upload inválida." }, { status: 400 });
-  if (body.type === "blob.generate-presigned-url" && !(await currentSession())) {
+  if (body.type === "blob.generate-presigned-url" && !(await sessionFor("veiculos"))) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       body,
       request,
       getSignedToken: async (pathname, rawPayload) => {
-        const session = await currentSession();
+        const session = await sessionFor("veiculos");
         if (!session) throw new Error("Não autorizado");
 
         let payload: ClientPayload = {};

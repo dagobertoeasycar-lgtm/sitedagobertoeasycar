@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { currentSession } from "@/lib/auth";
+import { sessionFor } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import {
   mergeConnectorConfig,
@@ -47,7 +47,7 @@ function readBody(body: Record<string, unknown>): PartnerInput {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await currentSession();
+  const session = await sessionFor("importacoes");
   if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const input = readBody((await request.json()) as Record<string, unknown>);

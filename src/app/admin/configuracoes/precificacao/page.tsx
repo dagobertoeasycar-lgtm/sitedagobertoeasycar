@@ -1,13 +1,12 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { getPricingRule, getStockRule } from "@/lib/settings";
 import { PricingRuleForm } from "@/components/PricingRuleForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPricingPage() {
-  if (!(await currentSession())) redirect("/admin/login");
+  await requireArea("configuracoes");
 
   const [pricing, stock] = await Promise.all([getPricingRule(), getStockRule()]);
 

@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { currentSession } from "@/lib/auth";
+import { requireArea } from "@/lib/permissions";
 import { query } from "@/lib/db";
 import { brl, km, ORIGIN_LABELS, shortTime } from "@/lib/admin-labels";
 
@@ -29,7 +28,7 @@ async function safe<T extends Record<string, unknown>>(sql: string): Promise<T[]
 }
 
 export default async function StockPage() {
-  if (!(await currentSession())) redirect("/admin/login");
+  await requireArea("veiculos");
 
   const [summaryRows, partners, attention] = await Promise.all([
     safe<Summary>(`select

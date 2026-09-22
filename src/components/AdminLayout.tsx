@@ -6,38 +6,41 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bell, Building2, CarFront, CircleDollarSign, ClipboardList, Handshake, Image, LayoutGrid, Link2,
   LogOut, MessageSquareQuote, Plus, RefreshCw, Search, Settings, ShoppingBag, Star, TriangleAlert,
-  Tag, UserCog, Warehouse, type LucideIcon,
+  BarChart3, History, Tag, UserCog, Users, Warehouse, type LucideIcon,
 } from "lucide-react";
 import type { AdminOverview } from "@/lib/admin-overview";
+import { canAccess, ROLES, type Area } from "@/lib/permissions-shared";
 
-type NavItem = { href: string; icon: LucideIcon; label: string; match?: string[] };
+type NavItem = { href: string; icon: LucideIcon; label: string; area: Area; match?: string[] };
 
 // Ordem e nomes seguem o protótipo do painel novo; itens próprios da Autodrive
 // (parceiros, atacado, depoimentos, Meta) entram nos pontos equivalentes.
 const NAV: NavItem[] = [
-  { href: "/admin", icon: LayoutGrid, label: "Dashboard" },
-  { href: "/admin/veiculos", icon: CarFront, label: "Anúncios / Veículos", match: ["/admin/veiculos/"] },
-  { href: "/admin/veiculos/novo", icon: Plus, label: "Novo anúncio" },
-  { href: "/admin/estoque", icon: Warehouse, label: "Estoque" },
-  { href: "/admin/banners", icon: Image, label: "Banners e Home" },
-  { href: "/admin/promocoes", icon: Tag, label: "Promoções" },
-  { href: "/admin/leads", icon: ClipboardList, label: "Leads / Contatos" },
-  { href: "/admin/financiamentos", icon: CircleDollarSign, label: "Financiamentos" },
-  { href: "/admin/atacado", icon: Building2, label: "Leads de parceiros" },
-  { href: "/admin/sync", icon: RefreshCw, label: "Importações" },
-  { href: "/admin/parceiros", icon: Handshake, label: "Fontes e parceiros" },
-  { href: "/admin/configuracoes/integracoes/meta", icon: ShoppingBag, label: "Catálogo Meta" },
-  { href: "/admin/depoimentos", icon: MessageSquareQuote, label: "Depoimentos" },
-  { href: "/admin/configuracoes", icon: Settings, label: "Configurações", match: ["/admin/configuracoes/precificacao", "/admin/trocar-senha"] },
+  { href: "/admin", icon: LayoutGrid, label: "Dashboard", area: "dashboard" },
+  { href: "/admin/veiculos", icon: CarFront, label: "Anúncios / Veículos", area: "veiculos", match: ["/admin/veiculos/"] },
+  { href: "/admin/veiculos/novo", icon: Plus, label: "Novo anúncio", area: "veiculos" },
+  { href: "/admin/estoque", icon: Warehouse, label: "Estoque", area: "veiculos" },
+  { href: "/admin/banners", icon: Image, label: "Banners e Home", area: "banners" },
+  { href: "/admin/promocoes", icon: Tag, label: "Promoções", area: "banners" },
+  { href: "/admin/leads", icon: ClipboardList, label: "Leads / Contatos", area: "leads" },
+  { href: "/admin/financiamentos", icon: CircleDollarSign, label: "Financiamentos", area: "leads" },
+  { href: "/admin/atacado", icon: Building2, label: "Leads de parceiros", area: "leads" },
+  { href: "/admin/sync", icon: RefreshCw, label: "Importações", area: "importacoes" },
+  { href: "/admin/parceiros", icon: Handshake, label: "Fontes e parceiros", area: "importacoes" },
+  { href: "/admin/configuracoes/integracoes/meta", icon: ShoppingBag, label: "Catálogo Meta", area: "meta" },
+  { href: "/admin/depoimentos", icon: MessageSquareQuote, label: "Depoimentos", area: "banners" },
+  { href: "/admin/usuarios", icon: Users, label: "Usuários e permissões", area: "usuarios" },
+  { href: "/admin/auditoria", icon: History, label: "Auditoria", area: "auditoria" },
+  { href: "/admin/relatorios", icon: BarChart3, label: "Relatórios", area: "relatorios" },
+  { href: "/admin/configuracoes", icon: Settings, label: "Configurações", area: "configuracoes", match: ["/admin/configuracoes/precificacao", "/admin/trocar-senha"] },
 ];
 
 const QUICK: NavItem[] = [
-  { href: "/admin/veiculos/novo", icon: Plus, label: "Novo anúncio" },
-  { href: "/admin/sync", icon: RefreshCw, label: "Importar veículos" },
-  { href: "/admin/leads", icon: ClipboardList, label: "Ver leads" },
+  { href: "/admin/veiculos/novo", icon: Plus, label: "Novo anúncio", area: "veiculos" },
+  { href: "/admin/sync", icon: RefreshCw, label: "Importar veículos", area: "importacoes" },
+  { href: "/admin/leads", icon: ClipboardList, label: "Ver leads", area: "leads" },
 ];
 
-const ROLE_LABELS: Record<string, string> = { admin: "Administrador", editor: "Editor de anúncios" };
 
 function isActive(pathname: string, item: NavItem) {
   if (pathname === item.href) return true;
@@ -167,7 +170,7 @@ export function AdminLayout({
           <img src="/brand/autodrive-logo.png" alt="Autodrive Veículos" />
         </Link>
         <nav className="ad-nav" aria-label="Menu do painel">
-          {NAV.map((item) => {
+          {NAV.filter((item) => canAccess(role, item.area)).map((item) => {
             const Icon = item.icon;
             return (
               <Link key={item.href} href={item.href} className={`ad-nav-item${isActive(pathname, item) ? " active" : ""}`}>
@@ -178,7 +181,7 @@ export function AdminLayout({
         </nav>
         <div className="ad-quick">
           <span className="ad-quick-title">Atalhos rápidos</span>
-          {QUICK.map((item) => {
+          {QUICK.filter((item) => canAccess(role, item.area)).map((item) => {
             const Icon = item.icon;
             return <Link key={item.label} href={item.href}><Icon size={15} aria-hidden />{item.label}</Link>;
           })}
@@ -212,7 +215,7 @@ export function AdminLayout({
           </Link>
           <div className="ad-user">
             <UserCog size={18} aria-hidden />
-            <div><strong>{ROLE_LABELS[role ?? ""] ?? "Usuário"}</strong><small>{user}</small></div>
+            <div><strong>{ROLES[(role ?? "") as keyof typeof ROLES] ?? "Usuário"}</strong><small>{user}</small></div>
           </div>
         </header>
 
