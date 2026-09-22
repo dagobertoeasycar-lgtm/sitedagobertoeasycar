@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Bell, Building2, CarFront, ClipboardList, Handshake, Image, LayoutGrid, Link2,
+  Bell, Building2, CarFront, CircleDollarSign, ClipboardList, Handshake, Image, LayoutGrid, Link2,
   LogOut, MessageSquareQuote, Plus, RefreshCw, Search, Settings, ShoppingBag, Star, TriangleAlert,
   Tag, UserCog, Warehouse, type LucideIcon,
 } from "lucide-react";
@@ -22,6 +22,7 @@ const NAV: NavItem[] = [
   { href: "/admin/banners", icon: Image, label: "Banners e Home" },
   { href: "/admin/promocoes", icon: Tag, label: "Promoções" },
   { href: "/admin/leads", icon: ClipboardList, label: "Leads / Contatos" },
+  { href: "/admin/financiamentos", icon: CircleDollarSign, label: "Financiamentos" },
   { href: "/admin/atacado", icon: Building2, label: "Leads de parceiros" },
   { href: "/admin/sync", icon: RefreshCw, label: "Importações" },
   { href: "/admin/parceiros", icon: Handshake, label: "Fontes e parceiros" },

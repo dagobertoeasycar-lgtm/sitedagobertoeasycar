@@ -442,3 +442,28 @@
 .ad-shell .ad-mini-card strong { font-size: 1.15rem; font-weight: 800; }
 .ad-shell .ad-mini-card small { font-size: .72rem; color: var(--ad-green); font-weight: 700; }
 @media (max-width: 900px) { .ad-shell .ad-mini-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- Leads e financiamentos ---------- */
+.ad-shell .ad-total { font-size: .8rem; font-weight: 800; color: var(--ad-soft); align-self: center; }
+.ad-shell .ad-lead-quick { display: grid; gap: 4px; min-width: 150px; }
+.ad-shell .ad-lead-quick select { height: 30px; padding: 0 6px; border: 1px solid var(--ad-line-strong); border-radius: 6px; background: #fff; font: inherit; font-size: .78rem; }
+.ad-shell .ad-status-select { font-weight: 800; }
+.ad-shell .ad-status-select.new { background: var(--ad-amber-bg); color: var(--ad-amber); border-color: #f0d9a8; }
+.ad-shell .ad-status-select.contacted { background: var(--ad-blue-bg); color: var(--ad-blue); }
+.ad-shell .ad-status-select.qualified { background: var(--ad-teal-bg); color: var(--ad-teal); }
+.ad-shell .ad-status-select.converted { background: var(--ad-green-bg); color: var(--ad-green); }
+.ad-shell .ad-status-select.lost, .ad-shell .ad-status-select.archived { background: #f1f4f6; color: var(--ad-muted); }
+.ad-shell .ad-lead-quick small { color: var(--ad-muted); }
+.ad-shell .ad-lead-details summary { cursor: pointer; }
+.ad-shell .ad-lead-details[open] > div { display: grid; gap: 6px; margin-top: 8px; padding: 10px; border: 1px solid var(--ad-line); border-radius: 8px; background: #fafcfd; min-width: 280px; max-width: 460px; font-size: .8rem; }
+.ad-shell .ad-lead-details p { margin: 0; }
+.ad-shell .ad-lead-details ul { margin: 0; padding-left: 16px; color: var(--ad-soft); }
+.ad-shell .ad-pre { white-space: pre-wrap; }
+.ad-shell .ad-lead-notes { display: grid; gap: 6px; }
+.ad-shell .ad-lead-notes label { display: grid; gap: 4px; font-weight: 800; }
+.ad-shell .ad-lead-notes textarea { width: 100%; padding: 6px 8px; border: 1px solid var(--ad-line-strong); border-radius: 6px; font: inherit; font-size: .8rem; }
+.ad-shell .ad-lead-notes div { display: flex; gap: 8px; align-items: center; }
+.ad-shell .adm-badge.contacted { background: var(--ad-blue-bg); color: var(--ad-blue); }
+.ad-shell .adm-badge.qualified { background: var(--ad-teal-bg); color: var(--ad-teal); }
+.ad-shell .adm-badge.converted { background: var(--ad-green-bg); color: var(--ad-green); }
+.ad-shell .adm-badge.lost { background: #f1f4f6; color: var(--ad-muted); }
