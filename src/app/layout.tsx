@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ENDERECO } from "@/lib/endereco";
+import { ENDERECO, MAPS_URL } from "@/lib/endereco";
 
 const siteUrl = "https://www.appautodrive.com.br";
 
@@ -21,10 +21,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     telephone: "+55 11 93471-8276",
     address: {
       "@type": "PostalAddress",
+      streetAddress: `${ENDERECO.logradouro}, ${ENDERECO.complemento}`,
       addressLocality: ENDERECO.cidade,
       addressRegion: ENDERECO.estado,
+      postalCode: ENDERECO.cep,
       addressCountry: "BR",
     },
+    hasMap: MAPS_URL,
     areaServed: { "@type": "State", name: "São Paulo" },
   };
   return (

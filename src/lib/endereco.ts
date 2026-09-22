@@ -1,16 +1,20 @@
-// Base pública de atendimento. Não expor endereço residencial em páginas,
-// mapas ou dados estruturados.
+// Escritório comercial da Autodrive. O mesmo texto deve aparecer no Perfil da
+// Empresa no Google, Facebook, Instagram e WhatsApp: o Google cruza esses
+// dados, e endereço escrito igual em todo lugar ajuda a ligar o site ao perfil.
 export const ENDERECO = {
-  linha1: "Barueri/SP",
-  complemento: "Atendimento mediante agendamento",
-  bairro: "",
+  logradouro: "Av. Henrique Gonçalves Baptista, 2245",
+  complemento: "Torre 5, 14º andar",
+  bairro: "Jardim Belval",
   cidade: "Barueri",
   estado: "SP",
-  cep: "",
+  cep: "06420-130",
+  linha1: "Av. Henrique Gonçalves Baptista, 2245 – Torre 5, 14º andar",
+  linha2: "Jardim Belval, Barueri/SP – CEP 06420-130",
+  observacao: "Escritório comercial. Atendimento presencial mediante agendamento.",
 } as const;
 
 /** Texto corrido, usado em buscas de mapa e no schema.org. */
-export const ENDERECO_BUSCA = `${ENDERECO.cidade} - ${ENDERECO.estado}`;
+export const ENDERECO_BUSCA = `${ENDERECO.logradouro}, ${ENDERECO.bairro}, ${ENDERECO.cidade} - ${ENDERECO.estado}, ${ENDERECO.cep}`;
 
 const q = encodeURIComponent(ENDERECO_BUSCA);
 
