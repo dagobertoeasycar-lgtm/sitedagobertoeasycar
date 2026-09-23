@@ -35,3 +35,18 @@ test("contador de visitas ignora robôs, equipe logada e não guarda IP", () => 
   assert.match(track, /SESSION_COOKIE_NAME/);
   assert.doesNotMatch(migration, /^\s*ip\s+(TEXT|INET)/im);
 });
+
+test("CRM: quadro com as cinco etapas, ficha editável e exclusão só para administrador", () => {
+  const labels = readFileSync("src/lib/admin-labels.ts", "utf8");
+  const board = readFileSync("src/components/CrmBoard.tsx", "utf8");
+  const route = readFileSync("src/app/api/admin/leads/[id]/route.ts", "utf8");
+  for (const stage of ["Aguardando atendimento", "Visita agendada", "Em atendimento", "Sucesso", "Insucesso"]) assert.match(labels, new RegExp(stage));
+  // Códigos antigos preservados para os relatórios.
+  assert.match(labels, /converted: "Sucesso"/);
+  assert.match(labels, /lost: "Insucesso"/);
+  assert.match(board, /draggable/);
+  assert.match(board, /Voltar etapa/);
+  assert.match(route, /export async function DELETE/);
+  assert.match(route, /role !== "admin"/);
+  for (const field of ["scheduledAt", "tags", "vehicleId", "lostReason", "deal", "note"]) assert.match(route, new RegExp(`body\.${field}`));
+});

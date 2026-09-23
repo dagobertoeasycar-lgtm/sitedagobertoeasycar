@@ -29,14 +29,44 @@ export const LEAD_KIND_LABELS: Record<string, string> = {
   vehicle_interest: "Interesse em veículo",
 };
 
+// Os códigos internos continuam os mesmos (relatórios usam converted/lost);
+// só os nomes seguem as etapas do CRM.
 export const LEAD_STATUS_LABELS: Record<string, string> = {
-  new: "Novo",
-  contacted: "Em contato",
-  qualified: "Qualificado",
-  converted: "Convertido",
-  lost: "Perdido",
+  new: "Aguardando atendimento",
+  scheduled: "Visita agendada",
+  contacted: "Em atendimento",
+  qualified: "Em atendimento (qualificado)",
+  converted: "Sucesso",
+  lost: "Insucesso",
   archived: "Arquivado",
 };
+
+/** Colunas do quadro do CRM, na ordem do funil. */
+export const CRM_STAGES = [
+  { id: "new", label: "Aguardando atendimento", tone: "amber" },
+  { id: "scheduled", label: "Visita agendada", tone: "blue" },
+  { id: "contacted", label: "Em atendimento", tone: "teal" },
+  { id: "converted", label: "Sucesso", tone: "green" },
+  { id: "lost", label: "Insucesso", tone: "red" },
+] as const;
+
+/** Status antigos que aparecem numa coluna do quadro. */
+export function crmStageOf(status: string) {
+  return status === "qualified" ? "contacted" : status;
+}
+
+export const LOST_REASONS = [
+  "Comprou em outro lugar",
+  "Crédito reprovado",
+  "Preço / condição",
+  "Desistiu da compra",
+  "Não respondeu",
+  "Carro vendido",
+  "Avaliação da troca",
+  "Outro",
+];
+
+export const SUGGESTED_TAGS = ["Quente", "Morno", "Frio", "Financiamento", "À vista", "Com troca", "Retornar", "VIP"];
 
 /** Status mostrado no badge: promoção tem destaque próprio, como no protótipo. */
 export function vehicleBadge(status: string, stockStatus: string, promotion: boolean) {

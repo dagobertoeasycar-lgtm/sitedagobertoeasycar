@@ -23,7 +23,7 @@ const NAV: NavItem[] = [
   { href: "/admin/estoque", icon: Warehouse, label: "Estoque", area: "veiculos" },
   { href: "/admin/banners", icon: Image, label: "Banners e Home", area: "banners" },
   { href: "/admin/promocoes", icon: Tag, label: "Promoções", area: "banners" },
-  { href: "/admin/leads", icon: ClipboardList, label: "Leads / Contatos", area: "leads" },
+  { href: "/admin/leads", icon: ClipboardList, label: "Leads · CRM", area: "leads" },
   { href: "/admin/financiamentos", icon: CircleDollarSign, label: "Financiamentos", area: "leads" },
   { href: "/admin/atacado", icon: Building2, label: "Leads de parceiros", area: "leads" },
   { href: "/admin/sync", icon: RefreshCw, label: "Importações", area: "importacoes" },

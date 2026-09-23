@@ -62,7 +62,7 @@ function reviewWhatsappLink(phone: string, name: string, reviewLink: string) {
   return `https://wa.me/55${phone.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
 }
 
-export async function LeadsView({ mode, searchParams, basePath }: { mode: Mode; searchParams: Record<string, string>; basePath: string }) {
+export async function LeadsView({ mode, searchParams, basePath, extraParams = {} }: { mode: Mode; searchParams: Record<string, string>; basePath: string; extraParams?: Record<string, string> }) {
   const reviewLink = await getReviewLink().catch(() => "");
   const filters = {
     q: searchParams.q || "",
@@ -130,7 +130,7 @@ export async function LeadsView({ mode, searchParams, basePath }: { mode: Mode; 
   const userName = Object.fromEntries(users.map((user) => [user.id, user.label]));
 
   const totalPages = Math.ceil(total / limit);
-  const pageLink = (n: number) => `${basePath}?${new URLSearchParams(Object.entries({ ...filters, p: String(n) }).filter(([, v]) => v)).toString()}`;
+  const pageLink = (n: number) => `${basePath}?${new URLSearchParams(Object.entries({ ...extraParams, ...filters, p: String(n) }).filter(([, v]) => v)).toString()}`;
   const active = Object.values(filters).some(Boolean);
 
   return (
@@ -139,6 +139,7 @@ export async function LeadsView({ mode, searchParams, basePath }: { mode: Mode; 
         <p className="adm-feedback error">Responsável e anotações ficam disponíveis depois de rodar a migração 022 (npm run db:migrate).</p>
       )}
       <form className="adm-filters" action={basePath}>
+        {Object.entries(extraParams).map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}
         <label>Busca<input name="q" defaultValue={filters.q} placeholder="Nome, telefone ou e-mail" /></label>
         <label>Status
           <select name="status" defaultValue={filters.status}>
@@ -170,7 +171,7 @@ export async function LeadsView({ mode, searchParams, basePath }: { mode: Mode; 
           </select>
         </label>
         <button className="ad-btn ghost">Filtrar</button>
-        {active && <Link href={basePath} className="adm-link">Limpar</Link>}
+        {active && <Link href={`${basePath}${Object.keys(extraParams).length ? `?${new URLSearchParams(extraParams)}` : ""}`} className="adm-link">Limpar</Link>}
         <span className="ad-push-right ad-total">{total.toLocaleString("pt-BR")} registro(s)</span>
       </form>
 
@@ -192,6 +193,7 @@ export async function LeadsView({ mode, searchParams, basePath }: { mode: Mode; 
                         {details.length > 0 && <ul>{details.map((line) => <li key={line}>{line}</li>)}</ul>}
                         {lead.page_url && <p><b>Página:</b> {lead.page_url}</p>}
                         {lead.utm_campaign && <p><b>Campanha:</b> {lead.utm_campaign}</p>}
+                        <p><Link href={`/admin/leads?abrir=${lead.id}`} className="adm-link">Abrir ficha completa no CRM →</Link></p>
                         {attendance && <LeadNotes id={lead.id} notes={lead.notes} />}
                       </div>
                     </details>

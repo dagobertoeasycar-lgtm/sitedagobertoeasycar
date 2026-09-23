@@ -188,7 +188,7 @@ ${vehicle.code ? `<div style="font-size:12px;color:#64737b">Código ${escapeHtml
 function internalEmail(lead: LeadNotification, settings: EmailSettings) {
   const label = leadLabel(lead);
   const protocol = protocolOf(lead.id);
-  const panel = `${siteUrl()}/admin/${lead.kind === "financing" ? "financiamentos" : lead.kind === "wholesale" || lead.kind === "partner" ? "atacado" : "leads"}?period=today`;
+  const panel = `${siteUrl()}/admin/leads?abrir=${lead.id}`;
   const phoneDigits = lead.phone.replace(/\D/g, "");
   const whatsapp = `https://wa.me/${phoneDigits.startsWith("55") ? phoneDigits : `55${phoneDigits}`}`;
   const contactRows: [string, string][] = [
