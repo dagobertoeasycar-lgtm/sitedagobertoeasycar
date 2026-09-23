@@ -15,20 +15,38 @@ export type Vehicle = {
   store: string; video_url: string | null; description: string;
   origin_type?: VehicleOriginType | null; partner_id?: string | null; private_owner_id?: string | null;
   partner_external_id?: string | null;
+  vehicle_type?: string | null;
 };
+
+export type VehicleKind = "cars" | "motorcycles";
 
 export type VehicleFilters = {
   q?: string; brand?: string; fuel?: string; transmission?: string;
   yearMin?: number; yearMax?: number; priceMin?: number; priceMax?: number;
-  origin?: string; sort?: string; page?: number;
+  origin?: string; type?: VehicleKind; sort?: string; page?: number;
 };
 
 export type VehicleChoice = Pick<Vehicle, "id" | "catalog_item_id" | "slug" | "title" | "brand" | "model" | "version" | "year_make" | "year_model" | "price_cents" | "image_url" | "origin_type">;
 
 export const VEHICLE_PAGE_SIZE = 28;
 
+// Algumas integrações antigas gravaram motos pelo estilo (ex.: Custom), não
+// pelo tipo principal. A expressão cobre os dois formatos já presentes no banco.
+const MOTORCYCLE_CONDITION = `(
+  lower(trim(coalesce(vehicle_type, ''))) IN ('motocicleta', 'moto')
+  OR lower(trim(coalesce(body_type, ''))) IN (
+    'motocicleta', 'moto', 'scooter', 'street', 'trail', 'custom',
+    'naked', 'touring', 'sport touring', 'off-road'
+  )
+)`;
+
+function addVehicleKindCondition(conditions: string[], type?: VehicleKind) {
+  if (type === "motorcycles") conditions.push(MOTORCYCLE_CONDITION);
+  if (type === "cars") conditions.push(`NOT ${MOTORCYCLE_CONDITION}`);
+}
+
 export async function listVehicles(filters: VehicleFilters = {}) {
-  const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax, origin, sort = "recent", page = 1 } = filters;
+  const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax, origin, type, sort = "recent", page = 1 } = filters;
   const conditions: string[] = ["status = 'published'"];
   const params: unknown[] = [];
   let paramIdx = 1;
@@ -47,6 +65,7 @@ export async function listVehicles(filters: VehicleFilters = {}) {
   if (priceMax) { conditions.push(`price_cents <= $${paramIdx}`); params.push(priceMax * 100); paramIdx++; }
   const normalizedOrigin = normalizeVehicleOrigin(origin);
   if (normalizedOrigin) { conditions.push(`origin_type = $${paramIdx}`); params.push(normalizedOrigin); paramIdx++; }
+  addVehicleKindCondition(conditions, type);
 
   const where = conditions.join(" AND ");
   const orderMap: Record<string, string> = {
@@ -84,7 +103,7 @@ export async function listVehicleChoices(limit = 180, origin?: VehicleOriginType
 }
 
 export async function countVehicles(filters: VehicleFilters = {}) {
-  const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax, origin } = filters;
+  const { q = "", brand, fuel, transmission, yearMin, yearMax, priceMin, priceMax, origin, type } = filters;
   const conditions: string[] = ["status = 'published'"];
   const params: unknown[] = [];
   let paramIdx = 1;
@@ -99,6 +118,7 @@ export async function countVehicles(filters: VehicleFilters = {}) {
   if (priceMax) { conditions.push(`price_cents <= $${paramIdx}`); params.push(priceMax * 100); paramIdx++; }
   const normalizedOrigin = normalizeVehicleOrigin(origin);
   if (normalizedOrigin) { conditions.push(`origin_type = $${paramIdx}`); params.push(normalizedOrigin); paramIdx++; }
+  addVehicleKindCondition(conditions, type);
 
   const where = conditions.join(" AND ");
   const result = await query<{ count: string }>(`SELECT count(*)::text as count FROM vehicles WHERE ${where}`, params);

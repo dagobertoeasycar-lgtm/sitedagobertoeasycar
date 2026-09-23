@@ -35,7 +35,8 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
     q: sp.q || "", brand: sp.brand || "", fuel: sp.fuel || "", transmission: sp.transmission || "",
     yearMin: sp.yearMin ? parseInt(sp.yearMin) : undefined, yearMax: sp.yearMax ? parseInt(sp.yearMax) : undefined,
     priceMin: sp.priceMin ? parseInt(sp.priceMin) : undefined, priceMax: sp.priceMax ? parseInt(sp.priceMax) : undefined,
-    origin: sp.origin || "", sort: sp.sort || "recent", page: parseInt(sp.p || "1"),
+    origin: sp.origin || "", type: sp.type === "cars" || sp.type === "motorcycles" ? sp.type : undefined,
+    sort: sp.sort || "recent", page: parseInt(sp.p || "1"),
   };
 
   const [vehicles, total, opts] = await Promise.all([
@@ -45,7 +46,7 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
   ]);
   const totalPages = Math.ceil(total / VEHICLE_PAGE_SIZE);
   const page = filters.page || 1;
-  const hasActiveFilters = !!(filters.brand || filters.fuel || filters.transmission || filters.yearMin || filters.yearMax || filters.priceMin || filters.priceMax || filters.origin);
+  const hasActiveFilters = !!(filters.brand || filters.fuel || filters.transmission || filters.yearMin || filters.yearMax || filters.priceMin || filters.priceMax || filters.origin || filters.type);
 
   return (
     <>
@@ -53,6 +54,11 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
       <section className="shell section">
         {/* Search + Filter + Sort bar */}
         <div className="filter-bar">
+          <nav className="vehicle-type-switch" aria-label="Tipo de veículo">
+            <Link href={buildHref(sp, { type: "", p: "1" })} className={!filters.type ? "active" : ""}>Todos</Link>
+            <Link href={buildHref(sp, { type: "cars", p: "1" })} className={filters.type === "cars" ? "active" : ""}>Carros</Link>
+            <Link href={buildHref(sp, { type: "motorcycles", p: "1" })} className={filters.type === "motorcycles" ? "active" : ""}>Motos</Link>
+          </nav>
           <form className="search-box" action="/veiculos">
             <input name="q" defaultValue={filters.q} placeholder="Pesquisar..." aria-label="Buscar veículo" />
             <button type="submit" className="search-btn" aria-label="Buscar">
@@ -63,6 +69,7 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
             {filters.fuel && <input type="hidden" name="fuel" value={filters.fuel} />}
             {filters.transmission && <input type="hidden" name="transmission" value={filters.transmission} />}
             {filters.origin && <input type="hidden" name="origin" value={filters.origin} />}
+            {filters.type && <input type="hidden" name="type" value={filters.type} />}
             {filters.yearMin && <input type="hidden" name="yearMin" value={filters.yearMin} />}
             {filters.yearMax && <input type="hidden" name="yearMax" value={filters.yearMax} />}
             {filters.priceMin && <input type="hidden" name="priceMin" value={filters.priceMin} />}
@@ -77,6 +84,7 @@ export default async function VehiclesPage({ searchParams }: { searchParams: Pro
             <div className="filter-panel">
               <form action="/veiculos">
                 {filters.q && <input type="hidden" name="q" value={filters.q} />}
+                {filters.type && <input type="hidden" name="type" value={filters.type} />}
                 {filters.sort && filters.sort !== "recent" && <input type="hidden" name="sort" value={filters.sort} />}
                 <div className="filter-group">
                   <label>Marca</label>

@@ -9,6 +9,19 @@ test("vitrine pública usa 28 veículos por página", () => {
   assert.match(page, /VEHICLE_PAGE_SIZE/);
 });
 
+test("vitrine permite separar carros e motos sem perder os filtros", () => {
+  const vehicles = readFileSync("src/lib/vehicles.ts", "utf8");
+  const page = readFileSync("src/app/(site)/veiculos/page.tsx", "utf8");
+
+  assert.match(vehicles, /MOTORCYCLE_CONDITION/);
+  assert.match(vehicles, /vehicle_type/);
+  assert.match(vehicles, /body_type/);
+  assert.match(page, /Tipo de veículo/);
+  assert.match(page, />Carros</);
+  assert.match(page, />Motos</);
+  assert.match(page, /name="type"/);
+});
+
 test("serviços de financiamento ficam separados por origem", () => {
   const form = readFileSync("src/components/FinancingForm.tsx", "utf8");
   const page = readFileSync("src/app/(site)/financiamento/page.tsx", "utf8");

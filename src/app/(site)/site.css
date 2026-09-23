@@ -279,6 +279,7 @@
   .autodrive-site .page-hero { padding-block: 28px; }
   .autodrive-site .page-hero h1 { font-size: 1.9rem; }
   .autodrive-site .filter-bar { gap: 10px; }
+  .autodrive-site .vehicle-type-switch { width: 100%; }
   .autodrive-site .search-box { min-width: 0; width: 100%; flex: 1 1 auto; }
   .autodrive-site .filter-dropdown > summary { width: 100%; }
   .autodrive-site .filter-panel { max-height: 65dvh; overflow-y: auto; }
