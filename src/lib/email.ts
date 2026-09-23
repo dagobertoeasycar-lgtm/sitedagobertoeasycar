@@ -144,7 +144,13 @@ function describeError(error: unknown) {
     EENVELOPE: "remetente ou destinatário recusado",
     EDNS: "servidor SMTP não encontrado",
   };
-  return [hints[safe.code] ?? safe.code, safe.responseCode ? `código ${safe.responseCode}` : ""].filter(Boolean).join(" · ");
+  // A resposta do servidor (ex.: "550 5.1.1 <x@y>: Recipient address rejected") diz o motivo exato.
+  // Nunca contém a senha; o AUTH do nodemailer não entra em `response`.
+  const details = error && typeof error === "object" ? error as Record<string, unknown> : {};
+  const response = typeof details.response === "string" ? details.response.replace(/\s+/g, " ").trim().slice(0, 200) : "";
+  const rejected = Array.isArray(details.rejected) && details.rejected.length ? `recusado: ${details.rejected.join(", ")}` : "";
+  const timeoutHint = safe.code === "ETIMEDOUT" || safe.code === "ESOCKET" ? "confira se a porta combina com a segurança (465 = SSL/TLS, 587 = STARTTLS)" : "";
+  return [hints[safe.code] ?? safe.code, safe.responseCode ? `código ${safe.responseCode}` : "", rejected, response, timeoutHint].filter(Boolean).join(" · ");
 }
 
 /* ------------------------------------------------------------------ */

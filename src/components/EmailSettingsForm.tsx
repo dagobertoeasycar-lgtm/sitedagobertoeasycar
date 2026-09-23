@@ -96,7 +96,11 @@ export function EmailSettingsForm({ initial }: { initial: PublicEmailSettings })
           <label className="ad-field"><span>Servidor (host)</span><input value={form.host} onChange={(e) => set("host", e.currentTarget.value)} placeholder="smtp.seudominio.com.br" /></label>
           <label className="ad-field"><span>Porta</span><input value={form.port} onChange={(e) => set("port", e.currentTarget.value.replace(/\D/g, ""))} inputMode="numeric" /></label>
           <label className="ad-field"><span>Segurança</span>
-            <select value={form.security} onChange={(e) => set("security", e.currentTarget.value as "starttls" | "ssl")}>
+            <select value={form.security} onChange={(e) => {
+              const security = e.currentTarget.value as "starttls" | "ssl";
+              // Porta e segurança andam juntas; trocar uma sem a outra trava a conexão.
+              setForm((current) => ({ ...current, security, port: current.port === "465" || current.port === "587" ? (security === "ssl" ? "465" : "587") : current.port }));
+            }}>
               <option value="starttls">STARTTLS (porta 587)</option>
               <option value="ssl">SSL/TLS (porta 465)</option>
             </select>
