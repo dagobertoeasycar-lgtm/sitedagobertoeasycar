@@ -3,13 +3,16 @@ import Link from "next/link";
 import { DefaultVehicleVideo } from "@/components/DefaultVehicleVideo";
 import { SessionTimeoutSettings } from "@/components/SessionTimeoutSettings";
 import { ReviewLinkForm } from "@/components/ReviewLinkForm";
-import { getReviewLink } from "@/lib/settings";
+import { getAdsConversions, getReviewLink } from "@/lib/settings";
+import { GoogleAdsForm } from "@/components/GoogleAdsForm";
+import { EMPTY_ADS_CONVERSIONS } from "@/lib/ads-conversions";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminConfigPage() {
   await requireArea("configuracoes");
   const reviewLink = await getReviewLink().catch(() => "");
+  const adsConversions = await getAdsConversions().catch(() => EMPTY_ADS_CONVERSIONS);
 
   return (
     <>
@@ -29,6 +32,7 @@ export default async function AdminConfigPage() {
         </Link>
       </div>
       <ReviewLinkForm initialUrl={reviewLink} />
+      <GoogleAdsForm initial={adsConversions} />
       <SessionTimeoutSettings />
       <DefaultVehicleVideo />
     </>

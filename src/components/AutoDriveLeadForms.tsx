@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { fireAdsConversion } from "@/lib/ads-conversions";
 import { formatCnpj } from "@/lib/cnpj";
 import { useMetaPixel } from "@/components/MetaPixelProvider";
 
@@ -122,6 +123,7 @@ function useLeadSubmit(kind: LeadKind, successMessage: string, eventName: string
       setState("done");
       setMessage(successMessage);
       track("Lead", { lead_type: kind });
+      fireAdsConversion("lead", { lead_type: kind });
       track(eventName, { lead_type: kind }, true);
     } catch (error) {
       setState("error");

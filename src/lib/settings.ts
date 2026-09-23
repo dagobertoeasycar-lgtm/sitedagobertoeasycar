@@ -1,5 +1,6 @@
 /** Leitura e gravação de app_settings. SOMENTE SERVIDOR (importa lib/db). */
 import { query } from "@/lib/db";
+import { normalizeAdsConversions, type AdsConversions } from "@/lib/ads-conversions";
 import {
   DEFAULT_PRICING_RULE,
   DEFAULT_STOCK_RULE,
@@ -72,4 +73,15 @@ export async function saveReviewLink(url: string) {
   }
   await writeSetting("google_review_link", clean);
   return clean;
+}
+
+/** Rótulos de conversão do Google Ads (lead enviado e clique no WhatsApp). */
+export async function getAdsConversions(): Promise<AdsConversions> {
+  return normalizeAdsConversions(await readSetting("google_ads_conversions"));
+}
+
+export async function saveAdsConversions(raw: unknown): Promise<AdsConversions> {
+  const value = normalizeAdsConversions(raw);
+  await writeSetting("google_ads_conversions", value);
+  return value;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
+import { fireAdsConversion } from "@/lib/ads-conversions";
 import { useMetaPixel } from "@/components/MetaPixelProvider";
 import type { VehicleChoice } from "@/lib/vehicles";
 import { VehicleImage } from "@/components/VehicleImage";
@@ -92,6 +93,7 @@ export function FinancingForm({ vehicles, service = "partners" }: { vehicles: Ve
       });
       if (response.ok) {
         track("Lead", { lead_type: "financing", financing_target: target, financing_service: service });
+        fireAdsConversion("lead", { lead_type: "financing" });
         window.location.assign(config.successHref);
         return;
       }

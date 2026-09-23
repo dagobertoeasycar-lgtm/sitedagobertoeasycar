@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { fireAdsConversion } from "@/lib/ads-conversions";
 import { useMetaPixel } from "@/components/MetaPixelProvider";
 
 export function LeadForm({ kind, title }: { kind: "contact" | "financing" | "sell_car"; title: string }) {
@@ -30,6 +31,7 @@ export function LeadForm({ kind, title }: { kind: "contact" | "financing" | "sel
     setState(response.ok ? "done" : "error");
     if (response.ok) {
       track("Lead", { lead_type: kind });
+      fireAdsConversion("lead", { lead_type: kind });
       formEl.reset();
     }
   }

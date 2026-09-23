@@ -1,13 +1,18 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MetaPixelProvider } from "@/components/MetaPixelProvider";
+import { GoogleAdsConversions } from "@/components/GoogleAdsConversions";
+import { getAdsConversions } from "@/lib/settings";
+import { EMPTY_ADS_CONVERSIONS } from "@/lib/ads-conversions";
 import { MessageCircle } from "lucide-react";
 import "./site.css";
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
+  const conversions = await getAdsConversions().catch(() => EMPTY_ADS_CONVERSIONS);
   return (
     <MetaPixelProvider pixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID ?? ""}>
       <div className="autodrive-site">
+        <GoogleAdsConversions conversions={conversions} />
         <Header />
         <main>{children}</main>
         <Footer />
