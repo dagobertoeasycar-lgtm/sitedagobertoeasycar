@@ -10,6 +10,14 @@ import { fireAdsConversion, type AdsConversions } from "@/lib/ads-conversions";
 export function GoogleAdsConversions({ conversions }: { conversions: AdsConversions }) {
   useEffect(() => {
     window.__autodriveAds = conversions;
+    // Página estática pode ter sido gerada antes dos rótulos existirem, então
+    // busca a versão atual sem tirar a página do cache.
+    if (!conversions.lead && !conversions.whatsapp) {
+      fetch("/api/ads-conversions")
+        .then((response) => response.json())
+        .then((data: AdsConversions) => { window.__autodriveAds = data; })
+        .catch(() => undefined);
+    }
     const onClick = (event: MouseEvent) => {
       const target = (event.target as HTMLElement | null)?.closest("a");
       if (!target) return;
