@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https://www.facebook.com " +
               // Tag do Google (Ads): pixels de conversão e remarketing.
               "https://www.googletagmanager.com https://www.google.com https://www.google.com.br " +
-              "https://googleads.g.doubleclick.net https://www.google-analytics.com " +
+              "https://*.doubleclick.net https://www.google-analytics.com " +
               "https://resized-images.autoconf.com.br https://static.autoconf.com.br " +
               "https://autoconf-production.s3.amazonaws.com " +
               "https://cdn-sistema-lojistas.bndv.com.br https://*.bndv.com.br " +
@@ -64,7 +64,7 @@ const nextConfig: NextConfig = {
               `https://googleads.g.doubleclick.net ${process.env.NODE_ENV === "development" ? "'unsafe-eval'" : ""}; ` +
               "connect-src 'self' https://www.facebook.com https://connect.facebook.net " +
               "https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com " +
-              "https://stats.g.doubleclick.net https://googleads.g.doubleclick.net " +
+              "https://*.doubleclick.net " +
               "https://www.google.com https://www.google.com.br " +
               "https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
               "media-src 'self' https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
