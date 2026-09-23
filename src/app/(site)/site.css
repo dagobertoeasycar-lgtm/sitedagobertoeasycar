@@ -302,3 +302,83 @@
 @media (prefers-reduced-motion: reduce) {
   .autodrive-site *, .autodrive-site *::before, .autodrive-site *::after { transition: none; animation: none; }
 }
+
+/* ---------- Card de veículo (vitrine) ---------- */
+.autodrive-site .vcard { border: 1px solid #e3ecee; border-radius: 14px; box-shadow: 0 6px 22px rgba(7,28,41,.07); transition: box-shadow .2s ease, transform .2s ease; }
+.autodrive-site .vcard:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(7,28,41,.13); }
+.autodrive-site .vcard-image { aspect-ratio: 4 / 3; background: #e9eff1; }
+.autodrive-site .vcard-badge { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 6px; color: #fff; font-size: .72rem; font-weight: 800; letter-spacing: .01em; box-shadow: 0 4px 12px rgba(6,27,41,.25); }
+.autodrive-site .vcard-badge.dark { background: #061b29; }
+.autodrive-site .vcard-badge.brand { background: var(--brand); }
+.autodrive-site .vcard-badge.hot { background: #e8590c; }
+.autodrive-site .vcard-body { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 16px; }
+.autodrive-site .vcard-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.autodrive-site .vcard-logo { flex: 0 0 auto; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #d4e1e4; border-radius: 50%; background: #fff; color: #061b29; font-size: .62rem; font-weight: 900; letter-spacing: .02em; box-shadow: inset 0 0 0 3px #eef5f6; }
+.autodrive-site .vcard-head h2 { margin: 0; min-width: 0; font-size: 1.06rem; line-height: 1.25; }
+.autodrive-site .vcard-head h2 a { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #071c29; }
+.autodrive-site .vcard-head h2 a:hover { color: var(--brand-hover); }
+.autodrive-site .vcard-version { margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #344b56; font-size: .8rem; font-weight: 700; }
+.autodrive-site .vcard-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: #64737b; font-size: .76rem; }
+.autodrive-site .vcard-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.autodrive-site .vcard-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 8px; }
+.autodrive-site .vcard-price { display: grid; gap: 2px; min-width: 0; }
+.autodrive-site .vcard-old { color: #64737b; font-size: .78rem; text-decoration: line-through; }
+.autodrive-site .vcard-price strong { display: inline-flex; align-items: baseline; gap: 5px; width: max-content; max-width: 100%; padding: 6px 11px; border-radius: 8px; background: var(--brand); color: #fff; font-size: 1.12rem; line-height: 1.2; white-space: nowrap; box-shadow: 0 6px 16px rgba(7,156,166,.28); }
+.autodrive-site .vcard-price strong small { font-size: .74rem; font-weight: 700; opacity: .9; }
+.autodrive-site .vcard-more { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 34px; padding: 6px 16px; border-radius: 8px; background: #061b29; color: #fff; font-size: .8rem; font-weight: 800; white-space: nowrap; transition: background .2s ease; }
+.autodrive-site .vcard-more:hover { background: var(--brand-hover); }
+@media (max-width: 1180px) and (min-width: 981px) {
+  .autodrive-site .vcard-price strong { font-size: 1rem; padding: 5px 9px; }
+}
+@media (max-width: 640px) {
+  .autodrive-site .vcard-body { padding: 14px 16px 16px; }
+  .autodrive-site .vcard-price strong { font-size: 1.2rem; }
+}
+
+/* ---------- Formulário de lead do anúncio (modal) ---------- */
+.autodrive-site .detail-sim-btn, .autodrive-site .detail-contact-card .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; cursor: pointer; }
+.autodrive-site .detail-contact-card .button + .button { margin-top: 8px; }
+.autodrive-site .detail-store-info span { display: block; }
+.vlead-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(6,27,41,.62); backdrop-filter: blur(3px); animation: vlead-fade .18s ease; }
+.vlead-dialog { position: relative; width: min(640px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; border-radius: 14px; background: #fff; box-shadow: 0 30px 80px rgba(6,27,41,.35); animation: vlead-up .22s ease; }
+.vlead-close { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255,255,255,.92); color: #071c29; cursor: pointer; box-shadow: 0 2px 8px rgba(6,27,41,.18); }
+.vlead-vehicle { display: flex; align-items: center; gap: 14px; padding: 14px 56px 14px 14px; background: #061b29; color: #fff; }
+.vlead-vehicle img { flex: 0 0 auto; width: 120px; height: 80px; object-fit: cover; border-radius: 8px; }
+.vlead-vehicle div { display: grid; gap: 2px; min-width: 0; }
+.vlead-vehicle small { color: #8fe3e8; font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.vlead-vehicle strong { font-size: 1rem; line-height: 1.25; }
+.vlead-vehicle span { overflow: hidden; color: #b8c7cd; font-size: .78rem; white-space: nowrap; text-overflow: ellipsis; }
+.vlead-vehicle b { width: max-content; margin-top: 4px; padding: 3px 9px; border-radius: 6px; background: var(--brand); font-size: .9rem; }
+.vlead-form { display: grid; gap: 14px; padding: 20px 22px 22px; }
+.vlead-form h2 { margin: 0; font-size: 1.3rem; }
+.vlead-lead { margin: -8px 0 0; color: #64737b; font-size: .9rem; }
+.vlead-form fieldset { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin: 0; padding: 14px; border: 1px solid #e3ecee; border-radius: 10px; }
+.vlead-form legend { padding: 0 6px; color: #057780; font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.vlead-form label { display: grid; gap: 5px; color: #344b56; font-size: .82rem; font-weight: 700; }
+.vlead-form .vlead-full, .vlead-form .vlead-chips { grid-column: 1 / -1; }
+.vlead-form input:not([type=radio]):not([type=checkbox]), .vlead-form select, .vlead-form textarea { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #cbd9dd; border-radius: 8px; background: #fff; color: #071c29; font-size: .95rem; font-weight: 400; }
+.vlead-form input:focus, .vlead-form select:focus, .vlead-form textarea:focus { outline: 2px solid rgba(7,156,166,.35); border-color: var(--brand); }
+.vlead-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.vlead-chips label { position: relative; display: inline-flex; align-items: center; min-height: 38px; padding: 7px 14px; border: 1px solid #cbd9dd; border-radius: 999px; background: #fff; color: #344b56; cursor: pointer; transition: all .15s ease; }
+.vlead-chips label:hover { border-color: var(--brand); }
+.vlead-chips label.active { border-color: var(--brand); background: var(--brand); color: #fff; }
+.vlead-chips input { position: absolute; opacity: 0; pointer-events: none; }
+.vlead-form .consent { display: flex; align-items: flex-start; gap: 8px; font-weight: 400; font-size: .8rem; }
+.vlead-form .consent a { color: var(--brand-hover); text-decoration: underline; }
+.vlead-submit { width: 100%; min-height: 48px; font-size: 1rem; cursor: pointer; }
+.vlead-done { display: grid; justify-items: center; gap: 8px; padding: 30px 24px 28px; text-align: center; }
+.vlead-done svg { color: #16a34a; }
+.vlead-done h2 { margin: 4px 0 0; }
+.vlead-done p { margin: 0; color: #344b56; }
+.vlead-protocol { padding: 6px 12px; border-radius: 6px; background: #eef5f6; }
+.vlead-done-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
+.vlead-done-actions .button { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+@keyframes vlead-fade { from { opacity: 0; } }
+@keyframes vlead-up { from { opacity: 0; transform: translateY(14px); } }
+@media (max-width: 560px) {
+  .vlead-backdrop { padding: 0; place-items: end stretch; }
+  .vlead-dialog { width: 100%; max-height: 94dvh; border-radius: 14px 14px 0 0; }
+  .vlead-form { padding: 16px; }
+  .vlead-form fieldset { grid-template-columns: 1fr; padding: 12px; }
+  .vlead-vehicle img { width: 84px; height: 60px; }
+}

@@ -5,6 +5,8 @@ import { GoogleAdsConversions } from "@/components/GoogleAdsConversions";
 import { getAdsConversions } from "@/lib/settings";
 import { EMPTY_ADS_CONVERSIONS } from "@/lib/ads-conversions";
 import { MessageCircle } from "lucide-react";
+import { Suspense } from "react";
+import { SiteAnalytics } from "@/components/SiteAnalytics";
 import "./site.css";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
@@ -13,6 +15,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     <MetaPixelProvider pixelId={process.env.NEXT_PUBLIC_META_PIXEL_ID ?? ""}>
       <div className="autodrive-site">
         <GoogleAdsConversions conversions={conversions} />
+        <Suspense fallback={null}><SiteAnalytics /></Suspense>
         <Header />
         <main>{children}</main>
         <Footer />

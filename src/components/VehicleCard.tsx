@@ -1,51 +1,73 @@
 import Link from "next/link";
-import { money, vehicleOriginBadgeLabel, vehiclePublicLocation, type Vehicle } from "@/lib/vehicles";
-import { MetaTrackedAnchor } from "@/components/MetaPixelEvents";
-import { Gauge, MapPin, MessageCircle } from "lucide-react";
+import { CalendarDays, Gauge } from "lucide-react";
+import { money, type Vehicle } from "@/lib/vehicles";
 import { VehicleImage } from "@/components/VehicleImage";
+
+const BRAND_MARKS: Record<string, string> = {
+  volkswagen: "VW", chevrolet: "GM", "mercedes-benz": "MB", mercedes: "MB", "land rover": "LR", "alfa romeo": "AR",
+  bmw: "BMW", audi: "AUDI", fiat: "FIAT", ford: "FORD", jeep: "JEEP", kia: "KIA", ram: "RAM", byd: "BYD", gwm: "GWM",
+  mini: "MINI", volvo: "VOLVO", honda: "H", hyundai: "H", toyota: "T", nissan: "N", renault: "R", peugeot: "P",
+  citroen: "C", "citroën": "C", mitsubishi: "M", suzuki: "S", chery: "C", "caoa chery": "C", jac: "JAC", porsche: "P", yamaha: "Y",
+};
+
+function titleCase(value: string) {
+  return value.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_, sep: string, letter: string) => sep + letter.toUpperCase());
+}
+
+/** Marca/modelo em caixa alta vinda das integrações fica em formato de título. */
+function tidy(value: string) {
+  const clean = value.trim();
+  if (clean.length > 3 && clean === clean.toUpperCase() && /\p{L}{4,}/u.test(clean)) return titleCase(clean);
+  return clean;
+}
+
+function brandMark(brand: string) {
+  const key = brand.trim().toLowerCase();
+  return BRAND_MARKS[key] ?? key.replace(/[^\p{L}]/gu, "").slice(0, 2).toUpperCase();
+}
+
+function cardBadge(vehicle: Vehicle) {
+  if (vehicle.promotion) return { label: "Oportunidade", tone: "hot" };
+  if (vehicle.featured) return { label: "Destaque", tone: "brand" };
+  if (vehicle.price_cents >= 15_000_000) return { label: "Premium", tone: "dark" };
+  const year = vehicle.year_model || vehicle.year_make;
+  if (year && year >= new Date().getFullYear() - 1) return { label: "Seminovo", tone: "brand" };
+  return { label: "Periciado", tone: "dark" };
+}
 
 export function VehicleCard({ vehicle, index = 0 }: { vehicle: Vehicle; index?: number }) {
   const imgSrc = vehicle.image_url || "/em-breve.png";
   const isExternal = imgSrc.startsWith("http");
-  const originLabel = vehicleOriginBadgeLabel(vehicle);
-  const version = vehicle.version?.trim();
-  const subtitle = [version && version.toLowerCase() !== vehicle.title.trim().toLowerCase() ? version : "", vehicle.fuel, vehicle.transmission].filter(Boolean).join(" · ");
-  const pixelParameters = {
-    content_ids: [vehicle.catalog_item_id], content_type: "product", content_name: vehicle.title,
-    value: vehicle.price_cents / 100, currency: "BRL", marca: vehicle.brand, modelo: vehicle.model,
-    ano: vehicle.year_model || vehicle.year_make, origem: originLabel,
-  };
+  const href = `/veiculos/${vehicle.slug}`;
+  const brand = tidy(vehicle.brand || "");
+  const model = tidy(vehicle.model || "");
+  const heading = [brand, model].filter(Boolean).join(" ") || vehicle.title;
+  const version = vehicle.version?.trim() || vehicle.title;
+  const badge = cardBadge(vehicle);
+  const hasOldPrice = Boolean(vehicle.old_price_cents && vehicle.old_price_cents > vehicle.price_cents);
 
   return (
-    <article className="vehicle-card">
-      <Link href={`/veiculos/${vehicle.slug}`} className="vehicle-image">
+    <article className="vehicle-card vcard">
+      <Link href={href} className="vehicle-image vcard-image" aria-label={`Ver ${vehicle.title}`}>
         <VehicleImage src={imgSrc} alt={vehicle.title} loading={isExternal && index < 6 ? "eager" : "lazy"} />
-        <span className="vehicle-origin-tag">{originLabel}</span>
-        <span className="vehicle-year-badge">{vehicle.year_make}/{vehicle.year_model}</span>
+        <span className={`vcard-badge ${badge.tone}`}>{badge.label}</span>
       </Link>
-      <div className="vehicle-content">
-        <div className="badges">
-          {vehicle.featured && <span>Destaque</span>}
-          <span>Periciado</span>
-          {vehicle.promotion && <span>Promoção</span>}
+      <div className="vcard-body">
+        <div className="vcard-head">
+          <span className="vcard-logo" aria-hidden="true">{brandMark(vehicle.brand || heading)}</span>
+          <h2><Link href={href} title={vehicle.title}>{heading}</Link></h2>
         </div>
-        <h2><Link href={`/veiculos/${vehicle.slug}`} title={vehicle.title}>{vehicle.title}</Link></h2>
-        <p title={subtitle}>{subtitle}</p>
-        {vehicle.old_price_cents && vehicle.old_price_cents > vehicle.price_cents ? (
-          <div>
-            <span style={{ textDecoration: "line-through", color: "#64748b", fontSize: "0.85rem" }}>{money(vehicle.old_price_cents)}</span>
-            <strong className="price">{money(vehicle.price_cents)}</strong>
+        <p className="vcard-version" title={version}>{version}</p>
+        <div className="vcard-meta">
+          <span><CalendarDays size={14} aria-hidden="true" />{vehicle.year_make}/{vehicle.year_model}</span>
+          <span><Gauge size={14} aria-hidden="true" />{vehicle.mileage.toLocaleString("pt-BR")} km</span>
+        </div>
+        <div className="vcard-foot">
+          <div className="vcard-price">
+            {hasOldPrice && <span className="vcard-old">de {money(vehicle.old_price_cents!)}</span>}
+            <strong>{hasOldPrice && <small>por</small>}{money(vehicle.price_cents)}</strong>
           </div>
-        ) : (
-          <strong className="price">{money(vehicle.price_cents)}</strong>
-        )}
-        <div className="vehicle-meta">
-          <span><Gauge size={15} aria-hidden="true" />{vehicle.mileage.toLocaleString("pt-BR")} km</span>
-          <span><MapPin size={15} aria-hidden="true" />{vehiclePublicLocation(vehicle)}</span>
-        </div>
-        <div className="card-actions">
-          <Link className="button button-outline" href={`/veiculos/${vehicle.slug}`}>Detalhes</Link>
-          <MetaTrackedAnchor className="button button-dark" href={`https://wa.me/5511934718276?text=${encodeURIComponent(`Olá! Tenho interesse no ${vehicle.title} (${vehicle.catalog_item_id}). Vi no site da Autodrive e quero mais informações.`)}`} target="_blank" rel="noreferrer" eventName="Contact" eventParameters={pixelParameters}><MessageCircle size={16} aria-hidden="true" />Contato</MetaTrackedAnchor>
+          <Link href={href} className="vcard-more">Ver mais</Link>
         </div>
       </div>
     </article>

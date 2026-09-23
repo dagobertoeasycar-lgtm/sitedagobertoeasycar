@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bell, Building2, CarFront, CircleDollarSign, ClipboardList, Handshake, Image, LayoutGrid, Link2,
   LogOut, MessageSquareQuote, Plus, RefreshCw, Search, Settings, ShoppingBag, Star, TriangleAlert,
-  BarChart3, History, Tag, UserCog, Users, Warehouse, type LucideIcon,
+  Activity, BarChart3, History, Mail, Tag, UserCog, Users, Warehouse, type LucideIcon,
 } from "lucide-react";
 import type { AdminOverview } from "@/lib/admin-overview";
 import { canAccess, ROLES, type Area } from "@/lib/permissions-shared";
@@ -17,6 +17,7 @@ type NavItem = { href: string; icon: LucideIcon; label: string; area: Area; matc
 // (parceiros, atacado, depoimentos, Meta) entram nos pontos equivalentes.
 const NAV: NavItem[] = [
   { href: "/admin", icon: LayoutGrid, label: "Dashboard", area: "dashboard" },
+  { href: "/admin/visitas", icon: Activity, label: "Central de visitas", area: "relatorios" },
   { href: "/admin/veiculos", icon: CarFront, label: "Anúncios / Veículos", area: "veiculos", match: ["/admin/veiculos/"] },
   { href: "/admin/veiculos/novo", icon: Plus, label: "Novo anúncio", area: "veiculos" },
   { href: "/admin/estoque", icon: Warehouse, label: "Estoque", area: "veiculos" },
@@ -32,6 +33,7 @@ const NAV: NavItem[] = [
   { href: "/admin/usuarios", icon: Users, label: "Usuários e permissões", area: "usuarios" },
   { href: "/admin/auditoria", icon: History, label: "Auditoria", area: "auditoria" },
   { href: "/admin/relatorios", icon: BarChart3, label: "Relatórios", area: "relatorios" },
+  { href: "/admin/configuracoes/emails", icon: Mail, label: "E-mails", area: "configuracoes" },
   { href: "/admin/configuracoes", icon: Settings, label: "Configurações", area: "configuracoes", match: ["/admin/configuracoes/precificacao", "/admin/trocar-senha"] },
 ];
 

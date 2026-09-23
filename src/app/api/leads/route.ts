@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { safeMailError, sendLeadNotification } from "@/lib/email";
+import { protocolOf, safeMailError, sendLeadNotification, type LeadKind } from "@/lib/email";
+import { getEmailSettings } from "@/lib/email-settings";
 import { formatCnpj, isValidCnpj } from "@/lib/cnpj";
 import { normalizeVehicleOrigin } from "@/lib/vehicle-origin";
 import { imageUploadMaxBytes, saveImageFile } from "@/lib/image-upload";
@@ -57,7 +58,17 @@ const payloadKeys = [
   "companyName", "tradeName", "cnpj", "address", "instagram", "website", "averageInventory", "currentSystem",
   "desiredWork", "vehicleId", "vehicleTitle", "vehicleOriginType", "leadSource", "campaign", "utmSource",
   "utmMedium", "utmCampaign", "pageUrl", "vehiclePhotos",
+  "intent", "paymentMethod", "installments", "tradeVehicle", "tradeYear", "tradeMileage", "visitDate", "visitPeriod",
 ];
+
+const VEHICLE_INTENTS: Record<string, string> = {
+  simulacao: "Simulação de financiamento",
+  interesse: "Interesse no veículo",
+  visita: "Agendamento de visita",
+};
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type VehicleRow = { id: string; title: string; catalog_item_id: string; internal_code: string | null; price_cents: number; image_url: string | null; slug: string; origin_type: string | null };
 
 type LeadPhotoFile = { field: string; label: string; file: File };
 
@@ -97,6 +108,21 @@ function line(label: string, value: unknown) {
 }
 
 function buildMessage(kind: string, body: Record<string, unknown>, fallback: string) {
+  const intent = text(body, "intent", 20);
+  if (VEHICLE_INTENTS[intent]) {
+    const hasTrade = text(body, "hasTrade", 10);
+    return [
+      `${VEHICLE_INTENTS[intent]}.`,
+      line("Veículo", text(body, "vehicleTitle", 220)),
+      line("Forma de pagamento", text(body, "paymentMethod", 60)),
+      line("Entrada", text(body, "downPayment", 40)),
+      line("Prazo desejado", text(body, "installments", 40)),
+      line("Carro na troca", hasTrade),
+      hasTrade === "Sim" ? line("Veículo da troca", [text(body, "tradeVehicle", 120), text(body, "tradeYear", 12), text(body, "tradeMileage", 20) && `${text(body, "tradeMileage", 20)} km`].filter(Boolean).join(" · ")) : "",
+      line("Data preferida para visita", [text(body, "visitDate", 20), text(body, "visitPeriod", 20)].filter(Boolean).join(" · ")),
+      line("Observações", fallback),
+    ].filter(Boolean).join("\n");
+  }
   if (kind === "financing") {
     const financingTarget = text(body, "financingTarget", 40);
     const service = resolveFinancingService(body.financingService, financingTarget);
@@ -254,6 +280,23 @@ export async function POST(request: NextRequest) {
       body.vehicleOriginType = "PRIVATE";
     }
   }
+  const intent = text(body, "intent", 20);
+  let pageVehicle: VehicleRow | null = null;
+  if (VEHICLE_INTENTS[intent]) {
+    if (!email) return NextResponse.json({ error: "Informe um e-mail válido para receber a confirmação." }, { status: 400 });
+    const vehicleId = text(body, "vehicleId", 60);
+    if (!UUID_RE.test(vehicleId)) return NextResponse.json({ error: "Veículo não identificado. Recarregue a página e tente de novo." }, { status: 400 });
+    const found = await query<VehicleRow>(
+      "SELECT id, title, catalog_item_id, internal_code, price_cents, image_url, slug, origin_type FROM vehicles WHERE id=$1 AND status='published' LIMIT 1",
+      [vehicleId],
+    );
+    pageVehicle = found.rows[0] ?? null;
+    if (!pageVehicle) return NextResponse.json({ error: "Este veículo não está mais disponível. Veja outras opções no estoque." }, { status: 400 });
+    financingVehicleId = pageVehicle.id;
+    body.vehicleTitle = body.selectedVehicleLabel = `${pageVehicle.title} (${pageVehicle.catalog_item_id})`;
+    body.vehicleOriginType = pageVehicle.origin_type ?? "";
+    if (text(body, "hasTrade", 10) === "Sim" && !text(body, "tradeVehicle", 120)) return NextResponse.json({ error: "Informe o carro que vai na troca." }, { status: 400 });
+  }
   if (isWholesale && (!email || !isValidCnpj(cnpj))) return NextResponse.json({ error: "Informe um CNPJ válido e um e-mail válido." }, { status: 400 });
   if (isPartner && (!email || !companyName || !text(body, "city", 100) || !isValidCnpj(cnpj))) return NextResponse.json({ error: "Informe os dados obrigatórios da empresa e um CNPJ válido." }, { status: 400 });
   if (isSellCar && (!text(body, "city", 100) || !text(body, "brand", 80) || !text(body, "model", 100) || !text(body, "year", 20) || !text(body, "mileage", 30) || !text(body, "targetPrice", 40))) return NextResponse.json({ error: "Informe os dados principais do veículo." }, { status: 400 });
@@ -351,20 +394,28 @@ export async function POST(request: NextRequest) {
       financingVehicleId,
     ],
   );
-  try {
-    await sendLeadNotification({
-      id: inserted.rows[0].id,
-      kind: kind as "contact" | "financing" | "sell_car" | "wholesale" | "partner" | "find_car" | "vehicle_interest",
-      name: resolvedName,
-      email,
-      phone,
-      message: resolvedMessage,
-      companyName: (isWholesale || isPartner) ? companyName : undefined,
-      cnpj: normalizedCnpj || undefined,
-      details: structuredPayload,
-    });
-  } catch (error) {
-    console.error("Falha ao notificar novo lead por SMTP", safeMailError(error));
-  }
-  return NextResponse.json({ ok: true }, { status: 201 });
+  const leadId = inserted.rows[0].id;
+  // O e-mail sai depois da resposta: o cliente não espera o SMTP e uma falha
+  // de envio não afeta o lead, que já está salvo e aparece no painel.
+  after(async () => {
+    try {
+      await sendLeadNotification({
+        id: leadId,
+        kind: kind as LeadKind,
+        name: resolvedName,
+        email,
+        phone,
+        message: resolvedMessage,
+        companyName: (isWholesale || isPartner) ? companyName : undefined,
+        cnpj: normalizedCnpj || undefined,
+        details: structuredPayload,
+        vehicle: pageVehicle ? { title: pageVehicle.title, priceCents: pageVehicle.price_cents, imageUrl: pageVehicle.image_url, slug: pageVehicle.slug, code: pageVehicle.internal_code || pageVehicle.catalog_item_id } : null,
+      });
+    } catch (error) {
+      console.error("Falha ao notificar novo lead por e-mail", safeMailError(error));
+    }
+  });
+  const mail = await getEmailSettings().then((r) => r.settings).catch(() => null);
+  const confirmationEmail = Boolean(email && mail?.enabled && mail.notifyCustomer);
+  return NextResponse.json({ ok: true, protocol: protocolOf(leadId), confirmationEmail }, { status: 201 });
 }

@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { query } from "@/lib/db";
 import { VehicleGallery } from "@/components/VehicleGallery";
-import { findVehicle, money, listVehicles, vehicleOriginBadgeLabel, vehicleOriginPublicLabel, vehiclePublicLocation } from "@/lib/vehicles";
+import { findVehicle, money, listVehicles, vehicleOriginPublicLabel, vehiclePublicLocation } from "@/lib/vehicles";
 import { VehicleCard } from "@/components/VehicleCard";
-import { MetaTrackedAnchor, VehicleViewContent } from "@/components/MetaPixelEvents";
+import { VehicleViewContent } from "@/components/MetaPixelEvents";
+import { VehicleLeadActions } from "@/components/VehicleLeadForm";
 import { readDefaultVehicleVideo } from "@/lib/default-vehicle-video";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +54,6 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const vehicle = await findVehicle(slug).catch(() => null);
   if (!vehicle) notFound();
-  const originBadge = vehicleOriginBadgeLabel(vehicle);
   const originPublicLabel = vehicleOriginPublicLabel(vehicle);
   const publicLocation = vehiclePublicLocation(vehicle);
   const message = encodeURIComponent(`Olá! Vi o ${vehicle.title} (${vehicle.catalog_item_id}) no site da Autodrive e gostaria de mais informações.`);
@@ -68,11 +68,6 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
     brand: vehicle.brand,
     model: vehicle.model,
     year: vehicle.year_model || vehicle.year_make,
-  };
-  const pixelParameters = {
-    content_ids: [vehicle.catalog_item_id], content_type: "product", content_name: vehicle.title,
-    value: vehicle.price_cents / 100, currency: "BRL", marca: vehicle.brand, modelo: vehicle.model,
-    ano: vehicle.year_model || vehicle.year_make, origem: originBadge,
   };
 
   // Suggestions: same brand or similar price
@@ -159,26 +154,25 @@ export default async function VehiclePage({ params }: { params: Promise<{ slug: 
 
           {/* Sidebar */}
           <aside className="detail-sidebar">
-            <MetaTrackedAnchor className="button detail-sim-btn" href="https://wa.me/5511934718276?text=Olá! Gostaria de simular um financiamento." target="_blank" rel="noreferrer" eventName="InitiateVehicleFinancing" eventParameters={pixelParameters} custom>
-              Faça sua Simulação Online
-            </MetaTrackedAnchor>
-            <div className="detail-contact-card">
-              <MetaTrackedAnchor href="https://wa.me/5511934718276" className="detail-contact-item" target="_blank" rel="noreferrer" eventName="Contact" eventParameters={pixelParameters}>
-                <span className="detail-contact-icon">📱</span>
-                <span>(11) 93471-8276</span>
-              </MetaTrackedAnchor>
-              <p className="detail-store-info">
-                <strong>{originPublicLabel}</strong><br/>
-                <span>📍 {publicLocation}</span>
-                <small>O atendimento e o lead passam sempre pela Autodrive.</small>
-              </p>
-              <MetaTrackedAnchor className="button" href={`https://wa.me/5511934718276?text=${message}`} target="_blank" rel="noreferrer" style={{ width: "100%" }} eventName="Contact" eventParameters={pixelParameters}>
-                Tenho interesse
-              </MetaTrackedAnchor>
-              <MetaTrackedAnchor className="button button-outline" href={`https://wa.me/5511934718276?text=${encodeURIComponent(`Olá! Quero agendar uma visita para conhecer o ${vehicle.title}.`)}`} target="_blank" rel="noreferrer" style={{ width: "100%" }} eventName="Schedule" eventParameters={pixelParameters}>
-                Agendar visita
-              </MetaTrackedAnchor>
-            </div>
+            <VehicleLeadActions
+              vehicle={{
+                id: vehicle.id,
+                title: vehicle.title,
+                version: vehicle.version || "",
+                price: money(vehicle.price_cents),
+                image: vehicle.image_url || "",
+                code: vehicle.catalog_item_id,
+              }}
+              whatsappHref={`https://wa.me/5511934718276?text=${message}`}
+              phoneLabel="(11) 93471-8276"
+              storeInfo={(
+                <p className="detail-store-info">
+                  <strong>{originPublicLabel}</strong>
+                  <span>📍 {publicLocation}</span>
+                  <small>O atendimento e o lead passam sempre pela Autodrive.</small>
+                </p>
+              )}
+            />
           </aside>
         </div>
       </section>

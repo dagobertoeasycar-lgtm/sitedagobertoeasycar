@@ -25,6 +25,7 @@ type RecentVehicleRow = {
 
 type RecentLeadRow = { id: string; name: string; phone: string; kind: string; status: string; vehicle_title: string | null; created_at: Date };
 type CountRow = { label: string; total: number };
+type VisitRow = { today: number; week: number; online: number; whatsapp: number; top_vehicle: string | null };
 type SourceRow = { name: string; connector: string; last_sync_at: Date | null; last_error: string | null; last_found: number | null };
 
 async function rows<T extends Record<string, unknown>>(sql: string): Promise<T[]> {
@@ -38,7 +39,7 @@ async function rows<T extends Record<string, unknown>>(sql: string): Promise<T[]
 export default async function AdminDashboard() {
   await requireArea("dashboard");
 
-  const [recentVehicles, recentLeads, topModels, byOrigin, sources] = await Promise.all([
+  const [recentVehicles, recentLeads, topModels, byOrigin, sources, visits] = await Promise.all([
     rows<RecentVehicleRow>(`select id, slug, internal_code, title, status, stock_status, promotion, origin_type, price_cents, mileage, year_make, year_model, image_url
       from vehicles order by updated_at desc limit 8`),
     rows<RecentLeadRow>(`select l.id, l.name, l.phone, l.kind, l.status, v.title as vehicle_title, l.created_at
@@ -49,13 +50,29 @@ export default async function AdminDashboard() {
       where status='published' group by origin_type order by total desc`),
     rows<SourceRow>(`select coalesce(nullif(trade_name,''), name) as name, connector, last_sync_at, last_error, last_found
       from partners where active and connector is not null order by name`),
+    rows<VisitRow>(`select
+        count(distinct visitor_id) filter (where event='pageview' and created_at >= date_trunc('day', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo')::int as today,
+        count(distinct visitor_id) filter (where event='pageview' and created_at >= (date_trunc('day', now() at time zone 'America/Sao_Paulo') - interval '6 days') at time zone 'America/Sao_Paulo')::int as week,
+        count(distinct visitor_id) filter (where created_at >= now() - interval '5 minutes')::int as online,
+        count(*) filter (where event='whatsapp_click' and created_at >= date_trunc('day', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo')::int as whatsapp,
+        (select title from vehicles v where v.slug = (select vehicle_slug from site_events where vehicle_slug is not null and event='pageview'
+          and created_at >= now() - interval '7 days' group by vehicle_slug order by count(*) desc limit 1)) as top_vehicle
+      from site_events where created_at >= now() - interval '8 days'`),
   ]);
+  const visit = visits[0];
 
   return (
     <>
       <div className="adm-header">
         <h1>Dashboard</h1>
         <Link href="/admin/veiculos/novo" className="ad-btn"><Plus size={16} aria-hidden />Novo anúncio</Link>
+      </div>
+
+      <div className="ad-mini-cards">
+        <Link href="/admin/visitas?periodo=hoje" className="ad-mini-card"><span>Visitantes hoje</span><strong>{(visit?.today ?? 0).toLocaleString("pt-BR")}</strong><small><span className="ad-live-dot" aria-hidden="true" /> {visit?.online ?? 0} online agora</small></Link>
+        <Link href="/admin/visitas?periodo=7" className="ad-mini-card"><span>Visitantes em 7 dias</span><strong>{(visit?.week ?? 0).toLocaleString("pt-BR")}</strong><small>Ver Central de visitas →</small></Link>
+        <Link href="/admin/visitas?periodo=hoje" className="ad-mini-card"><span>Cliques no WhatsApp hoje</span><strong>{visit?.whatsapp ?? 0}</strong></Link>
+        <Link href="/admin/visitas?periodo=7" className="ad-mini-card"><span>Carro mais visto (7 dias)</span><strong style={{ fontSize: ".95rem" }}>{visit?.top_vehicle ?? "—"}</strong></Link>
       </div>
 
       <div className="ad-grid-main">

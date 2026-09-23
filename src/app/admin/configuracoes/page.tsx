@@ -18,6 +18,9 @@ export default async function AdminConfigPage() {
     <>
       <div className="adm-header"><h1>Configurações</h1></div>
       <div className="adm-grid-2">
+        <Link className="adm-card config-link-card" href="/admin/configuracoes/emails">
+          <span className="config-link-icon">✉️</span><div><h2>E-mails e notificações</h2><p>SMTP, e-mail “não responda”, quem recebe os leads e confirmação automática para o cliente.</p></div>
+        </Link>
         <Link className="adm-card config-link-card" href="/admin/configuracoes/integracoes/meta">
           <span className="config-link-icon">🛒</span><div><h2>Integrações → Catálogo Meta</h2><p>Feed automático do estoque para o catálogo conectado ao WhatsApp Business.</p></div>
         </Link>
