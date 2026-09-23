@@ -8,6 +8,7 @@ type Feedback = { kind: "ok" | "error"; text: string; action: "save" | "test" } 
 const PRESETS: Record<string, { host: string; port: number; security: "starttls" | "ssl"; hint: string }> = {
   "Google Workspace / Gmail": { host: "smtp.gmail.com", port: 587, security: "starttls", hint: "Use uma senha de app (conta Google → Segurança → Senhas de app)." },
   "Microsoft 365 / Outlook": { host: "smtp.office365.com", port: 587, security: "starttls", hint: "A conta precisa ter SMTP autenticado liberado no Microsoft 365." },
+  "UOL Host (e-mail profissional)": { host: "smtps.uhserver.com", port: 465, security: "ssl", hint: "Usuário é o e-mail completo e a senha é a da caixa criada no painel da UOL Host." },
   "Hostinger": { host: "smtp.hostinger.com", port: 465, security: "ssl", hint: "Usuário é o próprio e-mail criado na Hostinger." },
   "Locaweb": { host: "email-ssl.com.br", port: 465, security: "ssl", hint: "Usuário é o próprio e-mail criado na Locaweb." },
   "Zoho Mail": { host: "smtp.zoho.com", port: 465, security: "ssl", hint: "Use uma senha de aplicativo do Zoho." },
