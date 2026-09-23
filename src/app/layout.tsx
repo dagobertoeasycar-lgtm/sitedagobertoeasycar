@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ENDERECO, MAPS_URL } from "@/lib/endereco";
+import { GoogleTag } from "@/components/GoogleTag";
 
 const siteUrl = "https://www.appautodrive.com.br";
 
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="pt-BR">
       <body>
         {children}
+        <GoogleTag />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </body>
     </html>

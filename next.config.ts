@@ -48,6 +48,9 @@ const nextConfig: NextConfig = {
             value:
               "default-src 'self'; " +
               "img-src 'self' data: https://www.facebook.com " +
+              // Tag do Google (Ads): pixels de conversão e remarketing.
+              "https://www.googletagmanager.com https://www.google.com https://www.google.com.br " +
+              "https://googleads.g.doubleclick.net https://www.google-analytics.com " +
               "https://resized-images.autoconf.com.br https://static.autoconf.com.br " +
               "https://autoconf-production.s3.amazonaws.com " +
               "https://cdn-sistema-lojistas.bndv.com.br https://*.bndv.com.br " +
@@ -56,11 +59,17 @@ const nextConfig: NextConfig = {
               // navegador bloqueia a foto tratada e o card fica vazio.
               "https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
               "style-src 'self' 'unsafe-inline'; " +
-              `script-src 'self' 'unsafe-inline' https://connect.facebook.net ${process.env.NODE_ENV === "development" ? "'unsafe-eval'" : ""}; ` +
+              `script-src 'self' 'unsafe-inline' https://connect.facebook.net ` +
+              "https://www.googletagmanager.com https://www.googleadservices.com " +
+              `https://googleads.g.doubleclick.net ${process.env.NODE_ENV === "development" ? "'unsafe-eval'" : ""}; ` +
               "connect-src 'self' https://www.facebook.com https://connect.facebook.net " +
+              "https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com " +
+              "https://stats.g.doubleclick.net https://googleads.g.doubleclick.net " +
+              "https://www.google.com https://www.google.com.br " +
               "https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
               "media-src 'self' https://*.blob.vercel-storage.com https://*.public.blob.vercel-storage.com; " +
-              "frame-src https://www.google.com https://www.youtube.com; " +
+              "frame-src https://www.google.com https://www.youtube.com https://td.doubleclick.net " +
+              "https://www.googletagmanager.com; " +
               "form-action 'self'; frame-ancestors 'self'; base-uri 'self'",
           },
         ],
