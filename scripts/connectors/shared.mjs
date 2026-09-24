@@ -97,34 +97,57 @@ export function clampMileage(value) {
   return n > MAX_MILEAGE ? MAX_MILEAGE : n;
 }
 
-async function pedir(url, { accept = "text/html", timeout = 30000 } = {}) {
+/**
+ * Leitor público usado como plano B quando o CDN do parceiro bloqueia o IP do
+ * servidor. Ele busca a página do próprio IP dele e devolve o HTML original.
+ * Sem isso, Justo Car e Now Car ficam congeladas: o estoque delas parou em
+ * 17/09/2026, com carro vendido ainda no ar.
+ */
+const LEITOR_PUBLICO = "https://r.jina.ai/";
+const LEITOR_TIMEOUT = 60000;
+
+function ehBloqueio(status) {
+  return status === 403 || status === 429;
+}
+
+async function buscar(url, { accept, timeout, headers = {} }) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
-    const res = await fetch(url, {
+    return await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": UA, Accept: accept, "Accept-Language": "pt-BR,pt;q=0.9" },
+      headers: { "User-Agent": UA, Accept: accept, "Accept-Language": "pt-BR,pt;q=0.9", ...headers },
       redirect: "follow",
     });
-    if (!res.ok) {
-      // 403/429 atrás de CDN quase nunca é erro de código: é bloqueio por
-      // reputação do IP de origem. Os runners do GitHub Actions ficam em
-      // faixas muito usadas para raspagem, e a Cloudflare barra por padrão.
-      // A mesma URL responde 200 de um IP comum.
-      const cdn = res.headers.get("cf-ray") ? "Cloudflare" : res.headers.get("server") || "CDN";
-      if (res.status === 403 || res.status === 429) {
-        throw new Error(
-          `HTTP ${res.status} em ${url} — ${cdn} bloqueou a requisição. ` +
-            `Não é erro do conector: o site responde normalmente de um IP comum. ` +
-            `Rode a sincronização de um servidor próprio, ou peça ao parceiro para liberar o acesso.`,
-        );
-      }
-      throw new Error(`HTTP ${res.status} em ${url}`);
-    }
-    return res;
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function pedir(url, { accept = "text/html", timeout = 30000 } = {}) {
+  const res = await buscar(url, { accept, timeout });
+  if (res.ok) return res;
+
+  // 403/429 atrás de CDN quase nunca é erro de código: é bloqueio por
+  // reputação do IP de origem. Os runners do GitHub Actions e os servidores
+  // em nuvem ficam em faixas muito usadas para raspagem, e a Cloudflare barra
+  // por padrão. A mesma URL responde 200 de um IP comum, então tentamos de
+  // novo através do leitor público antes de desistir.
+  const cdn = res.headers.get("cf-ray") ? "Cloudflare" : res.headers.get("server") || "CDN";
+  if (ehBloqueio(res.status)) {
+    const viaLeitor = await buscar(`${LEITOR_PUBLICO}${url}`, {
+      accept,
+      timeout: LEITOR_TIMEOUT,
+      headers: { "x-return-format": accept.includes("json") ? "text" : "html" },
+    }).catch(() => null);
+    if (viaLeitor?.ok) return viaLeitor;
+    throw new Error(
+      `HTTP ${res.status} em ${url} — ${cdn} bloqueou a requisição e o leitor público também não conseguiu ler. ` +
+        `Não é erro do conector: o site responde normalmente de um IP comum. ` +
+        `Peça ao parceiro um feed (XML/CSV) ou que libere o acesso.`,
+    );
+  }
+  throw new Error(`HTTP ${res.status} em ${url}`);
 }
 
 export async function fetchText(url, options) {
