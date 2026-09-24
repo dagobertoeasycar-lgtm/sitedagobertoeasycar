@@ -1,17 +1,16 @@
 name: Sincronizar estoque EasyCar
 
 on:
-  # Agendamento DESLIGADO de proposito. A Cloudflare bloqueia as faixas de IP
-  # dos runners do GitHub, e Justo Car e Now Car devolvem HTTP 403 daqui — as
-  # mesmas URLs respondem 200 de um IP comum. A sincronizacao de verdade roda
-  # na VM, pela tarefa agendada criada por scripts/setup-sync-scheduler.ps1.
+  # Roda de hora em hora na nuvem, sem depender de nenhuma maquina ligada.
+  # Antes a sincronizacao de verdade vivia numa tarefa agendada da VM, que so
+  # rodava quando a VM estava ligada (8 execucoes em 24h, em horarios soltos).
   #
-  # Este workflow fica como execucao manual: serve para aplicar migrations e
-  # para sincronizar os parceiros que nao usam Cloudflare (EasyCar, Tchesco Car,
-  # Guiotti) quando a VM estiver indisponivel.
-  #
-  # schedule:
-  #   - cron: "*/15 * * * *"
+  # Justo Car e Now Car respondem HTTP 403 (Cloudflare) para as faixas de IP
+  # dos runners do GitHub, igual acontecia na VM. Esses dois continuam a exigir
+  # outra solucao (feed do parceiro ou leitura por navegador); os demais
+  # (EasyCar, Tchesco Car, Guiotti) atualizam normalmente aqui.
+  schedule:
+    - cron: "7 * * * *"
   workflow_dispatch:
 
 concurrency:
