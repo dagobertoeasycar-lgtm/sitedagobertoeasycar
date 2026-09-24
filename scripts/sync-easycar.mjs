@@ -12,6 +12,7 @@
  *            EASYCAR_REVENDAS (opcional, ids separados por vírgula p/ filtrar lojas)
  */
 import pg from "pg";
+import { adquirirTrava, liberarTrava } from "./lib/lease.mjs";
 import {
   DEFAULT_PRICING_RULE,
   computePublishedPriceCents,
@@ -256,10 +257,8 @@ export async function runSync() {
   });
   await client.connect();
 
-  const lock = await client.query(
-    "select pg_try_advisory_lock(hashtext('easycar_sync')) as locked"
-  );
-  if (!lock.rows[0]?.locked) {
+  const travou = await adquirirTrava(client, "easycar_sync_lease");
+  if (!travou) {
     console.log("Sincronização anterior ainda ativa; ignorando.");
     await client.end();
     return { skippedRun: true, processed: 0, created: 0, updated: 0, skipped: 0, errors: 0 };
@@ -270,7 +269,7 @@ export async function runSync() {
     .catch(() => ({ rows: [] }));
   if (configResult.rows[0]?.value === "false") {
     console.log("Sync desabilitada no painel.");
-    await client.query("select pg_advisory_unlock(hashtext('easycar_sync'))").catch(() => {});
+    await liberarTrava(client, "easycar_sync_lease");
     await client.end();
     return { disabled: true, processed: 0, created: 0, updated: 0, skipped: 0, errors: 0 };
   }
@@ -515,7 +514,7 @@ export async function runSync() {
           )
           .catch(() => {});
       });
-    await client.query("select pg_advisory_unlock(hashtext('easycar_sync'))").catch(() => {});
+    await liberarTrava(client, "easycar_sync_lease");
     await client.end();
   }
 

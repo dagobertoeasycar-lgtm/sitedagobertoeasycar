@@ -12,6 +12,7 @@
  * Variáveis: DATABASE_URL (obrigatória)
  */
 import pg from "pg";
+import { adquirirTrava, liberarTrava } from "./lib/lease.mjs";
 import {
   DEFAULT_PRICING_RULE,
   computePublishedPriceCents,
@@ -297,8 +298,8 @@ async function main() {
   await client.connect();
   log(`Banco: ${resumo}`);
 
-  const lock = await client.query("select pg_try_advisory_lock(hashtext('autodrive_sync_partners')) as locked");
-  if (!lock.rows[0]?.locked) {
+  const travou = await adquirirTrava(client, "partners_sync_lease");
+  if (!travou) {
     log("Sincronização anterior ainda em andamento; saindo.");
     await client.end();
     return;
@@ -398,7 +399,7 @@ async function main() {
     const comErro = resumo.filter((r) => r.estado === "erro").length;
     log(`\n${resumo.length} parceiro(s) processado(s), ${comErro} com erro.`);
   } finally {
-    await client.query("select pg_advisory_unlock(hashtext('autodrive_sync_partners'))").catch(() => {});
+    await liberarTrava(client, "partners_sync_lease");
     await client.end();
   }
 }
