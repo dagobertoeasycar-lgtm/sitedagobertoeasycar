@@ -103,7 +103,11 @@ export function clampMileage(value) {
  * Sem isso, Justo Car e Now Car ficam congeladas: o estoque delas parou em
  * 17/09/2026, com carro vendido ainda no ar.
  */
-const LEITOR_PUBLICO = "https://r.jina.ai/";
+const LEITORES = [
+  { nome: "r.jina.ai", url: (alvo) => `https://r.jina.ai/${alvo}`, headers: (accept) => ({ "x-return-format": accept.includes("json") ? "text" : "html" }) },
+  { nome: "allorigins", url: (alvo) => `https://api.allorigins.win/raw?url=${encodeURIComponent(alvo)}`, headers: () => ({}) },
+  { nome: "codetabs", url: (alvo) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(alvo)}`, headers: () => ({}) },
+];
 const LEITOR_TIMEOUT = 60000;
 
 function ehBloqueio(status) {
@@ -124,26 +128,46 @@ async function buscar(url, { accept, timeout, headers = {} }) {
   }
 }
 
+/** Tenta cada leitor público na ordem; devolve a resposta boa ou o relato das falhas. */
+async function tentarLeitores(url, accept) {
+  const falhas = [];
+  for (const leitor of LEITORES) {
+    try {
+      const res = await buscar(leitor.url(url), { accept, timeout: LEITOR_TIMEOUT, headers: leitor.headers(accept) });
+      if (res.ok) {
+        const corpo = await res.text();
+        // Proxy que devolve página de erro do CDN responde 200 com pouco texto.
+        if (corpo.length > 2000) return { corpo, leitor: leitor.nome };
+        falhas.push(`${leitor.nome}: 200 com ${corpo.length} bytes`);
+      } else {
+        falhas.push(`${leitor.nome}: HTTP ${res.status}`);
+      }
+    } catch (erro) {
+      falhas.push(`${leitor.nome}: ${erro instanceof Error ? erro.message : erro}`);
+    }
+  }
+  return { falhas };
+}
+
 async function pedir(url, { accept = "text/html", timeout = 30000 } = {}) {
   const res = await buscar(url, { accept, timeout });
   if (res.ok) return res;
 
   // 403/429 atrás de CDN quase nunca é erro de código: é bloqueio por
-  // reputação do IP de origem. Os runners do GitHub Actions e os servidores
-  // em nuvem ficam em faixas muito usadas para raspagem, e a Cloudflare barra
-  // por padrão. A mesma URL responde 200 de um IP comum, então tentamos de
-  // novo através do leitor público antes de desistir.
+  // reputação do IP de origem. Os runners do GitHub Actions e os servidores em
+  // nuvem ficam em faixas muito usadas para raspagem, e a Cloudflare barra por
+  // padrão; a mesma URL responde 200 de um IP comum. Antes de desistir,
+  // tentamos ler por um leitor público, que busca a página do IP dele.
   const cdn = res.headers.get("cf-ray") ? "Cloudflare" : res.headers.get("server") || "CDN";
   if (ehBloqueio(res.status)) {
-    const viaLeitor = await buscar(`${LEITOR_PUBLICO}${url}`, {
-      accept,
-      timeout: LEITOR_TIMEOUT,
-      headers: { "x-return-format": accept.includes("json") ? "text" : "html" },
-    }).catch(() => null);
-    if (viaLeitor?.ok) return viaLeitor;
+    const tentativa = await tentarLeitores(url, accept);
+    if (tentativa.corpo) {
+      console.log(`  ${cdn} bloqueou o acesso direto; lido pelo ${tentativa.leitor}`);
+      return new Response(tentativa.corpo, { status: 200, headers: { "content-type": accept } });
+    }
     throw new Error(
-      `HTTP ${res.status} em ${url} — ${cdn} bloqueou a requisição e o leitor público também não conseguiu ler. ` +
-        `Não é erro do conector: o site responde normalmente de um IP comum. ` +
+      `HTTP ${res.status} em ${url} — ${cdn} bloqueou a requisição e os leitores públicos também falharam ` +
+        `(${tentativa.falhas.join("; ")}). Não é erro do conector: o site responde normalmente de um IP comum. ` +
         `Peça ao parceiro um feed (XML/CSV) ou que libere o acesso.`,
     );
   }
