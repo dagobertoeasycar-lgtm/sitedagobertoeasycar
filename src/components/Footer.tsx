@@ -1,77 +1,72 @@
 import Link from "next/link";
+import { Clock, MapPin, MessageCircle } from "lucide-react";
 import { ENDERECO, MAPS_ROTA_URL, WAZE_URL } from "@/lib/endereco";
-import { CIDADES } from "@/lib/seo-landings";
-import { listBrandLandings } from "@/lib/seo-landings";
+import { CIDADES, listBrandLandings } from "@/lib/seo-landings";
 
+const WHATSAPP = "https://wa.me/5511934718276";
+
+const NAV = [
+  { href: "/veiculos", label: "Estoque" },
+  { href: "/encontre-seu-carro", label: "Encontre seu carro" },
+  { href: "/venda-seu-carro", label: "Venda seu carro" },
+  { href: "/financiamento", label: "Financiamento" },
+  { href: "/financia-facil", label: "Financia Fácil" },
+  { href: "/parceiros", label: "Seja parceiro" },
+  { href: "/sobre", label: "Sobre" },
+  { href: "/contato", label: "Contato" },
+];
+
+// Rodapé padrão (o mesmo do site das lojas no SaaS, SiteFooter): faixa de
+// chamada com WhatsApp, 4 colunas (marca, navegação, atendimento, "procure por"
+// em etiquetas), aviso legal e barra final.
 export async function Footer() {
   // Links por marca e por cidade: ajudam o Google a achar o estoque e levam
   // quem procura "carros em Osasco" direto para uma página com conteúdo.
   const marcas = await listBrandLandings(6).then((list) => list.slice(0, 8)).catch(() => []);
+  const tags = [
+    ...marcas.map((m) => ({ href: `/carros/${m.slug}`, label: `${m.nome} seminovos` })),
+    ...CIDADES.map((c) => ({ href: `/carros-em/${c.slug}`, label: `Carros em ${c.nome}` })),
+  ];
   return (
     <footer className="site-footer">
-      <div className="shell footer-grid">
-        {/* Col 1: Logo + description */}
+      <div className="shell footer-cta">
         <div>
-          <img src="/brand/autodrive-logo-footer.png" alt="Autodrive Veículos" className="footer-logo" />
-          <p>Autodrive Veículos & Tecnologia: veículos próprios, parceiros e particulares em um só atendimento.</p>
-        </div>
-
-        {/* Col 2: Navegação */}
-        <div>
-          <strong>Navegação</strong>
-          <Link href="/veiculos">Estoque</Link>
-          <Link href="/encontre-seu-carro">Encontre seu carro</Link>
-          <Link href="/venda-seu-carro">Venda seu carro</Link>
-          <Link href="/financiamento">Financiamento</Link>
-          <Link href="/financia-facil">Financia Fácil</Link>
-          <Link href="/parceiros">Seja parceiro</Link>
-          <Link href="/sobre">Sobre</Link>
-          <Link href="/contato">Contato</Link>
-          <Link href="/admin/login">Acesso administrativo</Link>
-        </div>
-
-        {/* Col 3: Atendimento */}
-        <div>
-          <strong>Atendimento</strong>
-          <a href="https://wa.me/5511934718276" target="_blank" rel="noreferrer" className="footer-phone">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 0 0 .612.616l4.535-1.474A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.39-1.578l-.387-.232-2.695.876.9-2.65-.254-.404A9.93 9.93 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-            (11) 93471-8276
-          </a>
-          <a href={MAPS_ROTA_URL} target="_blank" rel="noreferrer" className="footer-address">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span>{ENDERECO.linha1}<br/>{ENDERECO.linha2}</span>
-          </a>
-          <span className="footer-mapas">
-            <a href={MAPS_ROTA_URL} target="_blank" rel="noreferrer">Google Maps</a>
-            <a href={WAZE_URL} target="_blank" rel="noreferrer">Waze</a>
-          </span>
-          <ul className="footer-highlights">
-            <li>Vários parceiros à sua disposição</li>
-            <li>Vários modelos para todos os gostos</li>
-            <li>Negociação fácil e rápida</li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Col 4: páginas de marca e cidade */}
-      <div className="shell footer-grid footer-landings">
-        <div>
-          <strong>Carros por marca</strong>
-          {marcas.map((marca) => <Link key={marca.slug} href={`/carros/${marca.slug}`}>{marca.nome}</Link>)}
-        </div>
-        <div>
-          <strong>Onde atendemos</strong>
-          {CIDADES.map((cidade) => <Link key={cidade.slug} href={`/carros-em/${cidade.slug}`}>Carros em {cidade.nome}</Link>)}
-        </div>
-      </div>
-
-      {/* CTA section */}
-      <div className="shell" style={{ marginTop: 32 }}>
-        <div className="footer-cta">
           <strong>Não encontrou o carro certo?</strong>
           <p>A Autodrive procura opções na rede de parceiros e centraliza o atendimento.</p>
-          <Link className="button" href="/encontre-seu-carro">Encontre meu carro</Link>
         </div>
+        <a className="button" href={WHATSAPP} target="_blank" rel="noreferrer"><MessageCircle size={18} aria-hidden="true" />Falar pelo WhatsApp</a>
+      </div>
+
+      <div className="shell footer-grid">
+        <div className="footer-brand">
+          <span className="footer-logo-plain"><img src="/brand/autodrive-logo-footer.png" alt="Autodrive Veículos" className="footer-logo" width={718} height={114} /></span>
+          <p>Veículos próprios, parceiros e particulares em um só atendimento.</p>
+        </div>
+
+        <nav className="footer-col" aria-label="Rodapé">
+          <strong>Navegação</strong>
+          <div className="footer-links two-cols">{NAV.map((n) => <Link key={n.href} href={n.href}>{n.label}</Link>)}</div>
+        </nav>
+
+        <div className="footer-col">
+          <strong>Atendimento</strong>
+          <ul className="footer-contact">
+            <li><MessageCircle size={16} aria-hidden="true" /><a href={WHATSAPP} target="_blank" rel="noreferrer">(11) 93471-8276</a></li>
+            <li><MapPin size={16} aria-hidden="true" /><span>{ENDERECO.linha1}<br />{ENDERECO.linha2}</span></li>
+            <li><Clock size={16} aria-hidden="true" /><span>{ENDERECO.observacao}</span></li>
+          </ul>
+          <div className="footer-mapas">
+            <a href={MAPS_ROTA_URL} target="_blank" rel="noreferrer">Google Maps</a>
+            <a href={WAZE_URL} target="_blank" rel="noreferrer">Waze</a>
+          </div>
+        </div>
+
+        {tags.length > 0 && (
+          <div className="footer-col">
+            <strong>Procure por</strong>
+            <div className="footer-tags">{tags.map((t) => <Link key={t.href} href={t.href}>{t.label}</Link>)}</div>
+          </div>
+        )}
       </div>
 
       <div className="shell footer-legal">
@@ -80,7 +75,11 @@ export async function Footer() {
 
       <div className="shell footer-bottom">
         <span>&copy; {new Date().getFullYear()} Autodrive Veículos. Todos os direitos reservados.</span>
-        <span><Link href="/privacidade">Privacidade</Link> &middot; <Link href="/termos">Termos</Link></span>
+        <span className="footer-legal-links">
+          <Link href="/privacidade">Privacidade</Link>
+          <Link href="/termos">Termos</Link>
+          <Link href="/admin/login">Acesso administrativo</Link>
+        </span>
       </div>
     </footer>
   );
