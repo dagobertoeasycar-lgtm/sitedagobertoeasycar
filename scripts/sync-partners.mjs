@@ -11,8 +11,8 @@
  * Uso: node scripts/sync-partners.mjs [sync_source_id ...]
  * Variáveis: DATABASE_URL (obrigatória)
  */
-import pg from "pg";
 import { adquirirTrava, liberarTrava } from "./lib/lease.mjs";
+import { criarConexao } from "./lib/db.mjs";
 import {
   DEFAULT_PRICING_RULE,
   computePublishedPriceCents,
@@ -294,7 +294,9 @@ async function importarParceiro(client, parceiro, regras) {
 }
 
 async function main() {
-  const client = new pg.Client({ connectionString, application_name: "autodrive_sync_partners" });
+  // Reconecta sozinho se o Neon derrubar a conexão ociosa (57P01) durante
+  // a leitura demorada de algum parceiro.
+  const client = criarConexao({ connectionString, application_name: "autodrive_sync_partners", log });
   await client.connect();
   log(`Banco: ${resumo}`);
 
