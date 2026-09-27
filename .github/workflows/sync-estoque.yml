@@ -5,10 +5,10 @@ on:
   # Antes a sincronizacao de verdade vivia numa tarefa agendada da VM, que so
   # rodava quando a VM estava ligada (8 execucoes em 24h, em horarios soltos).
   #
-  # Justo Car e Now Car respondem HTTP 403 (Cloudflare) para as faixas de IP
-  # dos runners do GitHub, igual acontecia na VM. Esses dois continuam a exigir
-  # outra solucao (feed do parceiro ou leitura por navegador); os demais
-  # (EasyCar, Tchesco Car, Guiotti) atualizam normalmente aqui.
+  # Justo Car e Now Car ficam atras da Cloudflare (403 para IP de datacenter),
+  # mas desde a migration 025 sao lidas pela API GraphQL da BNDV (Azure, sem
+  # Cloudflare), entao todas as lojas atualizam aqui. A leitura do site fica
+  # como plano B se a API falhar.
   schedule:
     - cron: "7 * * * *"
   workflow_dispatch:

@@ -8,6 +8,7 @@
  * config: { baseUrl, listPath, pageParam?, startPage?, maxPages?, vehicleFilter? }
  */
 import { fetchText, normalizeVehicle, passaFiltroTipo, readNextData, sleep, toCents, toInt } from "./shared.mjs";
+import { collectViaApi } from "./bndv-api.mjs";
 
 export const id = "bndv_next";
 export const label = "BNDV / Next.js (__NEXT_DATA__)";
@@ -46,7 +47,7 @@ function mapear(v, baseUrl) {
   });
 }
 
-export async function collect(config, log = console.log) {
+async function collectSite(config, log = console.log) {
   const baseUrl = String(config.baseUrl || "").replace(/\/+$/, "");
   if (!baseUrl) throw new Error("connector_config.baseUrl é obrigatório");
   const listPath = config.listPath || "/seminovos";
@@ -94,4 +95,23 @@ export async function collect(config, log = console.log) {
   }
 
   return saida;
+}
+
+/**
+ * Fonte principal: API da BNDV (funciona da nuvem, sem Cloudflare). Plano B:
+ * leitura do site, como antes. API "vazia" também cai no plano B — nunca
+ * tratamos zero carros como verdade, senão o estoque inteiro sairia do site.
+ */
+export async function collect(config, log = console.log) {
+  if (config.bndvCompanyId) {
+    const baseUrl = String(config.baseUrl || "").replace(/\/+$/, "");
+    try {
+      const itens = await collectViaApi(config, (id) => `${baseUrl}/anuncio/carro/${id}`, log);
+      if (itens.length) return itens;
+      log("  API BNDV não trouxe veículos; lendo o site (plano B)");
+    } catch (e) {
+      log(`  API BNDV indisponível (${e.message}); lendo o site (plano B)`);
+    }
+  }
+  return collectSite(config, log);
 }
